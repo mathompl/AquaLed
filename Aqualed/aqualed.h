@@ -2,7 +2,6 @@
 #include <Time.h>
 #include <EEPROM.h>
 #include <DS1307RTC.h>
-#include <avr/pgmspace.h>
 #include <OneWire.h>
 #include <avr/wdt.h>
 
@@ -81,32 +80,30 @@
 typedef struct
 {
         byte pwmPin;
-        boolean pwmI2C = false;
-        byte pwmStatus = 0;
-        byte pwmHOn = 0;
-        byte pwmMOn = 0;
-        byte pwmSOn = 0;
-        byte pwmHOff = 0;
-        byte pwmMOff = 0;
-        byte pwmSOff = 0;
-        byte pwmMin = 0;
-        byte pwmMax = 0;
-        byte pwmSr = 0;
-        byte pwmSs = 0;
-        byte pwmKeepLight = 0;
-        byte pwmInvert = 0;
-        double pwmNow = 0;
-        byte pwmLast = 0;
-        byte pwmGoal = 0;
-        byte pwmSaved = 0;
-        byte pwmTest = 0;
-        byte isSunrise = 0;
-        byte isSunset = 0;
-        byte pwmAmbient = 20;
+        boolean pwmI2C;
+        byte pwmStatus;
+        byte pwmHOn;
+        byte pwmMOn;
+        byte pwmSOn;
+        byte pwmHOff;
+        byte pwmMOff;
+        byte pwmSOff;
+        byte pwmMin;
+        byte pwmMax;
+        byte pwmSr;
+        byte pwmSs;
+        byte pwmKeepLight;
+        byte pwmInvert;
+        double pwmNow;
+        byte pwmLast;
+        byte pwmGoal;
+        byte pwmSaved;
+        byte pwmTest;
+        byte isSunrise;
+        byte isSunset;
+        byte pwmAmbient;
 } PWM;
-
 PWM pwm_list[PWMS];
-
 
 struct SETTINGS_STRUCT
 {
@@ -127,7 +124,6 @@ struct SETTINGS_STRUCT
 
 byte sensorsList[7][8];
 boolean sensorsDetected[7];
-
 
 SETTINGS_STRUCT SETTINGS =
 {
@@ -166,7 +162,7 @@ tmElements_t tm;
 byte nxLastHour = 0, nxLastMinute = 0;
 
 char cmdOutputArray[64];
-// test
+
 boolean justTurnedOn = true;
 
 // sensors

@@ -1,3 +1,6 @@
+#include <Arduino.h>
+#include <avr/pgmspace.h>
+
 #define NEX_RET_CMD_FINISHED                (0x01)
 #define NEX_RET_EVENT_TOUCH_HEAD            (0x65)
 #define NEX_EVENT_POP                       (0x00)
@@ -20,7 +23,9 @@ int t;
 char ti[1] = {0};
 char b[10]  = {0};
 bool forceRefresh = false;
+uint8_t nxScreen = 0;
 
+// pages
 #define PAGE_HOME 0
 #define PAGE_CONFIG 1
 #define PAGE_SETTIME 2
@@ -32,9 +37,7 @@ bool forceRefresh = false;
 #define PAGE_SCHEDULE 8
 #define PAGE_PWM_LIST 9
 
-byte nxScreen = 0;
-
-
+// commands
 #define CMD_SET_HOUR  0
 #define CMD_PARENTH     1
 #define CMD_BO_SET_PIC  2
@@ -217,7 +220,6 @@ char const xgti[] PROGMEM = "get ti.txt";
 char const xwtred[] PROGMEM = "wt.pco=63488";
 char const xwtgreen[] PROGMEM = "wt.txt=1024";
 char const xst[] PROGMEM = "st.txt=\"";
-
 char const xn0[] PROGMEM = "n0.val=";
 char const xn1[] PROGMEM = "n1.val=";
 char const xn2[] PROGMEM = "n2.val=";
