@@ -1,12 +1,12 @@
 # AquaLed
 
-Arduino PWM LED lamp driver software with LCD support and temperature control for reef marine aquariums.
+Arduino PWM LED lamp driver software with LCD support and temperature control for marine, reef or sweetwater aquariums.
 
 Features:
 - 6 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
 - programmable light hours with sunsets and sunrises
 - night light support
-- 3 digital thermometers with asynchronous temperature read, for: water, lamp and addictional lamp or sump, controlling 3 separate relays for cooling fans
+- 3 digital thermometers with asynchronous temperature read, for: water, lamp and addictional lamp or sump, controlling 3 separate  relays (cooling fans)
 - customizable dimming, linear or logarithmic algorith
 - bluetooth compatibility with AQma Led Control by Maqu http://magu.pl/aqma-led-control
 - full configuration and status using Nextion 2.8" LCD with touch support, including: operational hours, sunset & sunrise hours, thermometers, dimming times, schedule, night mode etc.
@@ -17,7 +17,7 @@ Features:
 - all settings stored in EEPROM
 - works on Arduino Nano
 
-Example Nextion code attached. I dont have copyright for graphics used, use only as an example.
+Example Nextion project attached. I dont have copyright for graphics used, use only as an example.
 
 REQUIREMENTS:
 
