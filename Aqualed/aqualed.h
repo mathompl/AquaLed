@@ -162,15 +162,11 @@ long unsigned currentTimeSec;
 boolean testMode = false;
 
 tmElements_t tm;
-//TimeChangeRule plCET = {"CET", Last, Sun, Oct, 1, 60};  //UTC - 4 hours
-//TimeChangeRule plCEST = {"CEST", Last, Sun, Mar, 1, 120};   //UTC - 5 hours
-//Timezone pl_TZ(plCET, plCEST);
-
 
 byte nxLastHour = 0, nxLastMinute = 0;
 
 char cmdOutputArray[64];
-
+// test
 boolean justTurnedOn = true;
 
 // sensors
@@ -238,7 +234,7 @@ SoftwareSerial bluetooth(A2, A1);
 #endif
 
 #ifndef NO_NEXTION
-      #include "nextion.h"
+      #include "Nextion.h"
 #endif
 
 #ifndef NO_TEMPERATURE

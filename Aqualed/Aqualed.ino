@@ -17,7 +17,7 @@
 
  */
 
-#include "aqualed.h"
+#include "Aqualed.h"
 
 void setup() {
         wdt_disable();
