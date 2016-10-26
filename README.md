@@ -27,7 +27,9 @@ Hardware:
 - Bluetooth (optional)
 - 3x DS18B20 digital thermometers 
 - 3x 5v relays modules
+- PCA9685 PWM i2c module (optional)
 - Nextion 2.8" LCD
+
 
 Libraries:
 - Arduino-Temperature-Control-Library (https://github.com/milesburton/Arduino-Temperature-Control-Library) 
@@ -40,4 +42,4 @@ Libraries:
 Software:
 - Nextion Editor (https://nextion.itead.cc/download.html)
 - Arduino IDE or atom.io
-
+ 
