@@ -43,12 +43,12 @@ Software:
 - Nextion Editor (https://nextion.itead.cc/download.html)
 - Arduino IDE or atom.io
  
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/0.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/1.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/2.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/3.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/4.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/5.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/6.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/7.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/3.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/4.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/5.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/6.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/7.jpg "AquaLed")
 
