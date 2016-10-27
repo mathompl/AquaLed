@@ -14,14 +14,14 @@
  */
 
 // adds integer value to buffer
-static void addInt (int x, boolean comma)
+static void addInt (int value, boolean addComma)
 {
-        sprintf (buffer + strlen (buffer), "%i", x);
-        if (comma) strcpy_P(buffer + strlen (buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_COMMA])));
+        sprintf (buffer + strlen (buffer), "%i", value);
+        if (addComma) strcpy_P(buffer + strlen (buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_COMMA])));
 }
 
 // fills nextion rectangle
-static void fillRect (int x, int y, int w, int h, int c)
+static void fillRect (int x, int y, int w, int h, int color)
 {
         memset(buffer, 0, sizeof (buffer));
         strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[CMD_FILL])));
@@ -29,130 +29,104 @@ static void fillRect (int x, int y, int w, int h, int c)
         addInt (y, true);
         addInt (w, true);
         addInt (h, true);
-        addInt (c, false);
+        addInt (color, false);
         strcpy (buffer + strlen(buffer), "\0");
         sendCommand(buffer);
-        wdt_reset();
 }
 
-static void sendCommandPGMInt (int i,  int b, boolean pth)
+static void sendCommandPGMInt (int pgmCommandIndex,  int value, boolean closingParenthesis)
 {
-        sendCommandPGMInt (i,  b, pth, false);
+        sendCommandPGMInt (pgmCommandIndex,  value, closingParenthesis, false);
 }
 
-static void  sendCommandPGMInt (int i,  int b, boolean pth, boolean leadingZeros)
+static void  sendCommandPGMInt (int pgmCommandIndex,  int value, boolean closingParenthesis, boolean leadingZeros)
 {
 
         memset(buffer, 0, sizeof (buffer));
-        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[i])));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         char tmp[5] = {0};
         memset(tmp, 0, sizeof (tmp));
-        if (leadingZeros) sprintf (tmp, "%02d", b);
-        else
-                sprintf (tmp, "%d", b);
+        if (leadingZeros) sprintf (tmp, "%02d", value); else sprintf (tmp, "%d", value);
         strcpy (buffer + strlen(buffer), tmp);
-        if (pth) strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
+        if (closingParenthesis) strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
         strcpy (buffer + strlen(buffer), "\0");
-        //strcat (buffer + strlen(buffer), "\0");
         sendCommand(buffer);
-        wdt_reset();
 }
 
-static void sendCommandPGM_C (int i, int x )
+static void sendCommandPGM_C (int pgmCommandIndex, int pgmConstStringIndex )
 {
         memset(buffer, 0, sizeof (buffer));
-        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[i])));
-        strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxConstStrings[x])));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
+        strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxConstStrings[pgmConstStringIndex])));
         strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
         strcpy (buffer + strlen(buffer), "\0");
         sendCommand(buffer);
-        wdt_reset();
 }
 
-static void sendCommandPGM (int i,  char *b, ...)
+static void sendCommandPGM (int pgmCommandIndex,  char *text, ...)
 {
         char* str;
         str = b;
         memset(buffer, 0, sizeof (buffer));
-        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[i])));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         va_list ap;
-        va_start(ap, b);
+        va_start(ap, text);
         do {
                 strcpy (buffer + strlen (buffer), str);
                 str = va_arg(ap, char*);
         } while (str != NULL);
         strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
-        //strcat (buffer , "\0");
-        //strcat (buffer , NULL);
         sendCommand (buffer);
-        wdt_reset();
         va_end(ap);
 }
 
-static void sendCommandPGMbs (int i,  byte bs, char *b, ...)
+// same  as sendcommandpgm but with user defined buffer size
+static void sendCommandPGMbs (int pgmCommandIndex,  byte bufferSize, char *text, ...)
 {
         char* str;
         str = b;
-        char localBuff[bs];
-        memset( localBuff, 0, bs );
-
-        strcpy_P(localBuff, (PGM_P)pgm_read_word(&(nxStrings[i])));
+        char localBuff[bufferSize];
+        memset( localBuff, 0, bufferSize );
+        strcpy_P(localBuff, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         va_list ap;
-        va_start(ap, b);
+        va_start(ap, text);
         do {
                 strcpy (localBuff + strlen (localBuff), str);
                 str = va_arg(ap, char*);
         } while (str != NULL);
         strcpy_P(localBuff + strlen(localBuff), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
-        //strcat (localBuff , "\0");
-//  strcat (localBuff , NULL);
         sendCommand(localBuff);
-        wdt_reset();
         va_end(ap);
 }
 
-static void sendCommandPGM (int i)
+// send nextion command without parameters
+static void sendCommandPGM (int pgmCommandIndex)
 {
         memset(buffer, 0, sizeof (buffer));
-        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[i])));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         sendCommand(buffer);
-        wdt_reset();
 }
 
-void nexInit(void)
-{
-        Serial.begin(9600);
-        sendCommand("");
-        sendCommandPGM(CMD_INIT1);
-        sendCommandPGM(CMD_INIT2);
-        sendCommandPGM(CMD_INIT3);
-        Serial.begin(115200);
-        toggleButtons ();
-        lastTouch = currentTimeSec;
-        wdt_reset();
-}
-
+// sned command to NEXTION_BAUD_RATE
 static void sendCommand(const char* cmd)
 {
         Serial.print(cmd);
         Serial.write(0xFF);
         Serial.write(0xFF);
         Serial.write(0xFF);
+        wdt_reset();
 }
 
-// warning - global result and value!
-bool recvRetNumber(int *result)
-{
 
+bool receiveNumber(int *result)
+{
         uint8_t temp[8] = {0};
         uint32_t r;
         Serial.setTimeout(500);
         if (sizeof(temp) != Serial.readBytes((char *)temp, sizeof(temp)))
         {
-
                 return false;
         }
-
         if (temp[0] == NEX_RET_NUMBER_HEAD
             && temp[5] == 0xFF
             && temp[6] == 0xFF
@@ -160,14 +134,27 @@ bool recvRetNumber(int *result)
             )
         {
                 r = ((uint32_t)temp[4] << 24) | ((uint32_t)temp[3] << 16) | ((uint32_t)temp[2] << 8) | ((uint32_t)temp[1]);
-
                 *result = (int) r;
                 return true;
-
         }
         return false;
 }
 
+// init nextion lcd
+void nexInit(void)
+{
+        Serial.begin(9600);
+        sendCommand("");
+        sendCommandPGM(CMD_INIT1);
+        sendCommandPGM(CMD_INIT2);
+        sendCommandPGM(CMD_INIT3);
+        Serial.begin(NEXTION_BAUD_RATE);
+        toggleButtons ();
+        lastTouch = currentTimeSec;
+        wdt_reset();
+}
+
+// main touch listener
 static void nxTouch()
 {
         byte __buffer[7];
@@ -205,6 +192,7 @@ static void nxTouch()
                 handlePage (pid, cid);
                 return;
         }
+        wdt_reset();
 }
 
 static void handlePage (byte pid, byte cid)
@@ -270,23 +258,23 @@ void handleThermoPage (byte cid)
 {
         switch (cid)
         {
-        // zapis
+        // save
         case 9:
                 sendCommandPGM (CMD_GET_N0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
 
                 for (int k = 0; k < 8; k++)
                         SETTINGS.ledSensorAddress[k] = sensorsList[t][k];
 
                 sendCommandPGM (CMD_GET_N1);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
                 for (int k = 0; k < 8; k++)
                         SETTINGS.sumpSensorAddress[k] = sensorsList[t][k];
 
                 sendCommandPGM (CMD_GET_N2);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
                 for (int k = 0; k < 8; k++)
                         SETTINGS.waterSensorAddress[k] = sensorsList[t][k];
@@ -297,7 +285,7 @@ void handleThermoPage (byte cid)
                 nxScreen = PAGE_CONFIG;
                 break;
 
-        //anulowane
+        //cancel
         case 10:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -313,7 +301,7 @@ void handleSchedulePage (byte cid)
 {
         switch (cid)
         {
-        //anulowane
+        //cancel
         case 1:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -332,6 +320,7 @@ void handleTestPage (byte cid)
 
         switch (cid)
         {
+        // pwms
         case 3:
         case 4:
         case 5:
@@ -354,13 +343,12 @@ void handleTestPage (byte cid)
                 }
                 c = 70 + p;
                 sendCommandPGM (c);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[p].pwmTest = mapRound ((byte)t, 0, 100, 0, 255);
-
                 break;
 
 
-        // powrót
+        // close
         case 2:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -382,58 +370,58 @@ void handlePWMPage (byte cid)
         int i;
         switch (cid)
         {
-        // zapis ustawien
+        // save
         case 13:
                 sendCommandPGM (CMD_GET_N9);
-                if (!recvRetNumber (&i)) return;
+                if (!receiveNumber (&i)) return;
                 if (i < 1 || i > PWMS) return;
 
                 sendCommandPGM (CMD_GET_C0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmStatus = t;
 
                 sendCommandPGM (CMD_GET_C1);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmKeepLight = t;
 
                 sendCommandPGM (CMD_GET_N0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmHOn = t;
 
                 sendCommandPGM (CMD_GET_N1);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmMOn = t;
 
                 sendCommandPGM (CMD_GET_N2);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmHOff = t;
 
                 sendCommandPGM (CMD_GET_N3);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmMOff = t;
 
                 sendCommandPGM (CMD_GET_N4);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmSr = t;
 
                 sendCommandPGM (CMD_GET_N5);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 pwm_list[i - 1].pwmSs = t;
 
                 sendCommandPGM (CMD_GET_N6);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
                 tmin = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmMin = tmin;
 
                 sendCommandPGM (CMD_GET_N7);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
                 tmax = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmMax = tmax;
 
                 sendCommandPGM (CMD_GET_N8);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
 
                 tamb = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmAmbient = tamb;
@@ -444,7 +432,7 @@ void handlePWMPage (byte cid)
                 nxScreen = PAGE_PWM_LIST;
                 break;
 
-        // wyjdz
+        //  cancel
         case 14:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
@@ -461,30 +449,30 @@ static void handleSettingsPage (byte cid)
 {
         switch (cid)
         {
-        // zapis ustawien
+        // save
         case 8:
                 sendCommandPGM (CMD_GET_N0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.max_led_temp = t;
 
                 sendCommandPGM (CMD_GET_N1);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.max_sump_temp = t;
 
                 sendCommandPGM (CMD_GET_N2);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.max_water_temp = t;
 
                 sendCommandPGM (CMD_GET_N3);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.pwmDimmingTime = t;
 
                 sendCommandPGM (CMD_GET_N4);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.screenSaverTime = t;
 
                 sendCommandPGM (CMD_GET_C0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.softDimming  = t;
 
                 writeEEPROMSettings ();
@@ -493,7 +481,7 @@ static void handleSettingsPage (byte cid)
                 nxScreen = PAGE_CONFIG;
                 break;
 
-        // wyjdz
+        // cancel
         case 9:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -511,22 +499,22 @@ static void handleSetTimePage (byte cid)
         int setHour, setMinute, setYear, setMonth, setDay;
         switch (cid)
         {
-        // zapis daty
+        // save
         case 4:
                 sendCommandPGM (CMD_GET_N0);
-                if (!recvRetNumber (&setHour)) return;
+                if (!receiveNumber (&setHour)) return;
                 sendCommandPGM (CMD_GET_N1);
-                if (!recvRetNumber (&setMinute)) return;
+                if (!receiveNumber (&setMinute)) return;
                 sendCommandPGM (CMD_GET_N2);
-                if (!recvRetNumber (&setDay)) return;
+                if (!receiveNumber (&setDay)) return;
                 sendCommandPGM (CMD_GET_N3);
-                if (!recvRetNumber (&setMonth)) return;
+                if (!receiveNumber (&setMonth)) return;
                 sendCommandPGM (CMD_GET_N4);
-                if (!recvRetNumber (&setYear)) return;
+                if (!receiveNumber (&setYear)) return;
                 setTime( setHour, setMinute, 0, setDay, setMonth, setYear );
                 RTC.set( now( ) );
                 sendCommandPGM (CMD_GET_C0);
-                if (!recvRetNumber (&t)) return;
+                if (!receiveNumber (&t)) return;
                 SETTINGS.dst =t;
                 readTime ();
                 adjustDST ();
@@ -537,7 +525,7 @@ static void handleSetTimePage (byte cid)
                 lastTouch = currentTimeSec;
                 break;
 
-        // wyjdz
+        // cancel
         case 5:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -560,7 +548,7 @@ static void drawSchedule ()
                 int min_start = (int)pwm_list[i].pwmHOn * (int)60 + (int)pwm_list[i].pwmMOn;
                 int min_stop = (int)pwm_list[i].pwmHOff * (int)60 + (int)pwm_list[i].pwmMOff;
 
-                // pasek tlo
+                // background
                 if (pwm_list[i].pwmKeepLight == 1)
                         fillRect (offset * i + startx, starty, width, height, COLOR_DARKBLUE);
                 else
@@ -569,7 +557,7 @@ static void drawSchedule ()
                 // off
                 if (pwm_list[i].pwmStatus == 0) continue;
 
-                // praca
+                // light
                 boolean midnight = false;
                 if (min_stop < min_start) midnight = true;
 
@@ -585,12 +573,12 @@ static void drawSchedule ()
                         int startL = map (min_start, 0, min_hour, starty, starty + height);
                         int stopL = map (min_stop, 0, min_hour, starty, starty + height ) - 30;
                         int stopM =  map (min_hour, 0, min_hour, starty, starty + height ) - startL;
-                        // od startu do polnocy
+                        // start to midnight
                         fillRect (offset * i + startx, startL, width, stopM, COLOR_GREEN);
-                        // od północy do stopu
+                        // midnight to end
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_GREEN);
                 }
-                // wschod
+                // sunrise
                 int min_sunrise  = min_start + (int)pwm_list[i].pwmSr;
                 if (min_sunrise > min_hour) midnight = true; else midnight = false;
 
@@ -606,12 +594,12 @@ static void drawSchedule ()
                         int stopM =  map (min_hour, 0, min_hour, starty, starty + height ) - startL;
                         int min_sunrise_left = min_sunrise - min_hour;
                         int stopL = map (min_sunrise_left, 0, min_hour, starty, starty + height ) - starty;
-                        // od startu do polnocy
+                        // start to midnight
                         fillRect (offset * i + startx, startL, width, stopM, COLOR_BLUE);
-                        // od pólnocy do końca
+                        // midnight to end
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_BLUE);
                 }
-                // zachod
+                // sunset
                 int min_sunset  = min_stop - (int)pwm_list[i].pwmSs;
                 if (min_sunset < 0) midnight = true; else midnight = false;
                 if (!midnight)
@@ -626,9 +614,9 @@ static void drawSchedule ()
                         int stopL = map (min_stop, 0, min_hour, starty, starty + height ) - starty;
                         int startL = map (min_sunset_left, 0, min_hour, starty, starty + height);
                         int stopM =  map (min_hour, 0, min_hour, starty, starty + height ) - startL;
-                        // od zera do konca
+                        // zero to end
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_BLUE);
-                        // pozostalosc do polnocy
+                        // rest till midnight
                         fillRect (offset * i + startx, startL, width, stopM, COLOR_BLUE);
                 }
         }
@@ -651,21 +639,20 @@ static void handleConfigPage (byte cid)
         char tempbuff[250] = {0};
         switch (cid)
         {
-        // harmonogram
+        // schedule
         case 8:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_SCHEDULE, false);
                 nxScreen = PAGE_SCHEDULE;
-                // rysowanie harmonogramu
                 drawSchedule ();
                 break;
-        // powrot
+        // close
         case 5:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_HOME, false);
                 forceRefresh = true;
                 nxScreen = PAGE_HOME;
                 toggleButtons();
                 break;
-        // konfiguracja termometrow
+        // thermo setup
         case 7:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_THERMO, false);
                 nxScreen = PAGE_THERMO;
@@ -717,7 +704,7 @@ static void handleConfigPage (byte cid)
 
                 break;
 
-        // ustawienie godziny
+        // hour and date setup
         case 2:
 
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_SETTIME, false);
@@ -730,7 +717,7 @@ static void handleConfigPage (byte cid)
                 nxScreen = PAGE_SETTIME;
                 break;
 
-        // inne ustawienia
+        // other settings
         case 4:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_SETTINGS, false);
                 sendCommandPGMInt(CMD_SET_N0, SETTINGS.max_led_temp, false);
@@ -741,7 +728,7 @@ static void handleConfigPage (byte cid)
                 sendCommandPGMInt(CMD_SET_C0, SETTINGS.softDimming, false);
                 nxScreen = PAGE_SETTINGS;
                 break;
-
+        // pwm config
         case 1:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
                 nxScreen = PAGE_PWM;
@@ -759,6 +746,7 @@ static void handlePWMListPage (byte cid)
 
         switch (cid)
         {
+        // enter pwm settings
         case 1:
         case 2:
         case 3:
@@ -786,7 +774,7 @@ static void handlePWMListPage (byte cid)
                 nxScreen = PAGE_PWM;
                 break;
 
-        // wyjdz
+        // cancel
         case 10:
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
@@ -836,7 +824,7 @@ static void handleHomePage (byte cid)
                 break;
         }
 }
-// obrazki
+// toggle home page buttons images
 static void toggleButtons()
 {
 
@@ -881,7 +869,6 @@ static void updateWaterTemp() {
                                 sendCommandPGM(CMD_SET_WT_RED);
                         else
                                 sendCommandPGM(CMD_SET_WT_GREEN);
-
                 }
                 else
                 {
@@ -890,7 +877,7 @@ static void updateWaterTemp() {
         }
 }
 
-static void updateInfo() {
+static void updateHomePage() {
         if (nxtemperatureAqua != temperatureAqua  || forceRefresh)
         {
                 if (temperatureAqua != TEMP_ERROR)
@@ -995,20 +982,17 @@ static void updateInfo() {
 
 }
 
-
-
 static void timeDisplay(tmElements_t tm) {
-        // if (nxLastMinute != tm.Minute || nxLastHour != tm.Hour || forceRefresh)
-        {
-                memset(buffer, 0, sizeof (buffer));
-                strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[CMD_SET_HOUR])));
-                if (currentTimeSec % 2 == 0) sprintf(buffer + strlen(buffer), "%02u:%02u", tm.Hour, tm.Minute);
-                else sprintf(buffer + strlen(buffer), "%02u %02u", tm.Hour, tm.Minute);
-                strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
-                sendCommand(buffer);
-                nxLastHour = tm.Hour;
-                nxLastMinute =  tm.Minute;
-        }
+
+        memset(buffer, 0, sizeof (buffer));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[CMD_SET_HOUR])));
+        if (currentTimeSec % 2 == 0) sprintf(buffer + strlen(buffer), "%02u:%02u", tm.Hour, tm.Minute);
+        else sprintf(buffer + strlen(buffer), "%02u %02u", tm.Hour, tm.Minute);
+        strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
+        sendCommand(buffer);
+        nxLastHour = tm.Hour;
+        nxLastMinute =  tm.Minute;
+
 }
 
 void nxDisplay ()
@@ -1027,7 +1011,7 @@ void nxDisplay ()
                 if (nxScreen == PAGE_HOME )
                 {
                         timeDisplay(tm);
-                        updateInfo();
+                        updateHomePage();
                         forceRefresh = false;
                 }
                 // screensaver

@@ -6,9 +6,9 @@
 #include <avr/wdt.h>
 
 
-/* PLIK KONFIGURACYJNY */
+/* Konfiguration file */
 
-// moduły
+// modułmodulesy
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
@@ -51,12 +51,12 @@
 
 
 
-// przekaźniki
+// relays pins
 #define LED_FANS_PIN 2
 #define WATER_FANS_PIN 8
 #define SUMP_FANS_PIN 7
 
-// rozdzielczosci taktowania
+// resolutions
 #define PWM_RESOLUTION 100
 #define PWM_MIN_STEP 0.01
 #define NX_INFO_RESOLUTION 1000
@@ -180,9 +180,7 @@ boolean nxledFansStatus = true;
 boolean nxwaterFansStatus = true;
 boolean nxsumpFansStatus = true;
 
-
-
-//const byte dimmingTable [] PROGMEM = {
+// logarithmic dimming table
 const byte dimmingTable [] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

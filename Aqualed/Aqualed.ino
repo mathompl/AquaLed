@@ -14,7 +14,9 @@
 
      Autor nie bierze odpowiedzialnosci za utrate danych lub inne szkody wyrzadzone przez kod programu lub bledne uzytkowanie
 
-
+     for config see:
+     @aqualed.h
+     @nextion.h
  */
 
 #include "Aqualed.h"
@@ -43,7 +45,7 @@ void setup() {
         pwm_i2c.setPWMFreq(1500);
 #endif
 
-        // watchdog na 4 sekundy
+        // launch watchdog  - 4 seconds
         wdt_enable(WDTO_4S);
 
 }
@@ -57,24 +59,24 @@ void loop() {
         pwm ();
         wdt_reset();
 
-        // obsluga nextiona
+        // nextion routines
 #ifndef NO_NEXTION
-        // obsluga wyswietlania
+        // nextion display
         nxDisplay ();
         wdt_reset();
-        // obsluga dotyku
+        // nextion touch istener
         nxTouch();
         wdt_reset();
 #endif
 
 
-        // kontrola temperatury i wiatrakow
+        // temperature and fans control
 #ifndef NO_TEMPERATURE
         fansControl ();
         wdt_reset();
 #endif
 
-        // read bluetooth
+        // bluetooth routines
 #ifndef NO_BLUETOOTH
         bluetoothServe ();
         wdt_reset();

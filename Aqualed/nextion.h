@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
+#define NEXTION_BAUD_RATE 115200
+
 #define NEX_RET_CMD_FINISHED                (0x01)
 #define NEX_RET_EVENT_TOUCH_HEAD            (0x65)
 #define NEX_EVENT_POP                       (0x00)

@@ -15,8 +15,8 @@
 
 void setupPWMPins ()
 {
-        // I2C = 0 - piny PWM Arduino
-        // I2C = 1 - kontroler i2c PWM np. PCA9685
+        // I2C = 0 - Arduino PWM pins
+        // I2C = 1 - i2c PWM module, eg. PCA9685
 
         // assign pins
         pwm_list[0].pwmPin = PWM1_PIN;
@@ -53,6 +53,7 @@ void setupPWMPins ()
                         digitalWrite(pwm_list[i].pwmPin, OFF);
                 }
                 pwm_list[i].pwmNow = 0;
+                pwm_list[i].pwmLast = 0;
                 pwm_list[i].pwmTest = 0;
 
 
@@ -65,7 +66,7 @@ void setupPWMPins ()
 }
 
 // sciemnianie/rozjasnianie
-boolean pwmStep (byte i, long silkyTime)
+boolean pwmStep (byte i, long dimmingTime)
 {
         boolean dimming = false;
         double pwmNow = pwm_list[i].pwmNow;
@@ -75,7 +76,7 @@ boolean pwmStep (byte i, long silkyTime)
         if (pwmNow == pwmGoal) return dimming;
 
         double step;
-        step = (double) (double)255 / (double)(silkyTime / PWM_RESOLUTION);
+        step = (double) (double)255 / (double)(dimmingTime / PWM_RESOLUTION);
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -95,7 +96,7 @@ boolean pwmStep (byte i, long silkyTime)
         return true;
 }
 
-// glowna petla pwm
+// calculate and set pwm value and drive led
 static void pwm( byte i )
 {
         pwm_list[i].isSunrise = false;
@@ -115,20 +116,20 @@ static void pwm( byte i )
                 if (currentTimeSec >= 0 && currentTimeSec < pwmOff) state = true;
         }
 
-        //test
+        //test mode
         if (testMode)
         {
                 pwm_list[i].pwmNow = pwm_list[i].pwmTest;
         }
         else
-        // off
+        // force off
         if (pwm_list[i].pwmStatus == 0 || SETTINGS.forceOFF == 1)
         {
                 pwm_list[i].pwmGoal = 0;
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
         else
-        // night
+        // force night
         if (SETTINGS.forceNight == 1)
         {
                 if (pwm_list[i].pwmKeepLight) pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
@@ -137,18 +138,19 @@ static void pwm( byte i )
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
         else
-        // ambient
+        // ambient/user program
         if (SETTINGS.forceAmbient == 1)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmAmbient;
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
+        // night light
         else if (!state && pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
-
+        // scheduled off
         else if (!state && !pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = 0;
@@ -170,7 +172,6 @@ static void pwm( byte i )
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
                 dimming = pwmStep (i, srMillis);
         }
-
         else if (state)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
@@ -178,27 +179,28 @@ static void pwm( byte i )
         }
         byte val = (byte) pwm_list[i].pwmNow;
 
-        // table
+        // logarithmic dimming table, experimental, works best if max 100%
         if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwm_list[i].pwmGoal)
         {
-                //  val = (byte)pgm_read_byte(&dimmingTable[val]);
                 val = dimmingTable[val];
         }
         if (pwm_list[i].pwmI2C == 0)
         {
                 analogWrite( pwm_list[i].pwmPin,  val);
         }
-        else
+// pwm module does not need constant updates
+        else if (pwm_list[i].pwmLast!=val)
         {
-                // tu można by się pokusić o wykorzystanie 12bitowej rozdzielczości sterownika - na razie jest mapowanie z 8bit na 12bit
+                // todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
                 long v = mapRound(val, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
                 pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
         }
+        pwm_list[i].pwmLast = val;
 
 }
 
 
-
+// calculate remaining sunset time (if any)
 long getSunsetMillis (byte i, long &m)
 {
         boolean midnight = false;
@@ -208,14 +210,14 @@ long getSunsetMillis (byte i, long &m)
 
         if (startTime < 0) midnight = true;
 
-        // przed północą
+        // before midnight
         if (currTime >= startTime && currTime <= stopTime)
         {
                 m = (long) (stopTime - currTime) * 1000;
                 return m;
         }
 
-        // przechodzi przez północ
+        // midnight crossing
         if (midnight)
         {
                 stopTime += 86400;
@@ -233,26 +235,27 @@ long getSunsetMillis (byte i, long &m)
 
 }
 
+// calculate remaining sunrise time (if any)
 long getSunriseMillis (byte i, long &m)
 {
-        // w sekundach
+        // in seconds
         int startTime = (int)pwm_list[i].pwmHOn * 60 * 60 + (int)pwm_list[i].pwmMOn * 60 + (int)pwm_list[i].pwmSOn;
         int currTime = (int)tm.Hour * 60 * 60 + (int)tm.Minute * 60 + (int)tm.Second;
         int stopTime = startTime + (int)pwm_list[i].pwmSr * 60;
 
         boolean midnight = false;
 
-        // sprawdz czy przejście przez północ
+        // check if midnight cross
         if (stopTime > 86400) midnight = true;
 
-        // przed północą - standardowo
+        // before midnight
         if (currTime >= startTime && currTime <= stopTime)
         {
                 m = (long) (stopTime - currTime) * 1000;
                 return m;
         }
 
-        // jesli polnoc
+        // if crossing midnight
         if (midnight)
         {
                 currTime += 86400;
@@ -266,8 +269,7 @@ long getSunriseMillis (byte i, long &m)
         return m;
 }
 
-
-
+// main pwm loop
 void pwm ()
 {
         if (currentMillis - previousPwmResolution > PWM_RESOLUTION)
