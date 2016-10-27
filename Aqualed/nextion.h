@@ -16,7 +16,6 @@
 #define startx 47
 #define starty 31
 
-bool recvRes = false;
 char buffer[50] = {0};
 bool formsInc = true;
 int t;

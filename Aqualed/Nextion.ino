@@ -18,7 +18,6 @@ static void addInt (int x, boolean comma)
 {
         sprintf (buffer + strlen (buffer), "%i", x);
         if (comma) strcpy_P(buffer + strlen (buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_COMMA])));
-
 }
 
 // fills nextion rectangle
@@ -142,7 +141,7 @@ static void sendCommand(const char* cmd)
 }
 
 // warning - global result and value!
-int recvRetNumber()
+bool recvRetNumber(int *result)
 {
 
         uint8_t temp[8] = {0};
@@ -150,8 +149,8 @@ int recvRetNumber()
         Serial.setTimeout(500);
         if (sizeof(temp) != Serial.readBytes((char *)temp, sizeof(temp)))
         {
-                recvRes = false;
-                return -1;
+
+                return false;
         }
 
         if (temp[0] == NEX_RET_NUMBER_HEAD
@@ -161,12 +160,12 @@ int recvRetNumber()
             )
         {
                 r = ((uint32_t)temp[4] << 24) | ((uint32_t)temp[3] << 16) | ((uint32_t)temp[2] << 8) | ((uint32_t)temp[1]);
-                recvRes = true;
-                return (int)r;
+
+                *result = (int) r;
+                return true;
 
         }
-        recvRes = false;
-        return -1;
+        return false;
 }
 
 static void nxTouch()
@@ -274,21 +273,21 @@ void handleThermoPage (byte cid)
         // zapis
         case 9:
                 sendCommandPGM (CMD_GET_N0);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
 
                 for (int k = 0; k < 8; k++)
                         SETTINGS.ledSensorAddress[k] = sensorsList[t][k];
 
                 sendCommandPGM (CMD_GET_N1);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
                 for (int k = 0; k < 8; k++)
                         SETTINGS.sumpSensorAddress[k] = sensorsList[t][k];
 
                 sendCommandPGM (CMD_GET_N2);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
                 for (int k = 0; k < 8; k++)
                         SETTINGS.waterSensorAddress[k] = sensorsList[t][k];
 
@@ -355,7 +354,7 @@ void handleTestPage (byte cid)
                 }
                 c = 70 + p;
                 sendCommandPGM (c);
-                t = recvRetNumber ();
+                if (!recvRetNumber (&t)) return;
                 pwm_list[p].pwmTest = mapRound ((byte)t, 0, 100, 0, 255);
 
                 break;
@@ -386,67 +385,56 @@ void handlePWMPage (byte cid)
         // zapis ustawien
         case 13:
                 sendCommandPGM (CMD_GET_N9);
-                i = recvRetNumber ();
-                if (!recvRes) return;
-
+                if (!recvRetNumber (&i)) return;
                 if (i < 1 || i > PWMS) return;
 
                 sendCommandPGM (CMD_GET_C0);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmStatus = t;
 
                 sendCommandPGM (CMD_GET_C1);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmKeepLight = t;
 
                 sendCommandPGM (CMD_GET_N0);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmHOn = t;
 
                 sendCommandPGM (CMD_GET_N1);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmMOn = t;
 
                 sendCommandPGM (CMD_GET_N2);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmHOff = t;
 
                 sendCommandPGM (CMD_GET_N3);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmMOff = t;
 
                 sendCommandPGM (CMD_GET_N4);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmSr = t;
 
-
                 sendCommandPGM (CMD_GET_N5);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 pwm_list[i - 1].pwmSs = t;
 
                 sendCommandPGM (CMD_GET_N6);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
                 tmin = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmMin = tmin;
 
                 sendCommandPGM (CMD_GET_N7);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
                 tmax = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmMax = tmax;
 
                 sendCommandPGM (CMD_GET_N8);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
+
                 tamb = mapRound ((byte)t, 0, 100, 0, 255);
                 pwm_list[i - 1].pwmAmbient = tamb;
 
@@ -454,7 +442,6 @@ void handlePWMPage (byte cid)
                 writeEEPROMPWMConfig (i - 1);
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
                 nxScreen = PAGE_PWM_LIST;
-
                 break;
 
         // wyjdz
@@ -477,39 +464,33 @@ static void handleSettingsPage (byte cid)
         // zapis ustawien
         case 8:
                 sendCommandPGM (CMD_GET_N0);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.max_led_temp = t;
 
                 sendCommandPGM (CMD_GET_N1);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.max_sump_temp = t;
 
                 sendCommandPGM (CMD_GET_N2);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.max_water_temp = t;
 
                 sendCommandPGM (CMD_GET_N3);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.pwmDimmingTime = t;
 
                 sendCommandPGM (CMD_GET_N4);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.screenSaverTime = t;
 
                 sendCommandPGM (CMD_GET_C0);
-                t = recvRetNumber ();
-                if (!recvRes) return;
+                if (!recvRetNumber (&t)) return;
                 SETTINGS.softDimming  = t;
+
                 writeEEPROMSettings ();
                 lastTouch = currentTimeSec;
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
                 nxScreen = PAGE_CONFIG;
-
                 break;
 
         // wyjdz
@@ -519,8 +500,6 @@ static void handleSettingsPage (byte cid)
                 nxScreen = PAGE_CONFIG;
                 break;
 
-
-
         default:
                 break;
         }
@@ -529,39 +508,26 @@ static void handleSettingsPage (byte cid)
 static void handleSetTimePage (byte cid)
 {
 
-        static int setHour, setMinute, setSecond, setYear, setMonth, setDay;
+        int setHour, setMinute, setYear, setMonth, setDay;
         switch (cid)
         {
         // zapis daty
         case 4:
                 sendCommandPGM (CMD_GET_N0);
-                setHour = recvRetNumber ();
-                if (!recvRes) return; ;
-
+                if (!recvRetNumber (&setHour)) return;
                 sendCommandPGM (CMD_GET_N1);
-                setMinute = recvRetNumber ();
-                if (!recvRes) return;
-
-                setSecond = 0;
-
+                if (!recvRetNumber (&setMinute)) return;
                 sendCommandPGM (CMD_GET_N2);
-                setDay = recvRetNumber ();
-                if (!recvRes) return;
-
+                if (!recvRetNumber (&setDay)) return;
                 sendCommandPGM (CMD_GET_N3);
-                setMonth = recvRetNumber ();
-                if (!recvRes) return;
-
+                if (!recvRetNumber (&setMonth)) return;
                 sendCommandPGM (CMD_GET_N4);
-                setYear = recvRetNumber ();
-                if (!recvRes) return;
-
-                setTime( setHour, setMinute, setSecond, setDay, setMonth, setYear );
+                if (!recvRetNumber (&setYear)) return;
+                setTime( setHour, setMinute, 0, setDay, setMonth, setYear );
                 RTC.set( now( ) );
-
                 sendCommandPGM (CMD_GET_C0);
-                if (!recvRes) return;
-                SETTINGS.dst = recvRetNumber ();
+                if (!recvRetNumber (&t)) return;
+                SETTINGS.dst =t;
                 readTime ();
                 adjustDST ();
                 writeEEPROMSettings ();
