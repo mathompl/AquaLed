@@ -1,3 +1,9 @@
+/*
+Bluetooth compatibilty with AQMA LED Control by Magu, see http://magu.pl/aqma-led-control
+
+
+*/
+
 #include <Arduino.h>
 #ifndef NO_BLUETOOTH
 
