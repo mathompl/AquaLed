@@ -48,10 +48,7 @@
 // termometry
 #define ONEWIRE_PIN 4
 
-
-
-
-// relays pins
+// relay's pins
 #define LED_FANS_PIN 2
 #define WATER_FANS_PIN 8
 #define SUMP_FANS_PIN 7
@@ -75,7 +72,6 @@
 
 #define ON  true
 #define OFF  false
-
 
 typedef struct
 {

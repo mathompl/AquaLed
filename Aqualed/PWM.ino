@@ -53,7 +53,6 @@ void setupPWMPins ()
                         digitalWrite(pwm_list[i].pwmPin, OFF);
                 }
                 pwm_list[i].pwmNow = 0;
-                pwm_list[i].pwmLast = 0;
                 pwm_list[i].pwmTest = 0;
 
 
@@ -189,14 +188,12 @@ static void pwm( byte i )
                 analogWrite( pwm_list[i].pwmPin,  val);
         }
 // pwm module does not need constant updates
-        else if (pwm_list[i].pwmLast!=val)
+        else
         {
                 // todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
                 long v = mapRound(val, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
                 pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
         }
-        pwm_list[i].pwmLast = val;
-
 }
 
 

@@ -66,7 +66,7 @@ static void sendCommandPGM_C (int pgmCommandIndex, int pgmConstStringIndex )
 static void sendCommandPGM (int pgmCommandIndex,  char *text, ...)
 {
         char* str;
-        str = b;
+        str = text;
         memset(buffer, 0, sizeof (buffer));
         strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         va_list ap;
@@ -76,6 +76,7 @@ static void sendCommandPGM (int pgmCommandIndex,  char *text, ...)
                 str = va_arg(ap, char*);
         } while (str != NULL);
         strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
+        strcpy (buffer + strlen(buffer), "\0");
         sendCommand (buffer);
         va_end(ap);
 }
@@ -84,7 +85,7 @@ static void sendCommandPGM (int pgmCommandIndex,  char *text, ...)
 static void sendCommandPGMbs (int pgmCommandIndex,  byte bufferSize, char *text, ...)
 {
         char* str;
-        str = b;
+        str = text;
         char localBuff[bufferSize];
         memset( localBuff, 0, bufferSize );
         strcpy_P(localBuff, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
@@ -95,6 +96,7 @@ static void sendCommandPGMbs (int pgmCommandIndex,  byte bufferSize, char *text,
                 str = va_arg(ap, char*);
         } while (str != NULL);
         strcpy_P(localBuff + strlen(localBuff), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
+        strcpy (localBuff + strlen(localBuff), "\0");
         sendCommand(localBuff);
         va_end(ap);
 }
@@ -104,6 +106,7 @@ static void sendCommandPGM (int pgmCommandIndex)
 {
         memset(buffer, 0, sizeof (buffer));
         strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
+        strcpy (buffer + strlen(buffer), "\0");
         sendCommand(buffer);
 }
 
