@@ -43,6 +43,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 - Arduino IDE or atom.io
  
  **Nextion LCD Screenshots**
+ 
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
