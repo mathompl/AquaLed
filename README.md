@@ -54,6 +54,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 - Nextion Editor (https://nextion.itead.cc/download.html)
 - Arduino IDE or atom.io
  
-** Wiring:**
+**Wiring:**
+
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg "AquaLed")
 
