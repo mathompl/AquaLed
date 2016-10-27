@@ -19,6 +19,18 @@ Features:
 
 Example Nextion project attached. I dont have copyright for graphics used, use only as an example.
 
+**Nextion LCD Screenshots**
+ 
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/9.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/3.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/4.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/5.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/6.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/7.jpg "AquaLed")
+
 **REQUIREMENTS:**
 
 **Hardware:**
@@ -42,15 +54,6 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 - Nextion Editor (https://nextion.itead.cc/download.html)
 - Arduino IDE or atom.io
  
- **Nextion LCD Screenshots**
- 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/9.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/3.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/4.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/5.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/6.jpg "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/7.jpg "AquaLed")
+** Wiring:**
+![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg "AquaLed")
 
