@@ -4,7 +4,7 @@ Arduino PWM LED lamp driver software with LCD support and temperature control fo
 
 Features:
 - 6 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
-- programmable light hours with sunsets and sunrises�
+- programmable light hours with sunsets and sunrises
 - night light support
 - 3 digital thermometers with asynchronous temperature read, for: water, lamp and addictional lamp or sump, controlling 3 separate  relays (cooling fans)
 - customizable dimming, linear or logarithmic algorith
@@ -56,5 +56,5 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
  
 **Wiring:**
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg "AquaLed")
+
 
