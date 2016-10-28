@@ -56,5 +56,5 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
  
 **Wiring:**
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg "AquaLed")
+[[doc/wiring.jpg|alt=Wiring]]
 
