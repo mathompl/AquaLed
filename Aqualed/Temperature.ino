@@ -24,8 +24,8 @@ void setupSensors ()
         digitalWrite(WATER_FANS_PIN, HIGH);
         digitalWrite(SUMP_FANS_PIN, HIGH);
         sensors.request(SETTINGS.ledSensorAddress);
-        sensors.request(SETTINGS.waterSensorAddress);
-        sensors.request(SETTINGS.sumpSensorAddress);
+       sensors.request(SETTINGS.waterSensorAddress);
+       sensors.request(SETTINGS.sumpSensorAddress);
 }
 
 void fansControl()
@@ -35,18 +35,18 @@ void fansControl()
         previousTemperature = currentMillis;
 
         if (sensors.available()) {
-                temperatureFans = sensors.readTemperature(SETTINGS.ledSensorAddress);
-                temperatureAqua = sensors.readTemperature(SETTINGS.waterSensorAddress);
+                temperatureLed = sensors.readTemperature(SETTINGS.ledSensorAddress);
+                temperatureWater = sensors.readTemperature(SETTINGS.waterSensorAddress);
                 temperatureSump = sensors.readTemperature(SETTINGS.sumpSensorAddress);;
-                sensors.request(SETTINGS.ledSensorAddress);
+                 sensors.request(SETTINGS.ledSensorAddress);
                 sensors.request(SETTINGS.waterSensorAddress);
                 sensors.request(SETTINGS.sumpSensorAddress);
         }
 
-        if (temperatureFans != TEMP_ERROR) {
+        if (temperatureLed != TEMP_ERROR) {
                 if (currentTimeSec - previousMillisFans > LED_FANS_INTERVAL || previousMillisFans == 0) {
                         previousMillisFans = currentTimeSec;
-                        if (temperatureFans > SETTINGS.max_led_temp)
+                        if (temperatureLed > SETTINGS.max_led_temp)
                         {
                                 digitalWrite(LED_FANS_PIN, LOW);
                                 ledFansStatus = true;
@@ -60,10 +60,10 @@ void fansControl()
                 }
         }
 
-        if (temperatureAqua != TEMP_ERROR) {
-                if (currentTimeSec - previousMillisAqua > WATER_FANS_INTERVAL || previousMillisAqua == 0) {
-                        previousMillisAqua = currentTimeSec;
-                        if (temperatureAqua > SETTINGS.max_water_temp)
+        if (temperatureWater != TEMP_ERROR) {
+                if (currentTimeSec - previousMillisWater > WATER_FANS_INTERVAL || previousMillisWater == 0) {
+                        previousMillisWater = currentTimeSec;
+                        if (temperatureWater > SETTINGS.max_water_temp)
                         {
                                 digitalWrite(WATER_FANS_PIN, LOW);
                                 waterFansStatus = true;

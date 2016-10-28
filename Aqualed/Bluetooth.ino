@@ -7,6 +7,8 @@ Bluetooth compatibilty with AQMA LED Control by Magu, see http://magu.pl/aqma-le
 #include <Arduino.h>
 #ifndef NO_BLUETOOTH
 
+char cmdOutputArray[64];
+
 byte translateAqmaNumber ( byte n ) {
         if (n == 31) return 0;
         if (n == 32) return 1;

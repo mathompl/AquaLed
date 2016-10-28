@@ -142,7 +142,7 @@ unsigned long previousPwmResolution = 0;
 unsigned long previousNxInfo = 0;
 unsigned long previousTemperature = 0;
 unsigned long previousMillisFans = 0;
-unsigned long previousMillisAqua = 0;
+unsigned long previousMillisWater = 0;
 unsigned long previousMillisSump = 0;
 unsigned long previousMillisNextion = 0;
 unsigned long previousMillisEepromState = 0;
@@ -157,16 +157,14 @@ tmElements_t tm;
 
 byte nxLastHour = 0, nxLastMinute = 0;
 
-char cmdOutputArray[64];
-
 boolean justTurnedOn = true;
 
 // sensors
-float temperatureFans;
-float temperatureAqua;
+float temperatureLed;
+float temperatureWater;
 float temperatureSump;
-float nxtemperatureFans;
-float nxtemperatureAqua;
+float nxtemperatureLed;
+float nxtemperatureWater;
 float nxtemperatureSump;
 
 boolean ledFansStatus = false;

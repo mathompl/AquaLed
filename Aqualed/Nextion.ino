@@ -860,15 +860,15 @@ static void toggleButtons()
 
 static void updateWaterTemp() {
 
-        if (nxtemperatureAqua != temperatureAqua  || forceRefresh)
+        if (nxtemperatureWater != temperatureWater  || forceRefresh)
         {
-                if (temperatureAqua != TEMP_ERROR)
+                if (temperatureWater != TEMP_ERROR)
                 {
                         char str_temp[3];
-                        dtostrf(temperatureAqua, 4, 1, str_temp);
+                        dtostrf(temperatureWater, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_WT, str_temp, xcelc, NULL);
-                        nxtemperatureAqua = temperatureAqua;
-                        if (temperatureAqua < 25 || temperatureAqua > SETTINGS.max_water_temp)
+                        nxtemperatureWater = temperatureWater;
+                        if (temperatureWater < 25 || temperatureWater > SETTINGS.max_water_temp)
                                 sendCommandPGM(CMD_SET_WT_RED);
                         else
                                 sendCommandPGM(CMD_SET_WT_GREEN);
@@ -881,14 +881,14 @@ static void updateWaterTemp() {
 }
 
 static void updateHomePage() {
-        if (nxtemperatureAqua != temperatureAqua  || forceRefresh)
+        if (nxtemperatureWater != temperatureWater  || forceRefresh)
         {
-                if (temperatureAqua != TEMP_ERROR)
+                if (temperatureWater != TEMP_ERROR)
                 {
                         char str_temp[3];
-                        dtostrf(temperatureAqua, 4, 1, str_temp);
+                        dtostrf(temperatureWater, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_WT, str_temp, xcelc, NULL);
-                        nxtemperatureAqua = temperatureAqua;
+                        nxtemperatureWater = temperatureWater;
                 }
                 else
                 {
@@ -896,14 +896,14 @@ static void updateHomePage() {
                 }
         }
 
-        if (nxtemperatureFans != temperatureFans  || forceRefresh)
+        if (nxtemperatureLed != temperatureLed  || forceRefresh)
         {
-                if (temperatureFans != TEMP_ERROR)
+                if (temperatureLed != TEMP_ERROR)
                 {
                         char str_temp[3];
-                        dtostrf(temperatureFans, 4, 1, str_temp);
+                        dtostrf(temperatureLed, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_LT, str_temp, xcelc, NULL);
-                        nxtemperatureFans = temperatureFans;
+                        nxtemperatureLed = temperatureLed;
                 }
                 else
                 {
