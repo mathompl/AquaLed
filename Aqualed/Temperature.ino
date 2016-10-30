@@ -1,6 +1,8 @@
-#include <Arduino.h>
-
 #ifndef NO_TEMPERATURE
+
+#include <Arduino.h>
+OneWire onewire(ONEWIRE_PIN);
+DS18B20 sensors(&onewire);
 /*
       AquaLed - sterownik oswietlenia akwarium morskiego
        - max 6 PWM,
@@ -24,8 +26,8 @@ void setupSensors ()
         digitalWrite(WATER_FANS_PIN, HIGH);
         digitalWrite(SUMP_FANS_PIN, HIGH);
         sensors.request(SETTINGS.ledSensorAddress);
-       sensors.request(SETTINGS.waterSensorAddress);
-       sensors.request(SETTINGS.sumpSensorAddress);
+        sensors.request(SETTINGS.waterSensorAddress);
+        sensors.request(SETTINGS.sumpSensorAddress);
 }
 
 void fansControl()
@@ -38,7 +40,7 @@ void fansControl()
                 temperatureLed = sensors.readTemperature(SETTINGS.ledSensorAddress);
                 temperatureWater = sensors.readTemperature(SETTINGS.waterSensorAddress);
                 temperatureSump = sensors.readTemperature(SETTINGS.sumpSensorAddress);;
-                 sensors.request(SETTINGS.ledSensorAddress);
+                sensors.request(SETTINGS.ledSensorAddress);
                 sensors.request(SETTINGS.waterSensorAddress);
                 sensors.request(SETTINGS.sumpSensorAddress);
         }
@@ -93,8 +95,8 @@ void fansControl()
         }
 }
 
-   boolean checkAddr (byte s[])
-   {
+boolean checkAddr (byte s[])
+{
         if (s[0] == 0 &&
             s[1] == 0 &&
             s[2] == 0 &&
@@ -104,7 +106,7 @@ void fansControl()
             s[6] == 0 &&
             s[7] == 0) return false;
         else return true;
-   }
+}
 
 
 byte sensorsCheck (byte s[])

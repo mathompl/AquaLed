@@ -18,7 +18,7 @@
 #define startx 47
 #define starty 31
 
-char buffer[40] = {0};
+char buffer[30] = {0};
 int t;
 char ti[1] = {0};
 char b[10]  = {0};

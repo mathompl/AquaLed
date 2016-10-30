@@ -1,5 +1,7 @@
-#include <Arduino.h>
+#ifndef NO_NEXTION
 
+#include <Arduino.h>
+#include "Nextion.h"
 /*
       AquaLed - sterownik oswietlenia akwarium morskiego
        - max 6 PWM,
@@ -191,7 +193,7 @@ static void nxTouch()
         {
                 pid = __buffer[1];
                 cid = __buffer[2];
-                delay(10);
+              //  delay(10);
                 handlePage (pid, cid);
                 return;
         }
@@ -859,7 +861,7 @@ static void toggleButtons()
 }
 
 static void updateWaterTemp() {
-
+    #ifndef NO_TEMPERATURE
         if (nxtemperatureWater != temperatureWater  || forceRefresh)
         {
                 if (temperatureWater != TEMP_ERROR)
@@ -878,6 +880,7 @@ static void updateWaterTemp() {
                         sendCommandPGM_C (CMD_SET_WT, STR_DASH);
                 }
         }
+        #endif
 }
 
 static void updateHomePage() {
@@ -895,7 +898,7 @@ static void updateHomePage() {
                         sendCommandPGM_C (CMD_SET_WT, STR_DASH);
                 }
         }
-
+#ifndef NO_TEMPERATURE
         if (nxtemperatureLed != temperatureLed  || forceRefresh)
         {
                 if (temperatureLed != TEMP_ERROR)
@@ -925,7 +928,7 @@ static void updateHomePage() {
                         sendCommandPGM_C (CMD_SET_ST, STR_DASH);
                 }
         }
-
+#endif
         for (int i = 0; i < PWMS; i++)
         {
                 if (pwmNxLast[i] != pwm_list[i].pwmNow || forceRefresh)
@@ -957,6 +960,7 @@ static void updateHomePage() {
                         pwmNxLast[i] = pwm_list[i].pwmNow;
                 }
         }
+        #ifndef NO_TEMPERATURE
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
         {
                 if (waterFansStatus)
@@ -982,6 +986,7 @@ static void updateHomePage() {
                         sendCommandPGM (CMD_HIDE_P2);
                 nxsumpFansStatus = sumpFansStatus;
         }
+        #endif
 
 }
 
@@ -1035,3 +1040,4 @@ void nxDisplay ()
         }
         if (lastTouch == 0) lastTouch = currentTimeSec;
 }
+#endif

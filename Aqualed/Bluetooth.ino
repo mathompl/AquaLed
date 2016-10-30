@@ -1,15 +1,25 @@
 /*
-Bluetooth compatibilty with AQMA LED Control by Magu, see http://magu.pl/aqma-led-control
+   Bluetooth compatibilty with AQMA LED Control by Magu, see http://magu.pl/aqma-led-control
 
 
-*/
+ */
 
-#include <Arduino.h>
 #ifndef NO_BLUETOOTH
 
-char cmdOutputArray[64];
+#include <Arduino.h>
+#include <SoftwareSerial.h>
 
-byte translateAqmaNumber ( byte n ) {
+SoftwareSerial bluetooth(A2, A1);
+
+static char cmdOutputArray[64];
+
+void setupBluetooth ()
+{
+        bluetooth.begin(9600);
+}
+
+
+static byte translateAqmaNumber ( byte n ) {
         if (n == 31) return 0;
         if (n == 32) return 1;
         if (n == 33) return 2;
@@ -19,7 +29,7 @@ byte translateAqmaNumber ( byte n ) {
         return 255;
 }
 
-boolean commandAnalysis( char cmdOutputArray[64] ) {
+static boolean commandAnalysis( char cmdOutputArray[64] ) {
 
         byte val[64];
         char *cmdVal;
@@ -80,7 +90,7 @@ boolean commandAnalysis( char cmdOutputArray[64] ) {
         {
                 int eAddress = 0;
                 // Serial.write("*66,");
-                bluetooth.write( "*66," );
+                bluetooth.write( "*66,");
 
                 while (eAddress <= 512)
                 {
@@ -141,7 +151,7 @@ void bluetoothServe ()
                 if (commandAnalysis(cmdOutputArray))
                         eEpromRead();
                 else
-                        bluetooth.print(F()"666,Bledne dane\n"));
+                        bluetooth.print(F("666,Bledne dane\n"));
 
 
         }

@@ -1,5 +1,10 @@
 #include <Arduino.h>
 
+#ifndef NO_I2C
+    #include <Adafruit_PWMServoDriver.h>
+Adafruit_PWMServoDriver pwm_i2c;
+#endif
+
 /*
       AquaLed - sterownik oswietlenia akwarium morskiego
        - max 6 PWM,
@@ -55,6 +60,12 @@ void setupPWMPins ()
                 pwm_list[i].pwmNow = 0;
                 pwm_list[i].pwmTest = 0;
         }
+
+        #ifndef NO_I2C
+        pwm_i2c = Adafruit_PWMServoDriver();
+        pwm_i2c.begin();
+        pwm_i2c.setPWMFreq(1500);
+        #endif
 
         //TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
         TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
@@ -175,27 +186,31 @@ static void pwm( byte i )
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
 
-        byte val = (byte) pwm_list[i].pwmNow;
-        // logarithmic dimming table, experimental, works best if max 100%
-        if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwm_list[i].pwmGoal)
-        {
+        // no change
+        if (pwmLast[i] == pwm_list[i].pwmNow) return;
 
-                val = dimmingTable[val];
-        }
         if (pwm_list[i].pwmI2C == 0)
         {
+                byte val = (byte) pwm_list[i].pwmNow;
+                // logarithmic dimming table, experimental, works best if max 100%
+                if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwm_list[i].pwmGoal)
+                {
+
+                        val = dimmingTable[val];
+                }
                 analogWrite( pwm_list[i].pwmPin,  val);
         }
         else
         {
+          #ifndef NO_I2C
                 // check - todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
                 // pwm module does not need constant updates
-
                 if (pwmLast[i] != pwm_list[i].pwmNow)
                 {
                         long v = mapRound(pwm_list[i].pwmNow, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
                         pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
                 }
+          #endif
 
         }
         pwmLast[i] = pwm_list[i].pwmNow;

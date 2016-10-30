@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Aqualed.h"
 
 /*
       AquaLed - sterownik oswietlenia akwarium morskiego v1.0
@@ -19,7 +20,7 @@
      @nextion.h
  */
 
-#include "Aqualed.h"
+
 
 void setup() {
         wdt_disable();
@@ -32,17 +33,11 @@ void setup() {
 #endif
 
 #ifndef NO_BLUETOOTH
-        bluetooth.begin(9600);
+      setupBluetooth ();
 #endif
 
 #ifndef NO_NEXTION
         nexInit();
-#endif
-
-#ifndef NO_I2C
-        pwm_i2c = Adafruit_PWMServoDriver();
-        pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(1500);
 #endif
 
         // launch watchdog  - 4 seconds

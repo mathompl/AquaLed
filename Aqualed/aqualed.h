@@ -4,18 +4,17 @@
 #include <DS1307RTC.h>
 #include <OneWire.h>
 #include <avr/wdt.h>
+#include <DallasTemperature.h>
+#include <DS18B20.h>
 
 
-/* Konfiguration file */
+/* Configuration file */
 
-// modułmodulesy
+// modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
 //#define NO_TEMPERATURE
-
-
-
 
 // PWM
 #define PWMS 8
@@ -151,14 +150,11 @@ unsigned long previousMillisEepromState = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
 
+tmElements_t tm;
 long unsigned currentMillis;
 long unsigned currentTimeSec;
 boolean testMode = false;
-
-tmElements_t tm;
-
 byte nxLastHour = 0, nxLastMinute = 0;
-
 boolean justTurnedOn = true;
 
 // sensors
@@ -211,25 +207,3 @@ const byte dimmingTable [] = {
         0xDB, 0xDD, 0xE0, 0xE2, 0xE4, 0xE7, 0xE9, 0xEB,
         0xEE, 0xF0, 0xF3, 0xF5, 0xF8, 0xFA, 0xFD, 0xFF,
 };
-
-
-#ifndef NO_BLUETOOTH
-        #include <SoftwareSerial.h>
-SoftwareSerial bluetooth(A2, A1);
-#endif
-
-#ifndef NO_I2C
-    #include <Adafruit_PWMServoDriver.h>
-    Adafruit_PWMServoDriver pwm_i2c;
-#endif
-
-#ifndef NO_NEXTION
-      #include "Nextion.h"
-#endif
-
-#ifndef NO_TEMPERATURE
-  #include <DallasTemperature.h>
-  #include <DS18B20.h>
-  OneWire onewire(ONEWIRE_PIN);
-  DS18B20 sensors(&onewire);
-#endif
