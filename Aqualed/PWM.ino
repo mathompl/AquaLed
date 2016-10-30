@@ -54,8 +54,6 @@ void setupPWMPins ()
                 }
                 pwm_list[i].pwmNow = 0;
                 pwm_list[i].pwmTest = 0;
-
-
         }
 
         //TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
@@ -69,7 +67,7 @@ boolean pwmStep (byte i, long dimmingTime)
 {
         boolean dimming = false;
         double pwmNow = pwm_list[i].pwmNow;
-        int pwmGoal = pwm_list[i].pwmGoal;
+        byte pwmGoal = pwm_list[i].pwmGoal;
 
         // mamy co chcemy, precz
         if (pwmNow == pwmGoal) return dimming;
@@ -176,24 +174,31 @@ static void pwm( byte i )
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
         }
-        byte val = (byte) pwm_list[i].pwmNow;
 
+        byte val = (byte) pwm_list[i].pwmNow;
         // logarithmic dimming table, experimental, works best if max 100%
         if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwm_list[i].pwmGoal)
         {
+
                 val = dimmingTable[val];
         }
         if (pwm_list[i].pwmI2C == 0)
         {
                 analogWrite( pwm_list[i].pwmPin,  val);
         }
-// pwm module does not need constant updates
         else
         {
-                // todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
-                long v = mapRound(val, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
-                pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
+                // check - todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
+                // pwm module does not need constant updates
+
+                if (pwmLast[i] != pwm_list[i].pwmNow)
+                {
+                        long v = mapRound(pwm_list[i].pwmNow, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
+                        pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
+                }
+
         }
+        pwmLast[i] = pwm_list[i].pwmNow;
 }
 
 
@@ -201,9 +206,9 @@ static void pwm( byte i )
 long getSunsetMillis (byte i, long &m)
 {
         boolean midnight = false;
-        int stopTime = (int)pwm_list[i].pwmHOff * 60 * 60 + (int)pwm_list[i].pwmMOff * 60 - (int)pwm_list[i].pwmSOff;
-        int currTime = (int)tm.Hour * 60 * 60 + (int)tm.Minute * 60 + (int)tm.Second;
-        int startTime = stopTime - (int) pwm_list[i].pwmSs * 60;
+        long stopTime = (long)pwm_list[i].pwmHOff * 60 * 60 + (long)pwm_list[i].pwmMOff * 60 - (long)pwm_list[i].pwmSOff;
+        long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
+        long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
 
         if (startTime < 0) midnight = true;
 
@@ -218,7 +223,7 @@ long getSunsetMillis (byte i, long &m)
         if (midnight)
         {
                 stopTime += 86400;
-                int startTime = stopTime - (int) pwm_list[i].pwmSs * 60;
+                long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
 
                 if (currTime >= startTime && currTime <= stopTime)
                 {
@@ -236,9 +241,9 @@ long getSunsetMillis (byte i, long &m)
 long getSunriseMillis (byte i, long &m)
 {
         // in seconds
-        int startTime = (int)pwm_list[i].pwmHOn * 60 * 60 + (int)pwm_list[i].pwmMOn * 60 + (int)pwm_list[i].pwmSOn;
-        int currTime = (int)tm.Hour * 60 * 60 + (int)tm.Minute * 60 + (int)tm.Second;
-        int stopTime = startTime + (int)pwm_list[i].pwmSr * 60;
+        long startTime = (long)pwm_list[i].pwmHOn * 60 * 60 + (long)pwm_list[i].pwmMOn * 60 + (long)pwm_list[i].pwmSOn;
+        long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (int)tm.Second;
+        long stopTime = startTime + (long)pwm_list[i].pwmSr * 60;
 
         boolean midnight = false;
 

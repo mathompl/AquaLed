@@ -91,7 +91,6 @@ typedef struct
         byte pwmKeepLight;
         byte pwmInvert;
         double pwmNow;
-        byte pwmLast;
         byte pwmGoal;
         byte pwmSaved;
         byte pwmTest;
@@ -100,6 +99,9 @@ typedef struct
         byte pwmAmbient;
 } PWM;
 PWM pwm_list[PWMS];
+
+double pwmLast[PWMS] = {0};
+double pwmNxLast[PWMS] = {0};
 
 struct SETTINGS_STRUCT
 {

@@ -18,8 +18,7 @@
 #define startx 47
 #define starty 31
 
-char buffer[50] = {0};
-bool formsInc = true;
+char buffer[40] = {0};
 int t;
 char ti[1] = {0};
 char b[10]  = {0};
@@ -374,8 +373,6 @@ char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
 
-char  xplus[] = "+\0";
-char  xminus[] = "-\0";
 char const xcelc[]  = "'C\0";
 char const xpercent[]  = "%\0";
 char const  xxdash[]  = "-\0";

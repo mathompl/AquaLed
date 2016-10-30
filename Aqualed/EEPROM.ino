@@ -111,7 +111,6 @@ void writeEEPROMDefaults ()
                         pwm_list[i].pwmKeepLight = 0;
                         pwm_list[i].pwmInvert = 0;
                         pwm_list[i].pwmNow = 0;
-                        pwm_list[i].pwmLast = 0;
                         pwm_list[i].pwmGoal = 0;
                         pwm_list[i].pwmSaved = 0;
                         pwm_list[i].pwmTest = 0;

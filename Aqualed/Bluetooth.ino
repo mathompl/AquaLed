@@ -141,7 +141,7 @@ void bluetoothServe ()
                 if (commandAnalysis(cmdOutputArray))
                         eEpromRead();
                 else
-                        bluetooth.print("666,Bledne dane\n");
+                        bluetooth.print(F()"666,Bledne dane\n"));
 
 
         }

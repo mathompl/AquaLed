@@ -928,7 +928,7 @@ static void updateHomePage() {
 
         for (int i = 0; i < PWMS; i++)
         {
-                if (pwm_list[i].pwmLast != pwm_list[i].pwmNow || forceRefresh)
+                if (pwmNxLast[i] != pwm_list[i].pwmNow || forceRefresh)
                 {
 
                         if (pwm_list[i].pwmNow == 0 || pwm_list[i].pwmStatus == 0)
@@ -949,12 +949,12 @@ static void updateHomePage() {
                         }
                         else
                         {
-                                byte percent =  mapRound((int)pwm_list[i].pwmNow, 0, 255, 0, 100);
+                                byte percent =  mapRound((byte)pwm_list[i].pwmNow, 0, 255, 0, 100);
                                 char buf[3] = {0};
                                 itoa(percent, buf, 10);
                                 sendCommandPGM (17 + i, buf, xpercent, NULL);
                         }
-                        pwm_list[i].pwmLast = pwm_list[i].pwmNow;
+                        pwmNxLast[i] = pwm_list[i].pwmNow;
                 }
         }
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
