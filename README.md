@@ -21,7 +21,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 
 **Nextion LCD Screenshots**
  
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg? "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/9.jpg "AquaLed")
@@ -30,6 +30,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/5.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/6.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/7.jpg "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/8.jpg "AquaLed")
 
 **REQUIREMENTS:**
 
