@@ -64,12 +64,12 @@ void setupPWMPins ()
         #ifndef NO_I2C
         pwm_i2c = Adafruit_PWMServoDriver();
         pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(1500);
+        pwm_i2c.setPWMFreq(100);
         #endif
 
         //TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
-        TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
-        TCCR2A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
+      //  TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
+//        TCCR2A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
 
 }
 
