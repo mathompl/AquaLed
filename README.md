@@ -54,7 +54,72 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 **Software:**
 - Nextion Editor (https://nextion.itead.cc/download.html)
 - Arduino IDE or atom.io
- 
+
+**Configuration:**
+Driver configuration is in file aqualed.h
+
+####PINS SETUP:
+#####To use arduino built-in PWM pins:
+```
+// PWM
+#define PWMS 8
+#define PWM1_PIN  3
+#define PWM2_PIN  5
+#define PWM3_PIN  6
+#define PWM4_PIN  9
+#define PWM5_PIN  10
+#define PWM6_PIN  11
+#define PWM7_PIN  1
+#define PWM8_PIN  2
+
+#define PWM1_I2C  0
+#define PWM2_I2C  0
+#define PWM3_I2C  0
+#define PWM4_I2C  0
+#define PWM5_I2C  0
+#define PWM6_I2C  0
+#define PWM7_I2C  1
+#define PWM8_I2C  1
+```
+
+#####To use I2C PWM module pins:
+```
+// PWM pins config
+#define PWMS 8
+#define PWM1_PIN  0
+#define PWM2_PIN  1
+#define PWM3_PIN  2
+#define PWM4_PIN  3
+#define PWM5_PIN  4
+#define PWM6_PIN  5
+#define PWM7_PIN  6
+#define PWM8_PIN  7
+
+// 0 - Arduino PWM pins
+// 1 - i2c PWM module, eg. PCA9685
+
+#define PWM1_I2C  1
+#define PWM2_I2C  1
+#define PWM3_I2C  1
+#define PWM4_I2C  1
+#define PWM5_I2C  1
+#define PWM6_I2C  1
+#define PWM7_I2C  1
+#define PWM8_I2C  1
+```
+
+
+####Modules (uncomment to disable)
+```
+// modules, uncomment to disable, comment to enable
+#define NO_BLUETOOTH
+//#define NO_NEXTION
+//#define NO_I2C
+//#define NO_TEMPERATURE
+```
+####Other
+There are many other options for eg. timers resolution, most of them are pretty self-explanatory ;)
+
 **Wiring:**
 
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg?"AquaLed wiring")
