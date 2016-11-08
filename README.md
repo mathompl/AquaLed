@@ -58,8 +58,8 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 **Configuration:**
 Driver configuration is in file aqualed.h
 
-***PINS SETUP:
-****To use arduino built-in PWM pins:
+####PINS SETUP:
+#####To use arduino built-in PWM pins:
 ```
 // PWM
 #define PWMS 8
@@ -82,7 +82,7 @@ Driver configuration is in file aqualed.h
 #define PWM8_I2C  1
 ```
 
-***To use I2C PWM module pins:
+#####To use I2C PWM module pins:
 ```
 // PWM pins config
 #define PWMS 8
@@ -109,7 +109,7 @@ Driver configuration is in file aqualed.h
 ```
 
 
-***Modules (uncomment to disable)
+####Modules (uncomment to disable)
 ```
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
@@ -117,7 +117,7 @@ Driver configuration is in file aqualed.h
 //#define NO_I2C
 //#define NO_TEMPERATURE
 ```
-***Other
+####Other
 There are many other options for eg. timers resolution, most of them are pretty self-explanatory ;)
 
 **Wiring:**
