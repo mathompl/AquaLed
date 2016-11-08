@@ -33,7 +33,7 @@ void setup() {
 #endif
 
 #ifndef NO_BLUETOOTH
-      setupBluetooth ();
+        setupBluetooth ();
 #endif
 
 #ifndef NO_NEXTION

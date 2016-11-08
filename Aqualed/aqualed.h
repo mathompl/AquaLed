@@ -16,6 +16,8 @@
 //#define NO_I2C
 //#define NO_TEMPERATURE
 
+
+// PWM pins config
 #define PWMS 8
 #define PWM1_PIN  0
 #define PWM2_PIN  1
@@ -25,6 +27,9 @@
 #define PWM6_PIN  5
 #define PWM7_PIN  6
 #define PWM8_PIN  7
+
+// 0 - Arduino PWM pins
+// 1 - i2c PWM module, eg. PCA9685
 
 #define PWM1_I2C  1
 #define PWM2_I2C  1

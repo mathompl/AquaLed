@@ -20,9 +20,6 @@ Adafruit_PWMServoDriver pwm_i2c;
 
 void setupPWMPins ()
 {
-        // I2C = 0 - Arduino PWM pins
-        // I2C = 1 - i2c PWM module, eg. PCA9685
-
         // assign pins
         pwm_list[0].pwmPin = PWM1_PIN;
         pwm_list[0].pwmI2C = PWM1_I2C;
@@ -64,11 +61,11 @@ void setupPWMPins ()
         #ifndef NO_I2C
         pwm_i2c = Adafruit_PWMServoDriver();
         pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(100);
+        pwm_i2c.setPWMFreq(I2C_FREQ);
         #endif
 
         //TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
-      //  TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
+        //  TCCR1A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
 //        TCCR2A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
 
 }

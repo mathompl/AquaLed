@@ -43,7 +43,6 @@ static void sendCommandPGMInt (int pgmCommandIndex,  int value, boolean closingP
 
 static void  sendCommandPGMInt (int pgmCommandIndex,  int value, boolean closingParenthesis, boolean leadingZeros)
 {
-
         memset(buffer, 0, sizeof (buffer));
         strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
         char tmp[5] = {0};
@@ -54,6 +53,20 @@ static void  sendCommandPGMInt (int pgmCommandIndex,  int value, boolean closing
         strcpy (buffer + strlen(buffer), "\0");
         sendCommand(buffer);
 }
+
+static void  sendCommandPGMLong (int pgmCommandIndex,  long value, boolean closingParenthesis)
+{
+        memset(buffer, 0, sizeof (buffer));
+        strcpy_P(buffer, (PGM_P)pgm_read_word(&(nxStrings[pgmCommandIndex])));
+        char tmp[5] = {0};
+        memset(tmp, 0, sizeof (tmp));
+        sprintf (tmp, "%lu", value);
+        strcpy (buffer + strlen(buffer), tmp);
+        if (closingParenthesis) strcpy_P(buffer + strlen(buffer), (PGM_P)pgm_read_word(&(nxStrings[CMD_PARENTH])));
+        strcpy (buffer + strlen(buffer), "\0");
+        sendCommand(buffer);
+}
+
 
 static void sendCommandPGM_C (int pgmCommandIndex, int pgmConstStringIndex )
 {
@@ -152,7 +165,10 @@ void nexInit(void)
         sendCommand("");
         sendCommandPGM(CMD_INIT1);
         sendCommandPGM(CMD_INIT2);
-        sendCommandPGM(CMD_INIT3);
+        sendCommandPGMLong(CMD_INIT3, NEXTION_BAUD_RATE, false);
+        Serial.flush ();
+        delay (1000);
+        Serial.end ();
         Serial.begin(NEXTION_BAUD_RATE);
         toggleButtons ();
         lastTouch = currentTimeSec;
@@ -193,7 +209,7 @@ static void nxTouch()
         {
                 pid = __buffer[1];
                 cid = __buffer[2];
-              //  delay(10);
+                //  delay(10);
                 handlePage (pid, cid);
                 return;
         }

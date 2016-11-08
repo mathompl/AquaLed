@@ -188,7 +188,7 @@ char const xwf[] PROGMEM = "wf.txt=\"";
 char const xlf[] PROGMEM = "lf.txt=\"";
 char const init1[] PROGMEM = "bkcmd=0";
 char const init2[] PROGMEM = "page 0";
-char const init3[] PROGMEM = "baud=115200";
+char const init3[] PROGMEM = "baud=";
 char const xpage[] PROGMEM = "page ";
 char const xt1[] PROGMEM = "t1.txt=\"";
 char const xt2[] PROGMEM = "t2.txt=\"";

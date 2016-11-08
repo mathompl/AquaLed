@@ -19,7 +19,7 @@ void setupBluetooth ()
 }
 
 
-static byte translateAqmaNumber ( byte n ) {
+ byte translateAqmaNumber ( byte n ) {
         if (n == 31) return 0;
         if (n == 32) return 1;
         if (n == 33) return 2;
@@ -29,7 +29,7 @@ static byte translateAqmaNumber ( byte n ) {
         return 255;
 }
 
-static boolean commandAnalysis( char cmdOutputArray[64] ) {
+ boolean commandAnalysis( char cmdOutputArray[64] ) {
 
         byte val[64];
         char *cmdVal;
