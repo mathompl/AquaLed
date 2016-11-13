@@ -675,6 +675,7 @@ static void handleConfigPage (byte cid)
                 break;
         // thermo setup
         case 7:
+              #ifndef NO_TEMPERATURE
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_THERMO, false);
                 nxScreen = PAGE_THERMO;
                 s = discoverOneWireDevices ();
@@ -709,6 +710,7 @@ static void handleConfigPage (byte cid)
                 sendCommandPGMInt (CMD_SET_N1, idxSump, false);
                 sendCommandPGMInt (CMD_SET_N2, idxWater, false);
                 sendCommandPGMbs (CMD_SET_T4, 250, tempbuff, NULL);
+              #endif
                 break;
         // test
         case 6:

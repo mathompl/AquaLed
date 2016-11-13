@@ -97,6 +97,8 @@ Odkomentuj jesli nie masz modulu PWM, zostana uzyte piny pwm arduino.
 // sprawdzeanie DST
 #define TIME_ADJUST_INTERVAL 3600
 
+#define MAX_WATTS 200
+
 #define ON  true
 #define OFF  false
 
@@ -124,6 +126,7 @@ typedef struct
         byte isSunrise;
         byte isSunset;
         byte pwmAmbient;
+        byte watts;
 } PWM;
 PWM pwm_list[PWMS];
 
@@ -146,6 +149,8 @@ struct SETTINGS_STRUCT
         byte sumpSensorAddress[8];
         byte waterSensorAddress[8];
 };
+
+
 
 byte sensorsList[7][8];
 boolean sensorsDetected[7];
