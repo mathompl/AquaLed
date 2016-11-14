@@ -3,6 +3,9 @@
 
 #define NEXTION_BAUD_RATE 115200
 
+// uncomment for use nextion editor simulator
+//#define NEXTION_SIMULATOR 1
+
 #define NEX_RET_CMD_FINISHED                (0x01)
 #define NEX_RET_EVENT_TOUCH_HEAD            (0x65)
 #define NEX_EVENT_POP                       (0x00)

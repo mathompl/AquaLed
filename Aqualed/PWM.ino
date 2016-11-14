@@ -193,7 +193,8 @@ static void pwm( byte i )
                 if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwm_list[i].pwmGoal)
                 {
 
-                        val = dimmingTable[val];
+                    //    val = (byte)pgm_read_byte(&dimmingTable[val]);
+                        //val = dimmingTable[val];
                 }
                 analogWrite( pwm_list[i].pwmPin,  val);
         }

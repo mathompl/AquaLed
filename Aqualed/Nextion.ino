@@ -166,9 +166,11 @@ void nexInit(void)
         sendCommandPGM(CMD_INIT1);
         sendCommandPGM(CMD_INIT2);
         sendCommandPGMLong(CMD_INIT3, NEXTION_BAUD_RATE, false);
-        Serial.flush ();
-        delay (1000);
-        Serial.end ();
+        #ifdef NEXTION_SIMULATOR
+          Serial.flush ();
+          delay (1000);
+          Serial.end ();
+        #endif
         Serial.begin(NEXTION_BAUD_RATE);
         toggleButtons ();
         lastTouch = currentTimeSec;
