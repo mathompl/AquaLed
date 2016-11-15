@@ -6,7 +6,7 @@
 #include <avr/wdt.h>
 #include <DallasTemperature.h>
 #include <DS18B20.h>
-#include <MemoryFree.h>
+
 
 /* Configuration file */
 
@@ -240,3 +240,7 @@ const byte dimmingTable [] PROGMEM = {
         0xDB, 0xDD, 0xE0, 0xE2, 0xE4, 0xE7, 0xE9, 0xEB,
         0xEE, 0xF0, 0xF3, 0xF5, 0xF8, 0xFA, 0xFD, 0xFF,
 };
+
+#ifndef NO_DEBUG
+#include <MemoryFree.h>
+#endif
