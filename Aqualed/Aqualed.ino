@@ -20,8 +20,6 @@
      @nextion.h
  */
 
-
-
 void setup() {
         wdt_disable();
         writeEEPROMDefaults ();
@@ -41,7 +39,7 @@ void setup() {
 #endif
 
         // launch watchdog  - 4 seconds
-        wdt_enable(WDTO_4S);
+      wdt_enable(WDTO_4S);
 
 }
 

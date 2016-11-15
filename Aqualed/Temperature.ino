@@ -45,52 +45,45 @@ void fansControl()
                 sensors.request(SETTINGS.sumpSensorAddress);
         }
 
-        if (temperatureLed != TEMP_ERROR) {
-                if (currentTimeSec - previousMillisFans > LED_FANS_INTERVAL || previousMillisFans == 0) {
-                        previousMillisFans = currentTimeSec;
-                        if (temperatureLed > SETTINGS.max_led_temp)
-                        {
-                                digitalWrite(LED_FANS_PIN, LOW);
-                                ledFansStatus = true;
-
-                        }
-                        else
-                        {
-                                digitalWrite(LED_FANS_PIN, HIGH);
-                                ledFansStatus = false;
-                        }
+        if (currentTimeSec - previousMillisFans > LED_FANS_INTERVAL || previousMillisFans == 0) {
+                previousMillisFans = currentTimeSec;
+                if (temperatureLed != TEMP_ERROR &&temperatureLed > SETTINGS.max_led_temp)
+                {
+                        digitalWrite(LED_FANS_PIN, LOW);
+                        ledFansStatus = true;
+                }
+                else
+                {
+                        digitalWrite(LED_FANS_PIN, HIGH);
+                        ledFansStatus = false;
                 }
         }
 
-        if (temperatureWater != TEMP_ERROR) {
-                if (currentTimeSec - previousMillisWater > WATER_FANS_INTERVAL || previousMillisWater == 0) {
-                        previousMillisWater = currentTimeSec;
-                        if (temperatureWater > SETTINGS.max_water_temp)
-                        {
-                                digitalWrite(WATER_FANS_PIN, LOW);
-                                waterFansStatus = true;
-                        }
-                        else
-                        {
-                                digitalWrite(WATER_FANS_PIN, HIGH);
-                                waterFansStatus = false;
-                        }
+        if (currentTimeSec - previousMillisWater > WATER_FANS_INTERVAL || previousMillisWater == 0) {
+                previousMillisWater = currentTimeSec;
+                if (temperatureWater != TEMP_ERROR && temperatureWater > SETTINGS.max_water_temp )
+                {
+                        digitalWrite(WATER_FANS_PIN, LOW);
+                        waterFansStatus = true;
+                }
+                else
+                {
+                        digitalWrite(WATER_FANS_PIN, HIGH);
+                        waterFansStatus = false;
                 }
         }
 
-        if (temperatureSump != TEMP_ERROR) {
-                if (currentTimeSec - previousMillisSump > SUMP_FANS_INTERVAL || previousMillisSump == 0) {
-                        previousMillisSump = currentTimeSec;
-                        if (temperatureSump > SETTINGS.max_sump_temp)
-                        {
-                                digitalWrite(SUMP_FANS_PIN, LOW);
-                                sumpFansStatus = true;
-                        }
-                        else
-                        {
-                                digitalWrite (SUMP_FANS_PIN, HIGH);
-                                sumpFansStatus = false;
-                        }
+        if (currentTimeSec - previousMillisSump > SUMP_FANS_INTERVAL || previousMillisSump == 0) {
+                previousMillisSump = currentTimeSec;
+                if (temperatureSump != TEMP_ERROR && temperatureSump > SETTINGS.max_sump_temp)
+                {
+                        digitalWrite(SUMP_FANS_PIN, LOW);
+                        sumpFansStatus = true;
+                }
+                else
+                {
+                        digitalWrite (SUMP_FANS_PIN, HIGH);
+                        sumpFansStatus = false;
                 }
         }
 }

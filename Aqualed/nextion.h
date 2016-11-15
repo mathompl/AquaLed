@@ -4,6 +4,7 @@
 #define NEXTION_BAUD_RATE 115200
 
 // uncomment for use nextion editor simulator
+// needs additional settings for non-standard baud rates
 //#define NEXTION_SIMULATOR 1
 
 #define NEX_RET_CMD_FINISHED                (0x01)
@@ -141,8 +142,6 @@ uint8_t nxScreen = 0;
 #define CMD_HIDE_P0 97
 #define CMD_HIDE_P1 98
 #define CMD_HIDE_P2 99
-
-
 
 #define STR_ON 0
 #define STR_OFF 1

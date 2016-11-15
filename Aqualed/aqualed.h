@@ -6,12 +6,13 @@
 #include <avr/wdt.h>
 #include <DallasTemperature.h>
 #include <DS18B20.h>
-
+#include <MemoryFree.h>
 
 /* Configuration file */
 
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
+#define NO_DEBUG
 //#define NO_NEXTION
 //#define NO_I2C
 //#define NO_TEMPERATURE
@@ -81,21 +82,21 @@ Odkomentuj jesli nie masz modulu PWM, zostana uzyte piny pwm arduino.
 #define SUMP_FANS_PIN 7
 
 // resolutions
-#define PWM_RESOLUTION 100
+#define PWM_RESOLUTION 100 //ms
 #define PWM_MIN_STEP 0.01
-#define NX_INFO_RESOLUTION 1000
-#define EEPROM_STATE_RESOLUTION 5000
+#define NX_INFO_RESOLUTION 1000 //ms
+#define EEPROM_STATE_RESOLUTION 5000 //ms
 
 // rozdzielczosc przekaznikow (s)
-#define LED_FANS_INTERVAL 300
-#define WATER_FANS_INTERVAL 300
-#define SUMP_FANS_INTERVAL 300
+#define LED_FANS_INTERVAL 300 //s
+#define WATER_FANS_INTERVAL 300 //s
+#define SUMP_FANS_INTERVAL 300 //s
 
 // probkowanie temperatury (ms)
-#define TEMPERATURE_SAMPLE_INTERVAL 1000
+#define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms
 
 // sprawdzeanie DST
-#define TIME_ADJUST_INTERVAL 3600
+#define TIME_ADJUST_INTERVAL 3600 //s
 
 #define MAX_WATTS 200
 
@@ -105,7 +106,7 @@ Odkomentuj jesli nie masz modulu PWM, zostana uzyte piny pwm arduino.
 typedef struct
 {
         byte pwmPin;
-        boolean pwmI2C;
+        bool pwmI2C;
         byte pwmStatus;
         byte pwmHOn;
         byte pwmMOn;
@@ -150,10 +151,8 @@ struct SETTINGS_STRUCT
         byte waterSensorAddress[8];
 };
 
-
-
 byte sensorsList[7][8];
-boolean sensorsDetected[7];
+bool  sensorsDetected[7];
 
 SETTINGS_STRUCT SETTINGS =
 {
@@ -186,9 +185,9 @@ unsigned long lastTouch = 0;
 tmElements_t tm;
 long unsigned currentMillis;
 long unsigned currentTimeSec;
-boolean testMode = false;
+bool  testMode = false;
 byte nxLastHour = 0, nxLastMinute = 0;
-boolean justTurnedOn = true;
+bool  justTurnedOn = true;
 
 // sensors
 float temperatureLed;
@@ -198,12 +197,12 @@ float nxtemperatureLed;
 float nxtemperatureWater;
 float nxtemperatureSump;
 
-boolean ledFansStatus = false;
-boolean waterFansStatus = false;
-boolean sumpFansStatus = false;
-boolean nxledFansStatus = true;
-boolean nxwaterFansStatus = true;
-boolean nxsumpFansStatus = true;
+bool  ledFansStatus = false;
+bool  waterFansStatus = false;
+bool  sumpFansStatus = false;
+bool  nxledFansStatus = false;
+bool  nxwaterFansStatus = false;
+bool  nxsumpFansStatus = false;
 
 // logarithmic dimming table
 const byte dimmingTable [] PROGMEM = {

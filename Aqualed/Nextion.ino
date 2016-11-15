@@ -166,10 +166,10 @@ void nexInit(void)
         sendCommandPGM(CMD_INIT1);
         sendCommandPGM(CMD_INIT2);
         sendCommandPGMLong(CMD_INIT3, NEXTION_BAUD_RATE, false);
-        #ifdef NEXTION_SIMULATOR
-          Serial.flush ();
-          delay (1000);
-          Serial.end ();
+        #ifndef NEXTION_SIMULATOR
+        Serial.flush ();
+        delay (1000);
+        Serial.end ();
         #endif
         Serial.begin(NEXTION_BAUD_RATE);
         toggleButtons ();
@@ -980,7 +980,7 @@ static void updateHomePage() {
                         pwmNxLast[i] = pwm_list[i].pwmNow;
                 }
         }
-        #ifndef NO_TEMPERATURE
+#ifndef NO_TEMPERATURE
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
         {
                 if (waterFansStatus)
@@ -1006,7 +1006,7 @@ static void updateHomePage() {
                         sendCommandPGM (CMD_HIDE_P2);
                 nxsumpFansStatus = sumpFansStatus;
         }
-        #endif
+#endif
 
 }
 
@@ -1023,6 +1023,29 @@ static void timeDisplay(tmElements_t tm) {
 
 }
 
+void debugInfo ()
+{
+        #ifndef NO_DEBUG
+            char tmp[30] = {0};
+            memset(tmp, 0, sizeof (tmp));
+            long days=0;
+            long hours=0;
+            long mins=0;
+            long secs=0;
+            secs = currentMillis/1000;
+            mins=secs/60;
+            hours=mins/60;
+            days=hours/24;
+            secs=secs-(mins*60);
+            mins=mins-(hours*60);
+            hours=hours-(days*24);
+            sprintf (tmp + strlen (tmp), "freemem %i ", freeMemory());
+            sprintf (tmp + strlen (tmp), "%02lu %02lu:%02lu:%02lu", days,  hours, mins, secs);
+            strcpy (tmp + strlen(tmp), "\0");
+            sendCommandPGM (CMD_SET_T1, tmp, NULL, true);
+        #endif
+}
+
 void nxDisplay ()
 {
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
@@ -1033,6 +1056,7 @@ void nxDisplay ()
                 {
                         timeDisplay(tm);
                         updateWaterTemp();
+                        debugInfo ();
                         forceRefresh = false;
                 }
 
