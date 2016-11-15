@@ -59,10 +59,10 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 Driver configuration is in file aqualed.h
 
 ####PINS SETUP:
-#####To use arduino built-in PWM pins:
+#####To use arduino built-in PWM pins (arduino ATmega328 or ATmega168 has 6 PWM channels, MEGA 2560 has 15 PWM channels):
 ```
 // PWM
-#define PWMS 8
+#define PWMS 6
 #define PWM1_PIN  3
 #define PWM2_PIN  5
 #define PWM3_PIN  6
@@ -82,7 +82,7 @@ Driver configuration is in file aqualed.h
 #define PWM8_I2C  1
 ```
 
-#####To use I2C PWM module pins:
+#####To use I2C PWM module (PCA9635, PCA9685 etc. modules) pins:
 ```
 // PWM pins config
 #define PWMS 8
