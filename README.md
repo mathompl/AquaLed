@@ -109,7 +109,7 @@ Driver configuration is in file aqualed.h
 ```
 
 
-####Modules (uncomment to disable)
+####Modules (uncomment to disable). As for now bluetooth and nextion support does not fit into Arduino Nano/UNO etc. flash memory. Use arduino Mega or disable one module support.
 ```
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
