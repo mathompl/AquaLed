@@ -14,7 +14,7 @@
 //#define USE_I2C_PWM_MODULE
 
 // modules, uncomment to disable, comment to enable
-//#define NO_BLUETOOTH
+#define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
 //#define NO_TEMPERATURE

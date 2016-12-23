@@ -25,6 +25,11 @@ void setupSensors ()
         digitalWrite(LED_FANS_PIN, HIGH);
         digitalWrite(WATER_FANS_PIN, HIGH);
         digitalWrite(SUMP_FANS_PIN, HIGH);
+        requestReadings ();
+}
+
+static void requestReadings ()
+{
         sensors.request(SETTINGS.ledSensorAddress);
         sensors.request(SETTINGS.waterSensorAddress);
         sensors.request(SETTINGS.sumpSensorAddress);
@@ -40,9 +45,7 @@ void fansControl()
                 temperatureLed = sensors.readTemperature(SETTINGS.ledSensorAddress);
                 temperatureWater = sensors.readTemperature(SETTINGS.waterSensorAddress);
                 temperatureSump = sensors.readTemperature(SETTINGS.sumpSensorAddress);;
-                sensors.request(SETTINGS.ledSensorAddress);
-                sensors.request(SETTINGS.waterSensorAddress);
-                sensors.request(SETTINGS.sumpSensorAddress);
+                requestReadings ();
         }
 
         if (currentTimeSec - previousMillisFans > LED_FANS_INTERVAL || previousMillisFans == 0) {
@@ -88,7 +91,7 @@ void fansControl()
         }
 }
 
-boolean checkAddr (byte s[])
+static boolean checkAddr (byte s[])
 {
         if (s[0] == 0 &&
             s[1] == 0 &&
@@ -102,7 +105,7 @@ boolean checkAddr (byte s[])
 }
 
 
-byte sensorsCheck (byte s[])
+static byte sensorsCheck (byte s[])
 {
         if (OneWire::crc8( s, 7) == s[7]) return true; else return false;
 }
