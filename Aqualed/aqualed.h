@@ -10,60 +10,57 @@
 
 /* Configuration file */
 
+// uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
+//#define USE_I2C_PWM_MODULE
+
 // modules, uncomment to disable, comment to enable
-#define NO_BLUETOOTH
-#define NO_DEBUG
+//#define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
 //#define NO_TEMPERATURE
 
-// PWM pins config
-#define PWMS 8
-#define PWM1_PIN  0
-#define PWM2_PIN  1
-#define PWM3_PIN  2
-#define PWM4_PIN  3
-#define PWM5_PIN  4
-#define PWM6_PIN  5
-#define PWM7_PIN  6
-#define PWM8_PIN  7
 
-// 0 - Arduino PWM pins
-// 1 - i2c PWM module, eg. PCA9685
+// ARDUINO build-in PWM pins config
+#ifdef USE_I2C_PWM_MODULE
+    #define PWMS 8
+    #define PWM1_PIN  0
+    #define PWM2_PIN  1
+    #define PWM3_PIN  2
+    #define PWM4_PIN  3
+    #define PWM5_PIN  4
+    #define PWM6_PIN  5
+    #define PWM7_PIN  6
+    #define PWM8_PIN  7
 
-#define PWM1_I2C  1
-#define PWM2_I2C  1
-#define PWM3_I2C  1
-#define PWM4_I2C  1
-#define PWM5_I2C  1
-#define PWM6_I2C  1
-#define PWM7_I2C  1
-#define PWM8_I2C  1
+    #define PWM1_I2C  1
+    #define PWM2_I2C  1
+    #define PWM3_I2C  1
+    #define PWM4_I2C  1
+    #define PWM5_I2C  1
+    #define PWM6_I2C  1
+    #define PWM7_I2C  1
+    #define PWM8_I2C  1
+#else
+// PWM MODULE pins config
+    #define PWMS 8
+    #define PWM1_PIN  3
+    #define PWM2_PIN  5
+    #define PWM3_PIN  6
+    #define PWM4_PIN  9
+    #define PWM5_PIN  10
+    #define PWM6_PIN  11
+    #define PWM7_PIN  1
+    #define PWM8_PIN  2
 
-/*
-
-Uncomment for arduino built-in pins
-Odkomentuj jesli nie masz modulu PWM, zostana uzyte piny pwm arduino.
-
-// PWM
-#define PWMS 8
-#define PWM1_PIN  3
-#define PWM2_PIN  5
-#define PWM3_PIN  6
-#define PWM4_PIN  9
-#define PWM5_PIN  10
-#define PWM6_PIN  11
-#define PWM7_PIN  1
-#define PWM8_PIN  2
-
-#define PWM1_I2C  0
-#define PWM2_I2C  0
-#define PWM3_I2C  0
-#define PWM4_I2C  0
-#define PWM5_I2C  0
-#define PWM6_I2C  0
-#define PWM7_I2C  1
-#define PWM8_I2C  1*/
+    #define PWM1_I2C  0
+    #define PWM2_I2C  0
+    #define PWM3_I2C  0
+    #define PWM4_I2C  0
+    #define PWM5_I2C  0
+    #define PWM6_I2C  0
+    #define PWM7_I2C  1
+    #define PWM8_I2C  1
+#endif
 
 #define PWM_MAX 255
 
@@ -240,7 +237,3 @@ const byte dimmingTable [] PROGMEM = {
         0xDB, 0xDD, 0xE0, 0xE2, 0xE4, 0xE7, 0xE9, 0xEB,
         0xEE, 0xF0, 0xF3, 0xF5, 0xF8, 0xFA, 0xFD, 0xFF,
 };
-
-#ifndef NO_DEBUG
-#include <MemoryFree.h>
-#endif

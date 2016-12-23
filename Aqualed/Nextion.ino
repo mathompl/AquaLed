@@ -1022,7 +1022,7 @@ static void timeDisplay(tmElements_t tm) {
         nxLastMinute =  tm.Minute;
 
 }
-
+/*
 void debugInfo ()
 {
         #ifndef NO_DEBUG
@@ -1044,7 +1044,7 @@ void debugInfo ()
             strcpy (tmp + strlen(tmp), "\0");
             sendCommandPGM (CMD_SET_T1, tmp, NULL, true);
         #endif
-}
+}*/
 
 void nxDisplay ()
 {
@@ -1055,8 +1055,7 @@ void nxDisplay ()
                 if (nxScreen == PAGE_SCREENSAVER )
                 {
                         timeDisplay(tm);
-                        updateWaterTemp();
-                        debugInfo ();
+                        updateWaterTemp();                      
                         forceRefresh = false;
                 }
 
