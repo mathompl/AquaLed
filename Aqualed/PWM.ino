@@ -81,7 +81,9 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwmNow == pwmGoal) return dimming;
 
         double step;
-        step = (double) (double)255 / (double)(dimmingTime / PWM_RESOLUTION);
+        step = (double) ( (double) 255 / (double) (dimmingTime / PWM_RESOLUTION));
+        //Serial.println (dimmingTime);
+        //Serial.println (step);
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -120,7 +122,7 @@ static void pwm( byte i )
                 if (currentTimeSec >= pwmOn && currentTimeSec <= 86400) state = true;
                 if (currentTimeSec >= 0 && currentTimeSec < pwmOff) state = true;
         }
-
+        long dimmingTime = (long) SETTINGS.pwmDimmingTime * (long)1000;
         //test mode
         if (testMode)
         {
@@ -131,7 +133,7 @@ static void pwm( byte i )
         if (pwm_list[i].pwmStatus == 0 || SETTINGS.forceOFF == 1)
         {
                 pwm_list[i].pwmGoal = 0;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i, dimmingTime);
         }
         else
         // force night
@@ -140,26 +142,26 @@ static void pwm( byte i )
                 if (pwm_list[i].pwmKeepLight) pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
                 else
                         pwm_list[i].pwmGoal = 0;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i, dimmingTime);
         }
         else
         // ambient/user program
         if (SETTINGS.forceAmbient == 1)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmAmbient;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i, dimmingTime);
         }
         // night light
         else if (!state && pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i, dimmingTime);
         }
         // scheduled off
         else if (!state && !pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = 0;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i,dimmingTime);
         }
         else
         //sunset
@@ -180,7 +182,7 @@ static void pwm( byte i )
         else if (state)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime * 1000);
+                dimming = pwmStep (i,dimmingTime);
         }
 
         // no change
