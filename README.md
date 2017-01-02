@@ -1,3 +1,4 @@
+<pop:lang:en>
 # AquaLed
 
 Arduino PWM LED lamp driver software with LCD support and temperature control for marine, reef or sweetwater aquariums.
@@ -124,4 +125,4 @@ There are many other options for eg. timers resolution, most of them are pretty 
 
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg?"AquaLed wiring")
 
-
+</pop:lang:en>
