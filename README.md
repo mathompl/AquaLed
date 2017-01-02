@@ -254,5 +254,4 @@ W pliku konfiguracyjnym można ustawić wiele opcji w tym czasy działania timer
 
 
 
-
-
+Support:http://nano-reef.pl/topic/88904-a-qualed-sterownik-led-termometry-lcd-nextion/
