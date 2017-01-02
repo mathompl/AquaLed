@@ -149,16 +149,16 @@ Przykładowy program na wyświetlacz załączony.
 
 **Wygląd ekranów na wyświetlaczu **
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/0.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/1.jpg> "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/2.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/9.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/3.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/4.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/5.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/6.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/7.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/8.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/0.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/1.jpg> "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/2.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/9.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/3.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/4.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/5.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/6.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/7.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/8.jpg? "AquaLed")
 
 **Wymagania:**
 
