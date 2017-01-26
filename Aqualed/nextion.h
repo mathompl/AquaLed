@@ -21,6 +21,8 @@
 #define height 240
 #define startx 47
 #define starty 31
+#define hour_startx 40;
+#define hour_stopx 180;
 
 char buffer[30] = {0};
 int t;

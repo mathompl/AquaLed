@@ -644,7 +644,7 @@ static void drawSchedule ()
                 }
         }
         int min_now = map (tm.Hour * 60 + tm.Minute, 0, min_hour, starty, starty + height);
-        fillRect (40, min_now, 180, 1, COLOR_YELLOW);
+        fillRect (hour_startx, min_now, hour_stopx, 1, COLOR_YELLOW);
         // siatka dodatkowa
         /*
            for (int i = 0 ; i < 24; i++)
@@ -1055,7 +1055,7 @@ void nxDisplay ()
                 if (nxScreen == PAGE_SCREENSAVER )
                 {
                         timeDisplay(tm);
-                        updateWaterTemp();                      
+                        updateWaterTemp();
                         forceRefresh = false;
                 }
 
