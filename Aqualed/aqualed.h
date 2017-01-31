@@ -80,7 +80,7 @@
 
 // resolutions
 #define PWM_RESOLUTION 100 //ms
-#define PWM_MIN_STEP 0.01
+#define PWM_MIN_STEP 0.0005
 #define NX_INFO_RESOLUTION 1000 //ms
 #define EEPROM_STATE_RESOLUTION 5000 //ms
 
@@ -130,6 +130,10 @@ PWM pwm_list[PWMS];
 
 double pwmLast[PWMS] = {0};
 double pwmNxLast[PWMS] = {0};
+
+// pwm sunset/sunrise goals
+byte pwmSS[PWMS] = {0};
+
 
 struct SETTINGS_STRUCT
 {

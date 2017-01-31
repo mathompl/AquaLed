@@ -81,9 +81,25 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwmNow == pwmGoal) return dimming;
 
         double step;
-        step = (double) ( (double) 255 / (double) (dimmingTime / PWM_RESOLUTION));
-        //Serial.println (dimmingTime);
-        //Serial.println (step);
+
+        double max = 255;
+
+        if (pwm_list[i].isSunset || pwm_list[i].isSunrise)
+        {
+          max = (double) pwmSS[i];
+
+        }
+
+        step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
+        /*if (i == 3 && (pwm_list[i].isSunset || pwm_list[i].isSunrise))
+        {
+          Serial.println (dimmingTime);
+          Serial.println (step);
+          Serial.println (max);
+          Serial.println ();
+
+        }*/
+
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -106,8 +122,7 @@ boolean pwmStep (byte i, long dimmingTime)
 // calculate and set pwm value and drive led
 static void pwm( byte i )
 {
-        pwm_list[i].isSunrise = false;
-        pwm_list[i].isSunset = false;
+
         long ssMillis;
         long srMillis;
         boolean state = false;
@@ -127,6 +142,8 @@ static void pwm( byte i )
         if (testMode)
         {
                 pwm_list[i].pwmNow = pwm_list[i].pwmTest;
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
         else
         // force off
@@ -134,6 +151,8 @@ static void pwm( byte i )
         {
                 pwm_list[i].pwmGoal = 0;
                 dimming = pwmStep (i, dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
         else
         // force night
@@ -143,6 +162,8 @@ static void pwm( byte i )
                 else
                         pwm_list[i].pwmGoal = 0;
                 dimming = pwmStep (i, dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
         else
         // ambient/user program
@@ -150,23 +171,25 @@ static void pwm( byte i )
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmAmbient;
                 dimming = pwmStep (i, dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
         // night light
         else if (!state && pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
                 dimming = pwmStep (i, dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
-        // scheduled off
-        else if (!state && !pwm_list[i].pwmKeepLight)
-        {
-                pwm_list[i].pwmGoal = 0;
-                dimming = pwmStep (i,dimmingTime);
-        }
+
         else
         //sunset
         if ( getSunsetMillis(i, ssMillis) > 0)
         {
+                // scale current pwm value
+                if  (pwm_list[i].isSunset == false) pwmSS[i] = pwm_list[i].pwmNow;
+
                 pwm_list[i].isSunset = true;
                 pwm_list[i].pwmGoal = 0;
                 dimming = pwmStep (i, ssMillis);
@@ -175,6 +198,9 @@ static void pwm( byte i )
         //sunrise
         if ( getSunriseMillis(i, srMillis) > 0)
         {
+          // scale current pwm value
+              if  (pwm_list[i].isSunrise == false) pwmSS[i] = pwm_list[i].pwmMax;
+
                 pwm_list[i].isSunrise = true;
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
                 dimming = pwmStep (i, srMillis);
@@ -183,6 +209,16 @@ static void pwm( byte i )
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
                 dimming = pwmStep (i,dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
+        }
+        // scheduled off
+        else if (!state && !pwm_list[i].pwmKeepLight)
+        {
+                pwm_list[i].pwmGoal = 0;
+                dimming = pwmStep (i,dimmingTime);
+                pwm_list[i].isSunrise = false;
+                pwm_list[i].isSunset = false;
         }
 
         // no change
@@ -220,19 +256,19 @@ static void pwm( byte i )
 // calculate remaining sunset time (if any)
 long getSunsetMillis (byte i, long &m)
 {
-        boolean midnight = false;
-        long stopTime = (long)pwm_list[i].pwmHOff * 60 * 60 + (long)pwm_list[i].pwmMOff * 60 - (long)pwm_list[i].pwmSOff;
-        long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
-        long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
+          boolean midnight = false;
+          long stopTime = (long)pwm_list[i].pwmHOff * 60 * 60 + (long)pwm_list[i].pwmMOff * 60 ;
+          long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
+          long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
 
-        if (startTime < 0) midnight = true;
+          if (startTime < 0) midnight = true;
 
-        // before midnight
-        if (currTime >= startTime && currTime <= stopTime)
-        {
-                m = (long) (stopTime - currTime) * 1000;
-                return m;
-        }
+          // before midnight
+          if (currTime >= startTime && currTime <= stopTime)
+          {
+                  m = (long) (stopTime - currTime) * 1000;
+                  return m;
+          }
 
         // midnight crossing
         if (midnight)
@@ -256,7 +292,7 @@ long getSunsetMillis (byte i, long &m)
 long getSunriseMillis (byte i, long &m)
 {
         // in seconds
-        long startTime = (long)pwm_list[i].pwmHOn * 60 * 60 + (long)pwm_list[i].pwmMOn * 60 + (long)pwm_list[i].pwmSOn;
+        long startTime = (long)pwm_list[i].pwmHOn * 60 * 60 + (long)pwm_list[i].pwmMOn * 60;
         long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (int)tm.Second;
         long stopTime = startTime + (long)pwm_list[i].pwmSr * 60;
 
