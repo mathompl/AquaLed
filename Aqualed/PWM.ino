@@ -56,6 +56,9 @@ void setupPWMPins ()
                 }
                 pwm_list[i].pwmNow = 0;
                 pwm_list[i].pwmTest = 0;
+                pwm_list[i].dimmingStart = false;
+                pwm_list[i].recoverLastState = true;
+
         }
 
         #ifndef NO_I2C
@@ -78,27 +81,25 @@ boolean pwmStep (byte i, long dimmingTime)
         byte pwmGoal = pwm_list[i].pwmGoal;
 
         // mamy co chcemy, precz
-        if (pwmNow == pwmGoal) return dimming;
+        if (pwmNow == pwmGoal)
+        {
+                pwm_list[i].dimmingStart = false;
+                pwm_list[i].recoverLastState = false;
+                return dimming;
+        }
 
         double step;
 
+// full pwm scale dimming when no other data
         double max = 255;
 
-        if (pwm_list[i].isSunset || pwm_list[i].isSunrise)
+// scale dimming
+        if (pwm_list[i].dimmingStart == true)
         {
-          max = (double) pwmSS[i];
-
+                max = (double) pwm_list[i].dimmingScale;
         }
 
         step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
-        /*if (i == 3 && (pwm_list[i].isSunset || pwm_list[i].isSunrise))
-        {
-          Serial.println (dimmingTime);
-          Serial.println (step);
-          Serial.println (max);
-          Serial.println ();
-
-        }*/
 
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
@@ -108,20 +109,40 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwmGoal > pwmNow)
         {
                 pwmNow = pwmNow + step;
-                if (pwmNow > pwmGoal ) pwmNow = pwmGoal;
+                if (pwmNow >= pwmGoal || pwmNow+0.1 >=pwmGoal ) pwmNow = pwmGoal;
         }
         else
         {
                 pwmNow = pwmNow - step;
-                if (pwmNow < 0 || pwmNow < 0.1) pwmNow = 0;
+                if (pwmNow <= 0 || pwmNow < 0.1) pwmNow = 0;
         }
         pwm_list[i].pwmNow = pwmNow;
         return true;
 }
 
+// calculate when dimming actualy starts to scale dimming values
+static bool isDimmingStart (int i)
+{
+        if (pwm_list[i].pwmGoal != pwm_list[i].pwmNow  && !pwm_list[i].dimmingStart) return true;
+        else return false;
+}
+
+static void forcePWMRecovery ()
+{
+        for (int i = 0; i < PWMS; i++)
+        {
+                pwm_list[i].recoverLastState = true;
+        }
+}
+
 // calculate and set pwm value and drive led
 static void pwm( byte i )
 {
+        pwm_list[i].isSunset= false;
+        pwm_list[i].isSunrise= false;
+        pwm_list[i].isNight= false;
+
+
 
         long ssMillis;
         long srMillis;
@@ -142,45 +163,85 @@ static void pwm( byte i )
         if (testMode)
         {
                 pwm_list[i].pwmNow = pwm_list[i].pwmTest;
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
+                pwm_list[i].dimmingStart = false;
         }
         else
         // force off
         if (pwm_list[i].pwmStatus == 0 || SETTINGS.forceOFF == 1)
         {
                 pwm_list[i].pwmGoal = 0;
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = pwm_list[i].pwmNow;
+                }
+
                 dimming = pwmStep (i, dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
         }
         else
         // force night
         if (SETTINGS.forceNight == 1)
         {
-                if (pwm_list[i].pwmKeepLight) pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
+                if (pwm_list[i].pwmKeepLight)
+                {
+                  #ifdef PWM_FORCE_NIGHT_VALUE
+                        pwm_list[i].pwmGoal = PWM_FORCE_NIGHT_VALUE;
+                  #else
+                        pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
+                  #endif
+                }
                 else
                         pwm_list[i].pwmGoal = 0;
+
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMin);
+                }
+                pwm_list[i].isNight= true;
                 dimming = pwmStep (i, dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
         }
         else
         // ambient/user program
         if (SETTINGS.forceAmbient == 1)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmAmbient;
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmAmbient);
+                }
+
                 dimming = pwmStep (i, dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
+        }
+        // restore state after shutdown or forced mode
+        else if (pwm_list[i].recoverLastState)
+        {
+                pwm_list[i].pwmGoal = pwm_list[i].pwmSaved;
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = pwm_list[i].pwmSaved;
+                }
+
+                dimming = pwmStep (i,dimmingTime);
         }
         // night light
         else if (!state && pwm_list[i].pwmKeepLight)
         {
+              #ifdef PWM_FORCE_NIGHT_VALUE
+                pwm_list[i].pwmGoal = PWM_FORCE_NIGHT_VALUE;
+              #else
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMin;
+              #endif
+
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMin);
+                }
+                pwm_list[i].isNight= true;
                 dimming = pwmStep (i, dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
         }
 
         else
@@ -188,37 +249,56 @@ static void pwm( byte i )
         if ( getSunsetMillis(i, ssMillis) > 0)
         {
                 // scale current pwm value
-                if  (pwm_list[i].isSunset == false) pwmSS[i] = pwm_list[i].pwmNow;
 
                 pwm_list[i].isSunset = true;
-                pwm_list[i].pwmGoal = 0;
+                if (pwm_list[i].pwmKeepLight) pwm_list[i].pwmGoal = pwm_list[i].pwmMin; else pwm_list[i].pwmGoal = 0;
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMax);
+                }
+
                 dimming = pwmStep (i, ssMillis);
         }
         else
         //sunrise
         if ( getSunriseMillis(i, srMillis) > 0)
         {
-          // scale current pwm value
-              if  (pwm_list[i].isSunrise == false) pwmSS[i] = pwm_list[i].pwmMax;
 
                 pwm_list[i].isSunrise = true;
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
+
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMax);
+                }
+
                 dimming = pwmStep (i, srMillis);
         }
         else if (state)
         {
                 pwm_list[i].pwmGoal = pwm_list[i].pwmMax;
+
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMax);
+                }
+
                 dimming = pwmStep (i,dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
         }
         // scheduled off
         else if (!state && !pwm_list[i].pwmKeepLight)
         {
                 pwm_list[i].pwmGoal = 0;
-                dimming = pwmStep (i,dimmingTime);
-                pwm_list[i].isSunrise = false;
-                pwm_list[i].isSunset = false;
+
+                if (isDimmingStart(i))
+                {
+                        pwm_list[i].dimmingStart = true;
+                        pwm_list[i].dimmingScale = pwm_list[i].pwmNow;
+                }
+                dimming = pwmStep (i,dimmingT ime);
         }
 
         // no change
@@ -239,7 +319,6 @@ static void pwm( byte i )
         else
         {
           #ifndef NO_I2C
-                // check - todo: 12bit resolution - now cast 8 bit to 12 bit - precision loss
                 // pwm module does not need constant updates
                 if (pwmLast[i] != pwm_list[i].pwmNow)
                 {
@@ -256,19 +335,19 @@ static void pwm( byte i )
 // calculate remaining sunset time (if any)
 long getSunsetMillis (byte i, long &m)
 {
-          boolean midnight = false;
-          long stopTime = (long)pwm_list[i].pwmHOff * 60 * 60 + (long)pwm_list[i].pwmMOff * 60 ;
-          long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
-          long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
+        boolean midnight = false;
+        long stopTime = (long)pwm_list[i].pwmHOff * 60 * 60 + (long)pwm_list[i].pwmMOff * 60;
+        long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
+        long startTime = stopTime - (long) pwm_list[i].pwmSs * 60;
 
-          if (startTime < 0) midnight = true;
+        if (startTime < 0) midnight = true;
 
-          // before midnight
-          if (currTime >= startTime && currTime <= stopTime)
-          {
-                  m = (long) (stopTime - currTime) * 1000;
-                  return m;
-          }
+        // before midnight
+        if (currTime >= startTime && currTime <= stopTime)
+        {
+                m = (long) (stopTime - currTime) * 1000;
+                return m;
+        }
 
         // midnight crossing
         if (midnight)
@@ -339,8 +418,8 @@ void pwm ()
                 previousMillisEepromState = currentMillis;
                 for (int i = 0; i < PWMS; i++)
                 {
-                        writeEEPROMPWMState(i);
-
+                        // write state only in normal operation
+                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient) writeEEPROMPWMState(i);
                 }
         }
 }

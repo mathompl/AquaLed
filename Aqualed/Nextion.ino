@@ -177,6 +177,11 @@ void nexInit(void)
         wdt_reset();
 }
 
+void nxReinit()
+{
+        sendCommandPGMLong(CMD_INIT3, NEXTION_BAUD_RATE, false);
+}
+
 // main touch listener
 static void nxTouch()
 {
@@ -825,7 +830,14 @@ static void handleHomePage (byte cid)
         //toggle night mode
         case 23:
                 if (SETTINGS.forceAmbient  == 1 || SETTINGS.forceOFF  == 1) return;
-                if (SETTINGS.forceNight == 1) SETTINGS.forceNight = 0; else SETTINGS.forceNight = 1;
+                if (SETTINGS.forceNight == 1)
+                {
+                        SETTINGS.forceNight = 0;
+                        forcePWMRecovery ();
+                }
+                else
+                        SETTINGS.forceNight = 1;
+
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -833,14 +845,24 @@ static void handleHomePage (byte cid)
         // ambient toggle
         case 25:
                 if (SETTINGS.forceOFF == 1 || SETTINGS.forceNight == 1) return;
-                if (SETTINGS.forceAmbient == 1) SETTINGS.forceAmbient = 0; else SETTINGS.forceAmbient = 1;
+                if (SETTINGS.forceAmbient == 1)
+                {
+                        SETTINGS.forceAmbient = 0;
+                        forcePWMRecovery ();
+                }
+                else SETTINGS.forceAmbient = 1;
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
 
         // off/on toggle
         case 22:
-                if (SETTINGS.forceOFF == 1) SETTINGS.forceOFF = 0; else SETTINGS.forceOFF = 1;
+                if (SETTINGS.forceOFF == 1)
+                {
+                        SETTINGS.forceOFF = 0;
+                        forcePWMRecovery ();
+                }
+                else SETTINGS.forceOFF = 1;
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -890,7 +912,7 @@ static void updateWaterTemp() {
                         dtostrf(temperatureWater, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_WT, str_temp, xcelc, NULL);
                         nxtemperatureWater = temperatureWater;
-                        if (temperatureWater < 25 || temperatureWater > SETTINGS.max_water_temp)
+                        if (temperatureWater < WATER_TEMPERATURE_MIN || temperatureWater > SETTINGS.max_water_temp)
                                 sendCommandPGM(CMD_SET_WT_RED);
                         else
                                 sendCommandPGM(CMD_SET_WT_GREEN);
@@ -958,7 +980,7 @@ static void updateHomePage() {
                         {
                                 sendCommandPGM_C(17 + i, STR_OFF);
                         }
-                        else if (pwm_list[i].pwmNow == pwm_list[i].pwmMin && pwm_list[i].pwmKeepLight )
+                        else if (pwm_list[i].isNight)
                         {
                                 sendCommandPGM_C (17 + i, STR_NIGHT);
                         }
@@ -969,6 +991,10 @@ static void updateHomePage() {
                         else if (pwm_list[i].isSunset )
                         {
                                 sendCommandPGM_C (17 + i, STR_SUNSET);
+                        }
+                        else if (pwm_list[i].recoverLastState)
+                        {
+                                sendCommandPGM_C (17 + i, STR_RECOVER);
                         }
                         else
                         {
@@ -1023,9 +1049,9 @@ static void timeDisplay(tmElements_t tm) {
 
 }
 /*
-void debugInfo ()
-{
-        #ifndef NO_DEBUG
+   void debugInfo ()
+   {
+ #ifndef NO_DEBUG
             char tmp[30] = {0};
             memset(tmp, 0, sizeof (tmp));
             long days=0;
@@ -1043,11 +1069,16 @@ void debugInfo ()
             sprintf (tmp + strlen (tmp), "%02lu %02lu:%02lu:%02lu", days,  hours, mins, secs);
             strcpy (tmp + strlen(tmp), "\0");
             sendCommandPGM (CMD_SET_T1, tmp, NULL, true);
-        #endif
-}*/
+ #endif
+   }*/
 
 void nxDisplay ()
 {
+        if (currentMillis - previousNxReinit > NEXTION_REINIT_TIME)
+        {
+                previousNxReinit = currentMillis;
+//                nxReinit();
+        }
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
         {
                 previousNxInfo = currentMillis;

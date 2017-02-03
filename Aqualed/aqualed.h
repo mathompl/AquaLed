@@ -64,6 +64,9 @@
 
 #define PWM_MAX 255
 
+// overwrite night mode values (when 1% resolution is too much)
+//#define PWM_FORCE_NIGHT_VALUE 1
+
 // i2c
 #define PWM_I2C_MIN 0
 #define PWM_I2C_MAX 4095
@@ -79,8 +82,8 @@
 #define SUMP_FANS_PIN 7
 
 // resolutions
-#define PWM_RESOLUTION 100 //ms
-#define PWM_MIN_STEP 0.0005
+#define PWM_RESOLUTION 500 //ms
+#define PWM_MIN_STEP 0.00001
 #define NX_INFO_RESOLUTION 1000 //ms
 #define EEPROM_STATE_RESOLUTION 5000 //ms
 
@@ -99,6 +102,8 @@
 
 #define ON  true
 #define OFF  false
+
+#define WATER_TEMPERATURE_MIN 24
 
 typedef struct
 {
@@ -123,17 +128,16 @@ typedef struct
         byte pwmTest;
         byte isSunrise;
         byte isSunset;
+        byte isNight;
         byte pwmAmbient;
-        byte watts;
+        byte dimmingScale;
+        bool dimmingStart;
+        bool recoverLastState;
 } PWM;
 PWM pwm_list[PWMS];
 
 double pwmLast[PWMS] = {0};
 double pwmNxLast[PWMS] = {0};
-
-// pwm sunset/sunrise goals
-byte pwmSS[PWMS] = {0};
-
 
 struct SETTINGS_STRUCT
 {
@@ -153,7 +157,7 @@ struct SETTINGS_STRUCT
 };
 
 byte sensorsList[7][8];
-bool  sensorsDetected[7];
+bool sensorsDetected[7];
 
 SETTINGS_STRUCT SETTINGS =
 {

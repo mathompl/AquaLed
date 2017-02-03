@@ -3,6 +3,10 @@
 
 #define NEXTION_BAUD_RATE 115200
 
+// needed when hotplugging nextion when baud rate !=9600
+#define NEXTION_REINIT_TIME 5000 //ms
+unsigned long previousNxReinit= 0;
+
 // uncomment for use nextion editor simulator
 // needs additional settings for non-standard baud rates
 //#define NEXTION_SIMULATOR 1
@@ -153,6 +157,7 @@ uint8_t nxScreen = 0;
 #define STR_DASH 5
 #define STR_SLASH 6
 #define STR_EMPTY 7
+#define STR_RECOVER 8
 
 #define COLOR_RED 32768
 #define COLOR_GREEN 1024
@@ -376,6 +381,7 @@ char const  xsunset[] PROGMEM = "ZACHOD\0";
 char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
+char const  xrecover[]  PROGMEM = "POWROT\0";
 
 char const xcelc[]  = "'C\0";
 char const xpercent[]  = "%\0";
@@ -390,5 +396,6 @@ PGM_P const nxConstStrings[] PROGMEM
   xsunset, //4
   xdash, //5
   xslash, //6
-  xempty //7
+  xempty, //7
+  xrecover //8
 };
