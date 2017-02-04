@@ -298,7 +298,7 @@ static void pwm( byte i )
                         pwm_list[i].dimmingStart = true;
                         pwm_list[i].dimmingScale = pwm_list[i].pwmNow;
                 }
-                dimming = pwmStep (i,dimmingT ime);
+                dimming = pwmStep (i,dimmingTime);
         }
 
         // no change
