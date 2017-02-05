@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
+#define DEFAULT_BAUD_RATE 9600
 #define NEXTION_BAUD_RATE 115200
 
 // needed when hotplugging nextion when baud rate !=9600
@@ -376,16 +377,17 @@ PGM_P const nxStrings[] PROGMEM
 char const  xon[] PROGMEM = "ON\0";
 char const  xoff[] PROGMEM = "OFF\0";
 char const  xnight[] PROGMEM = "NOC\0";
-char const  xsunrise[] PROGMEM = "WSCHOD\0";
-char const  xsunset[] PROGMEM = "ZACHOD\0";
+char const  xsunrise[] PROGMEM = "WSCH\0";
+char const  xsunset[] PROGMEM = "ZACH\0";
 char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
-char const  xrecover[]  PROGMEM = "POWROT\0";
+char const  xrecover[]  PROGMEM = "POWR\0";
 
 char const xcelc[]  = "'C\0";
 char const xpercent[]  = "%\0";
 char const  xxdash[]  = "-\0";
+char const  xxspace[]  = " \0";
 
 PGM_P const nxConstStrings[] PROGMEM
 {

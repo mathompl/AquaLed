@@ -158,6 +158,7 @@ static void pwm( byte i )
                 if (currentTimeSec >= pwmOn && currentTimeSec <= 86400) state = true;
                 if (currentTimeSec >= 0 && currentTimeSec < pwmOff) state = true;
         }
+
         long dimmingTime = (long) SETTINGS.pwmDimmingTime * (long)1000;
         //test mode
         if (testMode)
@@ -255,7 +256,7 @@ static void pwm( byte i )
                 if (isDimmingStart(i))
                 {
                         pwm_list[i].dimmingStart = true;
-                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMax);
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmGoal);
                 }
 
                 dimming = pwmStep (i, ssMillis);

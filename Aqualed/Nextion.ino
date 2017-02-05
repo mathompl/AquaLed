@@ -179,7 +179,12 @@ void nexInit(void)
 
 void nxReinit()
 {
+        Serial.begin(9600);
+        Serial.flush ();
+        Serial.end ();
         sendCommandPGMLong(CMD_INIT3, NEXTION_BAUD_RATE, false);
+        Serial.begin(NEXTION_BAUD_RATE);
+
 }
 
 // main touch listener
@@ -975,34 +980,44 @@ static void updateHomePage() {
         {
                 if (pwmNxLast[i] != pwm_list[i].pwmNow || forceRefresh)
                 {
+                        char buf2[15] = {0};
+                        memset(buf2, 0, sizeof (buf2));
+
+
+
+                        byte percent =  mapRound((byte)pwm_list[i].pwmNow, 0, 255, 0, 100);
+                        char buf[3] = {0};
+                        itoa(percent, buf, 10);
+                        strcpy (buf2 + strlen(buf2), buf);
+                        strcpy (buf2 + strlen(buf2), xpercent);
 
                         if (pwm_list[i].pwmNow == 0 || pwm_list[i].pwmStatus == 0)
                         {
-                                sendCommandPGM_C(17 + i, STR_OFF);
+                                strcpy (buf2 + strlen(buf2), xxspace);
+                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_OFF])));
                         }
                         else if (pwm_list[i].isNight)
                         {
-                                sendCommandPGM_C (17 + i, STR_NIGHT);
+                          strcpy (buf2 + strlen(buf2), xxspace);
+                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_NIGHT])));
                         }
                         else if (pwm_list[i].isSunrise )
                         {
-                                sendCommandPGM_C (17 + i, STR_SUNRISE);
+                          strcpy (buf2 + strlen(buf2), xxspace);
+                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNRISE])));
                         }
                         else if (pwm_list[i].isSunset )
                         {
-                                sendCommandPGM_C (17 + i, STR_SUNSET);
+                          strcpy (buf2 + strlen(buf2), xxspace);
+                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNSET])));
                         }
                         else if (pwm_list[i].recoverLastState)
                         {
-                                sendCommandPGM_C (17 + i, STR_RECOVER);
+                          strcpy (buf2 + strlen(buf2), xxspace);
+                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_RECOVER])));
                         }
-                        else
-                        {
-                                byte percent =  mapRound((byte)pwm_list[i].pwmNow, 0, 255, 0, 100);
-                                char buf[3] = {0};
-                                itoa(percent, buf, 10);
-                                sendCommandPGM (17 + i, buf, xpercent, NULL);
-                        }
+                        strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_EMPTY])));
+                        sendCommandPGM (17 + i, buf2, NULL);
                         pwmNxLast[i] = pwm_list[i].pwmNow;
                 }
         }
@@ -1077,7 +1092,7 @@ void nxDisplay ()
         if (currentMillis - previousNxReinit > NEXTION_REINIT_TIME)
         {
                 previousNxReinit = currentMillis;
-//                nxReinit();
+                //nxReinit();
         }
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
         {
