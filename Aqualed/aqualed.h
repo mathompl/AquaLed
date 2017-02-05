@@ -70,7 +70,9 @@
 // i2c
 #define PWM_I2C_MIN 0
 #define PWM_I2C_MAX 4095
-#define I2C_FREQ 100 //hz
+#define I2C_FREQ 500 //hz
+byte i2c_invert=0;
+
 
 
 // termometry

@@ -323,6 +323,11 @@ static void pwm( byte i )
                 // pwm module does not need constant updates
                 if (pwmLast[i] != pwm_list[i].pwmNow)
                 {
+                        long v;
+                        if (i2c_invert == 1)
+                        long v = mapRound(pwm_list[i].pwmNow, 255, 0, PWM_I2C_MIN, PWM_I2C_MAX);
+                        else
+
                         long v = mapRound(pwm_list[i].pwmNow, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
                         pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
                 }
