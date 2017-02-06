@@ -97,10 +97,28 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwm_list[i].dimmingStart == true)
         {
                 max = (double) pwm_list[i].dimmingScale;
+                //max = (double) abs (pwm_list[i].pwmGoal - pwm_list[i].pwmNow);
+
+                step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
+
         }
 
-        step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
+        #ifdef DEBUG
+        if (i == 3 )
+        {
+                Serial.print ("step = ");
+                Serial.print (step,10);
+                Serial.print (" pwmnow = ");
+                Serial.print (pwm_list[i].pwmNow);
+                Serial.print (" pwmgoal = ");
+                Serial.print (pwm_list[i].pwmGoal);
+                Serial.print (" i2c = ");
 
+                int v = mapDouble(pwm_list[i].pwmNow, 0.0, 255.0, PWM_I2C_MIN, PWM_I2C_MAX);
+                Serial.print (v);
+                Serial.println ();
+        }
+        #endif
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -141,8 +159,6 @@ static void pwm( byte i )
         pwm_list[i].isSunset= false;
         pwm_list[i].isSunrise= false;
         pwm_list[i].isNight= false;
-
-
 
         long ssMillis;
         long srMillis;
@@ -222,7 +238,7 @@ static void pwm( byte i )
                 if (isDimmingStart(i))
                 {
                         pwm_list[i].dimmingStart = true;
-                        pwm_list[i].dimmingScale = pwm_list[i].pwmSaved;
+                        pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmSaved);
                 }
 
                 dimming = pwmStep (i,dimmingTime);
@@ -247,7 +263,7 @@ static void pwm( byte i )
 
         else
         //sunset
-        if ( getSunsetMillis(i, ssMillis) > 0)
+        if ( getSunsetMillis (i, ssMillis) > 0)
         {
                 // scale current pwm value
 
@@ -257,9 +273,10 @@ static void pwm( byte i )
                 {
                         pwm_list[i].dimmingStart = true;
                         pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmGoal);
+                        pwm_list[i].dimmingTime = ssMillis;
                 }
 
-                dimming = pwmStep (i, ssMillis);
+                dimming = pwmStep (i, pwm_list[i].dimmingTime);
         }
         else
         //sunrise
@@ -273,9 +290,11 @@ static void pwm( byte i )
                 {
                         pwm_list[i].dimmingStart = true;
                         pwm_list[i].dimmingScale = abs(pwm_list[i].pwmNow-pwm_list[i].pwmMax);
+                        pwm_list[i].dimmingTime = srMillis;
+
                 }
 
-                dimming = pwmStep (i, srMillis);
+                dimming = pwmStep (i, pwm_list[i].dimmingTime);
         }
         else if (state)
         {
@@ -325,9 +344,9 @@ static void pwm( byte i )
                 {
                         long v;
                         if (i2c_invert == 1)
-                                v = mapRound(pwm_list[i].pwmNow, 255, 0, PWM_I2C_MIN, PWM_I2C_MAX);
+                                v = mapDouble(pwm_list[i].pwmNow, 255.0, 0.0, PWM_I2C_MIN, PWM_I2C_MAX);
                         else
-                                v = mapRound(pwm_list[i].pwmNow, 0, 255, PWM_I2C_MIN, PWM_I2C_MAX);
+                                v = mapDouble(pwm_list[i].pwmNow, 0.0, 255.0, PWM_I2C_MIN, PWM_I2C_MAX);
                         pwm_i2c.setPWM(pwm_list[i].pwmPin, 0, v );
                 }
           #endif
@@ -424,7 +443,7 @@ void pwm ()
                 for (int i = 0; i < PWMS; i++)
                 {
                         // write state only in normal operation
-                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient && pwm_list[i].pwmSaved!=pwm_list[i].pwmNow)
+                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient)
                         {
                                 pwm_list[i].pwmSaved = pwm_list[i].pwmNow;
                                 writeEEPROMPWMState(i);
@@ -436,4 +455,9 @@ void pwm ()
 long mapRound(long x, long in_min, long in_max, long out_min, long out_max)
 {
         return ((x - in_min) * (out_max - out_min) + (in_max - in_min) / 2) / (in_max - in_min) + out_min;
+}
+
+int mapDouble(double x, double in_min, double in_max, int out_min, int out_max)
+{
+        return (int)((x - in_min) * ((double)out_max - (double)out_min)  / (in_max - in_min) + (double)out_min);
 }

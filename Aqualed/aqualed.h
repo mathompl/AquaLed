@@ -11,14 +11,14 @@
 /* Configuration file */
 
 // uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
-#define USE_I2C_PWM_MODULE
+//#define USE_I2C_PWM_MODULE
 
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
 //#define NO_TEMPERATURE
-
+//#define DEBUG
 
 // ARDUINO build-in PWM pins config
 #ifdef USE_I2C_PWM_MODULE
@@ -84,7 +84,7 @@ byte i2c_invert=0;
 #define SUMP_FANS_PIN 7
 
 // resolutions
-#define PWM_RESOLUTION 500 //ms
+#define PWM_RESOLUTION 500.0 //ms
 #define PWM_MIN_STEP 0.00001
 #define NX_INFO_RESOLUTION 1000 //ms
 #define EEPROM_STATE_RESOLUTION 5000 //ms
@@ -128,12 +128,14 @@ typedef struct
         byte pwmGoal;
         byte pwmSaved;
         byte pwmTest;
+        ;
         byte isSunrise;
         byte isSunset;
         byte isNight;
         byte pwmAmbient;
         byte dimmingScale;
         bool dimmingStart;
+        long dimmingTime;
         bool recoverLastState;
 } PWM;
 PWM pwm_list[PWMS];
