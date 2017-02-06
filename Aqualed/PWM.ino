@@ -424,7 +424,11 @@ void pwm ()
                 for (int i = 0; i < PWMS; i++)
                 {
                         // write state only in normal operation
-                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient) writeEEPROMPWMState(i);
+                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient && pwm_list[i].pwmSaved!=pwm_list[i].pwmNow)
+                        {
+                                pwm_list[i].pwmSaved = pwm_list[i].pwmNow;
+                                writeEEPROMPWMState(i);
+                        }
                 }
         }
 }
