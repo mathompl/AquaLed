@@ -46,7 +46,7 @@ uint8_t nxScreen = 0;
 #define PAGE_SCREENSAVER 6
 #define PAGE_THERMO 7
 #define PAGE_SCHEDULE 8
-#define PAGE_PWM_LIST 9
+#define PAGE_pwmChannel 9
 
 // commands
 #define CMD_SET_HOUR  0

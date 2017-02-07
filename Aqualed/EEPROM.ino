@@ -34,27 +34,27 @@ static int getEEPROMAddr( byte n ) {
 void writeEEPROMPWMConfig (byte pwmNumber)
 {
         int startAddr = getEEPROMAddr( pwmNumber );
-        EEPROM.write( startAddr + 1,  pwm_list[pwmNumber].pwmPin );
-        EEPROM.write( startAddr + 2,  pwm_list[pwmNumber].pwmStatus );
-        EEPROM.write( startAddr + 3,  pwm_list[pwmNumber].pwmHOn );
-        EEPROM.write( startAddr + 4,  pwm_list[pwmNumber].pwmMOn );
-        EEPROM.write( startAddr + 5,  pwm_list[pwmNumber].pwmSOn );
-        EEPROM.write( startAddr + 6,  pwm_list[pwmNumber].pwmHOff );
-        EEPROM.write( startAddr + 7,  pwm_list[pwmNumber].pwmMOff );
-        EEPROM.write( startAddr + 8,  pwm_list[pwmNumber].pwmSOff );
-        EEPROM.write( startAddr + 9,  pwm_list[pwmNumber].pwmMin );
-        EEPROM.write( startAddr + 10,  pwm_list[pwmNumber].pwmMax );
-        EEPROM.write( startAddr + 11,  pwm_list[pwmNumber].pwmSr );
-        EEPROM.write( startAddr + 12,  pwm_list[pwmNumber].pwmSs );
-        EEPROM.write( startAddr + 13,  pwm_list[pwmNumber].pwmKeepLight );
-        EEPROM.write( startAddr + 15,  pwm_list[pwmNumber].pwmAmbient );
+        EEPROM.write( startAddr + 1,  pwmChannel[pwmNumber].pwmPin );
+        EEPROM.write( startAddr + 2,  pwmChannel[pwmNumber].pwmStatus );
+        EEPROM.write( startAddr + 3,  pwmChannel[pwmNumber].pwmHOn );
+        EEPROM.write( startAddr + 4,  pwmChannel[pwmNumber].pwmMOn );
+        EEPROM.write( startAddr + 5,  pwmChannel[pwmNumber].pwmSOn );
+        EEPROM.write( startAddr + 6,  pwmChannel[pwmNumber].pwmHOff );
+        EEPROM.write( startAddr + 7,  pwmChannel[pwmNumber].pwmMOff );
+        EEPROM.write( startAddr + 8,  pwmChannel[pwmNumber].pwmSOff );
+        EEPROM.write( startAddr + 9,  pwmChannel[pwmNumber].pwmMin );
+        EEPROM.write( startAddr + 10,  pwmChannel[pwmNumber].pwmMax );
+        EEPROM.write( startAddr + 11,  pwmChannel[pwmNumber].pwmSr );
+        EEPROM.write( startAddr + 12,  pwmChannel[pwmNumber].pwmSs );
+        EEPROM.write( startAddr + 13,  pwmChannel[pwmNumber].pwmKeepLight );
+        EEPROM.write( startAddr + 15,  pwmChannel[pwmNumber].pwmAmbient );
 }
 
 void writeEEPROMPWMState (byte pwmNumber)
 {
         int startAddr = getEEPROMAddr( pwmNumber );
-        EEPROM.write( startAddr + 14,  pwm_list[pwmNumber].pwmTest );
-        EEPROM.write( startAddr + 16,  (byte) pwm_list[pwmNumber].pwmNow );
+        EEPROM.write( startAddr + 14,  pwmChannel[pwmNumber].pwmTest );
+        EEPROM.write( startAddr + 16,  (byte) pwmChannel[pwmNumber].pwmNow );
 }
 
 static boolean isFirstRun ()
@@ -97,26 +97,26 @@ void writeEEPROMDefaults ()
 
                 for (int i = 0; i < PWMS; i++ )
                 {
-                        pwm_list[i].pwmStatus = 0;
-                        pwm_list[i].pwmHOn = 0;
-                        pwm_list[i].pwmMOn = 0;
-                        pwm_list[i].pwmSOn = 0;
-                        pwm_list[i].pwmHOff = 0;
-                        pwm_list[i].pwmMOff = 0;
-                        pwm_list[i].pwmSOff = 0;
-                        pwm_list[i].pwmMin = 0;
-                        pwm_list[i].pwmMax = 0;
-                        pwm_list[i].pwmSr = 0;
-                        pwm_list[i].pwmSs = 0;
-                        pwm_list[i].pwmKeepLight = 0;
-                        pwm_list[i].pwmInvert = 0;
-                        pwm_list[i].pwmNow = 0;
-                        pwm_list[i].pwmGoal = 0;
-                        pwm_list[i].pwmSaved = 0;
-                        pwm_list[i].pwmTest = 0;
-                        pwm_list[i].isSunrise = 0;
-                        pwm_list[i].isSunset = 0;
-                        pwm_list[i].pwmAmbient = 0;
+                        pwmChannel[i].pwmStatus = 0;
+                        pwmChannel[i].pwmHOn = 0;
+                        pwmChannel[i].pwmMOn = 0;
+                        pwmChannel[i].pwmSOn = 0;
+                        pwmChannel[i].pwmHOff = 0;
+                        pwmChannel[i].pwmMOff = 0;
+                        pwmChannel[i].pwmSOff = 0;
+                        pwmChannel[i].pwmMin = 0;
+                        pwmChannel[i].pwmMax = 0;
+                        pwmChannel[i].pwmSr = 0;
+                        pwmChannel[i].pwmSs = 0;
+                        pwmChannel[i].pwmKeepLight = 0;
+                        pwmChannel[i].pwmInvert = 0;
+                        pwmChannel[i].pwmNow = 0;
+                        pwmChannel[i].pwmGoal = 0;
+                        pwmChannel[i].pwmSaved = 0;
+                        pwmChannel[i].pwmTest = 0;
+                        pwmChannel[i].isSunrise = 0;
+                        pwmChannel[i].isSunset = 0;
+                        pwmChannel[i].pwmAmbient = 0;
 
                         writeEEPROMPWMConfig (i);
                         writeEEPROMPWMState (i);
@@ -197,21 +197,21 @@ void eEpromRead( ) {
         for (int i = 0; i < PWMS; i++)
         {
                 int startAddr = getEEPROMAddr( i );
-                pwm_list[i].pwmStatus = EEPROM.read( startAddr + 2 );
-                pwm_list[i].pwmHOn = EEPROM.read( startAddr + 3 );
-                pwm_list[i].pwmMOn = EEPROM.read( startAddr + 4 );
-                pwm_list[i].pwmSOn = EEPROM.read( startAddr + 5 );
-                pwm_list[i].pwmHOff = EEPROM.read( startAddr + 6 );
-                pwm_list[i].pwmMOff = EEPROM.read( startAddr + 7 );
-                pwm_list[i].pwmSOff = EEPROM.read( startAddr + 8 );
-                pwm_list[i].pwmMin = EEPROM.read( startAddr + 9 );
-                pwm_list[i].pwmMax = EEPROM.read( startAddr + 10 );
-                pwm_list[i].pwmSr = EEPROM.read( startAddr + 11 );
-                pwm_list[i].pwmSs = EEPROM.read( startAddr + 12 );
-                pwm_list[i].pwmKeepLight = EEPROM.read( startAddr + 13 );
-                pwm_list[i].pwmTest = EEPROM.read( startAddr + 14 );
-                pwm_list[i].pwmAmbient = EEPROM.read( startAddr + 15 );
-                pwm_list[i].pwmSaved = EEPROM.read( startAddr + 16);
+                pwmChannel[i].pwmStatus = EEPROM.read( startAddr + 2 );
+                pwmChannel[i].pwmHOn = EEPROM.read( startAddr + 3 );
+                pwmChannel[i].pwmMOn = EEPROM.read( startAddr + 4 );
+                pwmChannel[i].pwmSOn = EEPROM.read( startAddr + 5 );
+                pwmChannel[i].pwmHOff = EEPROM.read( startAddr + 6 );
+                pwmChannel[i].pwmMOff = EEPROM.read( startAddr + 7 );
+                pwmChannel[i].pwmSOff = EEPROM.read( startAddr + 8 );
+                pwmChannel[i].pwmMin = EEPROM.read( startAddr + 9 );
+                pwmChannel[i].pwmMax = EEPROM.read( startAddr + 10 );
+                pwmChannel[i].pwmSr = EEPROM.read( startAddr + 11 );
+                pwmChannel[i].pwmSs = EEPROM.read( startAddr + 12 );
+                pwmChannel[i].pwmKeepLight = EEPROM.read( startAddr + 13 );
+                pwmChannel[i].pwmTest = EEPROM.read( startAddr + 14 );
+                pwmChannel[i].pwmAmbient = EEPROM.read( startAddr + 15 );
+                pwmChannel[i].pwmSaved = EEPROM.read( startAddr + 16);
 
         }
         readEEPROMSettings ();

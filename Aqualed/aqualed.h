@@ -11,7 +11,7 @@
 /* Configuration file */
 
 // uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
-//#define USE_I2C_PWM_MODULE
+#define USE_I2C_PWM_MODULE
 
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
@@ -128,7 +128,6 @@ typedef struct
         byte pwmGoal;
         byte pwmSaved;
         byte pwmTest;
-        ;
         byte isSunrise;
         byte isSunset;
         byte isNight;
@@ -138,7 +137,7 @@ typedef struct
         long dimmingTime;
         bool recoverLastState;
 } PWM;
-PWM pwm_list[PWMS];
+PWM pwmChannel[PWMS];
 
 double pwmLast[PWMS] = {0};
 double pwmNxLast[PWMS] = {0};

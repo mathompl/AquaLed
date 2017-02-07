@@ -269,7 +269,7 @@ static void handlePage (byte pid, byte cid)
                 handleSchedulePage (cid);
                 break;
 
-        case PAGE_PWM_LIST:
+        case PAGE_pwmChannel:
                 handlePWMListPage (cid);
                 break;
 
@@ -377,7 +377,7 @@ void handleTestPage (byte cid)
                 c = 70 + p;
                 sendCommandPGM (c);
                 if (!receiveNumber (&t)) return;
-                pwm_list[p].pwmTest = mapRound ((byte)t, 0, 100, 0, 255);
+                pwmChannel[p].pwmTest = mapRound ((byte)t, 0, 100, 0, 255);
                 break;
 
 
@@ -387,7 +387,7 @@ void handleTestPage (byte cid)
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_CONFIG, false);
                 testMode = false;
                 for (int i = 0; i < PWMS; i++)
-                        pwm_list[i].pwmTest = 0;
+                        pwmChannel[i].pwmTest = 0;
                 nxScreen = PAGE_CONFIG;
                 break;
 
@@ -411,65 +411,65 @@ void handlePWMPage (byte cid)
 
                 sendCommandPGM (CMD_GET_C0);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmStatus = t;
+                pwmChannel[i - 1].pwmStatus = t;
 
                 sendCommandPGM (CMD_GET_C1);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmKeepLight = t;
+                pwmChannel[i - 1].pwmKeepLight = t;
 
                 sendCommandPGM (CMD_GET_N0);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmHOn = t;
+                pwmChannel[i - 1].pwmHOn = t;
 
                 sendCommandPGM (CMD_GET_N1);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmMOn = t;
+                pwmChannel[i - 1].pwmMOn = t;
 
                 sendCommandPGM (CMD_GET_N2);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmHOff = t;
+                pwmChannel[i - 1].pwmHOff = t;
 
                 sendCommandPGM (CMD_GET_N3);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmMOff = t;
+                pwmChannel[i - 1].pwmMOff = t;
 
                 sendCommandPGM (CMD_GET_N4);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmSr = t;
+                pwmChannel[i - 1].pwmSr = t;
 
                 sendCommandPGM (CMD_GET_N5);
                 if (!receiveNumber (&t)) return;
-                pwm_list[i - 1].pwmSs = t;
+                pwmChannel[i - 1].pwmSs = t;
 
                 sendCommandPGM (CMD_GET_N6);
                 if (!receiveNumber (&t)) return;
 
                 tmin = mapRound ((byte)t, 0, 100, 0, 255);
-                pwm_list[i - 1].pwmMin = tmin;
+                pwmChannel[i - 1].pwmMin = tmin;
 
                 sendCommandPGM (CMD_GET_N7);
                 if (!receiveNumber (&t)) return;
 
                 tmax = mapRound ((byte)t, 0, 100, 0, 255);
-                pwm_list[i - 1].pwmMax = tmax;
+                pwmChannel[i - 1].pwmMax = tmax;
 
                 sendCommandPGM (CMD_GET_N8);
                 if (!receiveNumber (&t)) return;
 
                 tamb = mapRound ((byte)t, 0, 100, 0, 255);
-                pwm_list[i - 1].pwmAmbient = tamb;
+                pwmChannel[i - 1].pwmAmbient = tamb;
 
                 lastTouch = currentTimeSec;
                 writeEEPROMPWMConfig (i - 1);
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
-                nxScreen = PAGE_PWM_LIST;
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
+                nxScreen = PAGE_pwmChannel;
                 break;
 
         //  cancel
         case 14:
                 lastTouch = currentTimeSec;
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
-                nxScreen = PAGE_PWM_LIST;
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
+                nxScreen = PAGE_pwmChannel;
                 break;
 
 
@@ -578,17 +578,17 @@ static void drawSchedule ()
         for (int i = 0; i < PWMS; i++)
         {
 
-                int min_start = (int)pwm_list[i].pwmHOn * (int)60 + (int)pwm_list[i].pwmMOn;
-                int min_stop = (int)pwm_list[i].pwmHOff * (int)60 + (int)pwm_list[i].pwmMOff;
+                int min_start = (int)pwmChannel[i].pwmHOn * (int)60 + (int)pwmChannel[i].pwmMOn;
+                int min_stop = (int)pwmChannel[i].pwmHOff * (int)60 + (int)pwmChannel[i].pwmMOff;
 
                 // background
-                if (pwm_list[i].pwmKeepLight == 1)
+                if (pwmChannel[i].pwmKeepLight == 1)
                         fillRect (offset * i + startx, starty, width, height, COLOR_DARKBLUE);
                 else
                         fillRect (offset * i + startx, starty, width, height, COLOR_RED);
 
                 // off
-                if (pwm_list[i].pwmStatus == 0) continue;
+                if (pwmChannel[i].pwmStatus == 0) continue;
 
                 // light
                 boolean midnight = false;
@@ -612,7 +612,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_GREEN);
                 }
                 // sunrise
-                int min_sunrise  = min_start + (int)pwm_list[i].pwmSr;
+                int min_sunrise  = min_start + (int)pwmChannel[i].pwmSr;
                 if (min_sunrise > min_hour) midnight = true; else midnight = false;
 
                 if (!midnight)
@@ -633,7 +633,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_BLUE);
                 }
                 // sunset
-                int min_sunset  = min_stop - (int)pwm_list[i].pwmSs;
+                int min_sunset  = min_stop - (int)pwmChannel[i].pwmSs;
                 if (min_sunset < 0) midnight = true; else midnight = false;
                 if (!midnight)
                 {
@@ -732,9 +732,9 @@ static void handleConfigPage (byte cid)
 
                 for (int i = 0; i < PWMS; i++)
                 {
-                        sendCommandPGMInt (60 + i, mapRound (pwm_list[i].pwmNow, 0, 255, 0, 100), false);
-                        sendCommandPGMInt (80 + i, mapRound (pwm_list[i].pwmNow, 0, 255, 0, 100), false);
-                        pwm_list[i].pwmTest = pwm_list[i].pwmNow;
+                        sendCommandPGMInt (60 + i, mapRound (pwmChannel[i].pwmNow, 0, 255, 0, 100), false);
+                        sendCommandPGMInt (80 + i, mapRound (pwmChannel[i].pwmNow, 0, 255, 0, 100), false);
+                        pwmChannel[i].pwmTest = pwmChannel[i].pwmNow;
                 }
 
                 break;
@@ -765,7 +765,7 @@ static void handleConfigPage (byte cid)
                 break;
         // pwm config
         case 1:
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
                 nxScreen = PAGE_PWM;
                 break;
 
@@ -791,17 +791,17 @@ static void handlePWMListPage (byte cid)
         case 7:
         case 8:
                 sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM, false);
-                sendCommandPGMInt(CMD_SET_C0, pwm_list[cid - 1].pwmStatus, false);
-                sendCommandPGMInt(CMD_SET_C1, pwm_list[cid - 1].pwmKeepLight, false);
-                sendCommandPGMInt(CMD_SET_N0, pwm_list[cid - 1].pwmHOn, false);
-                sendCommandPGMInt(CMD_SET_N1, pwm_list[cid - 1].pwmMOn, false);
-                sendCommandPGMInt(CMD_SET_N2, pwm_list[cid - 1].pwmHOff, false);
-                sendCommandPGMInt(CMD_SET_N3, pwm_list[cid - 1].pwmMOff, false);
-                sendCommandPGMInt(CMD_SET_N4, pwm_list[cid - 1].pwmSr, false);
-                sendCommandPGMInt(CMD_SET_N5, pwm_list[cid - 1].pwmSs, false);
-                tmin = mapRound (pwm_list[cid - 1].pwmMin, 0, 255, 0, 100);
-                tmax = mapRound (pwm_list[cid - 1].pwmMax, 0, 255, 0, 100);
-                tamb = mapRound (pwm_list[cid - 1].pwmAmbient, 0, 255, 0, 100);
+                sendCommandPGMInt(CMD_SET_C0, pwmChannel[cid - 1].pwmStatus, false);
+                sendCommandPGMInt(CMD_SET_C1, pwmChannel[cid - 1].pwmKeepLight, false);
+                sendCommandPGMInt(CMD_SET_N0, pwmChannel[cid - 1].pwmHOn, false);
+                sendCommandPGMInt(CMD_SET_N1, pwmChannel[cid - 1].pwmMOn, false);
+                sendCommandPGMInt(CMD_SET_N2, pwmChannel[cid - 1].pwmHOff, false);
+                sendCommandPGMInt(CMD_SET_N3, pwmChannel[cid - 1].pwmMOff, false);
+                sendCommandPGMInt(CMD_SET_N4, pwmChannel[cid - 1].pwmSr, false);
+                sendCommandPGMInt(CMD_SET_N5, pwmChannel[cid - 1].pwmSs, false);
+                tmin = mapRound (pwmChannel[cid - 1].pwmMin, 0, 255, 0, 100);
+                tmax = mapRound (pwmChannel[cid - 1].pwmMax, 0, 255, 0, 100);
+                tamb = mapRound (pwmChannel[cid - 1].pwmAmbient, 0, 255, 0, 100);
                 sendCommandPGMInt(CMD_SET_N6, tmin, false);
                 sendCommandPGMInt(CMD_SET_N7, tmax, false);
                 sendCommandPGMInt(CMD_SET_N8, tamb, false);
@@ -978,47 +978,47 @@ static void updateHomePage() {
 #endif
         for (int i = 0; i < PWMS; i++)
         {
-                if (pwmNxLast[i] != pwm_list[i].pwmNow || forceRefresh)
+                if (pwmNxLast[i] != pwmChannel[i].pwmNow || forceRefresh)
                 {
                         char buf2[15] = {0};
                         memset(buf2, 0, sizeof (buf2));
 
 
 
-                        byte percent =  mapRound((byte)pwm_list[i].pwmNow, 0, 255, 0, 100);
+                        byte percent =  mapRound((byte)pwmChannel[i].pwmNow, 0, 255, 0, 100);
                         char buf[3] = {0};
                         itoa(percent, buf, 10);
                         strcpy (buf2 + strlen(buf2), buf);
                         strcpy (buf2 + strlen(buf2), xpercent);
 
-                        if (pwm_list[i].pwmNow == 0 || pwm_list[i].pwmStatus == 0)
+                        if (pwmChannel[i].pwmNow == 0 || pwmChannel[i].pwmStatus == 0)
                         {
                                 strcpy (buf2 + strlen(buf2), xxspace);
                                 strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_OFF])));
                         }
-                        else if (pwm_list[i].isNight)
+                        else if (pwmChannel[i].isNight)
                         {
                           strcpy (buf2 + strlen(buf2), xxspace);
                           strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_NIGHT])));
                         }
-                        else if (pwm_list[i].isSunrise )
+                        else if (pwmChannel[i].isSunrise )
                         {
                           strcpy (buf2 + strlen(buf2), xxspace);
                           strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNRISE])));
                         }
-                        else if (pwm_list[i].isSunset )
+                        else if (pwmChannel[i].isSunset )
                         {
                           strcpy (buf2 + strlen(buf2), xxspace);
                           strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNSET])));
                         }
-                        else if (pwm_list[i].recoverLastState)
+                        else if (pwmChannel[i].recoverLastState)
                         {
                           strcpy (buf2 + strlen(buf2), xxspace);
                           strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_RECOVER])));
                         }
                         strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_EMPTY])));
                         sendCommandPGM (17 + i, buf2, NULL);
-                        pwmNxLast[i] = pwm_list[i].pwmNow;
+                        pwmNxLast[i] = pwmChannel[i].pwmNow;
                 }
         }
 #ifndef NO_TEMPERATURE
@@ -1119,7 +1119,7 @@ void nxDisplay ()
                     && nxScreen != PAGE_SETTIME
                     && nxScreen != PAGE_THERMO
                     && nxScreen != PAGE_SCHEDULE
-                    && nxScreen != PAGE_PWM_LIST
+                    && nxScreen != PAGE_pwmChannel
                     )
                 {
                         sendCommandPGMInt (CMD_SET_PAGE, PAGE_SCREENSAVER, false);
