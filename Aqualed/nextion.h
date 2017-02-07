@@ -375,18 +375,18 @@ PGM_P const nxStrings[] PROGMEM
   xhp2 //99
 };
 
-char const  xon[] PROGMEM = "A\0";
-char const  xoff[] PROGMEM = "T\0";
-char const  xnight[] PROGMEM = "P\0";
-char const  xsunrise[] PROGMEM = "G\0";
-char const  xsunset[] PROGMEM = "H\0";
+char const  xon[] PROGMEM = "WL\0";
+char const  xoff[] PROGMEM = "WYL\0";
+char const  xnight[] PROGMEM = "NOC\0";
+char const  xsunrise[] PROGMEM = "WSCH\0";
+char const  xsunset[] PROGMEM = "ZACH\0";
 char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
-char const  xrecover[]  PROGMEM = "D\0";
+char const  xrecover[]  PROGMEM = "^\0";
 char const  xfan[] PROGMEM = "U\0";
 
-char const xcelc[]  = "Q\0";
+char const xcelc[]  = "'C\0";
 char const xpercent[]  = "%\0";
 char const  xxdash[]  = "-\0";
 char const  xxspace[]  = " \0";

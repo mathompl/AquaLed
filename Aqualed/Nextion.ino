@@ -998,23 +998,23 @@ static void updateHomePage() {
                         }
                         else if (pwmChannel[i].isNight)
                         {
-                          strcpy (buf2 + strlen(buf2), xxspace);
-                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_NIGHT])));
+                                strcpy (buf2 + strlen(buf2), xxspace);
+                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_NIGHT])));
                         }
                         else if (pwmChannel[i].isSunrise )
                         {
-                          strcpy (buf2 + strlen(buf2), xxspace);
-                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNRISE])));
+                                strcpy (buf2 + strlen(buf2), xxspace);
+                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNRISE])));
                         }
                         else if (pwmChannel[i].isSunset )
                         {
-                          strcpy (buf2 + strlen(buf2), xxspace);
-                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNSET])));
+                                strcpy (buf2 + strlen(buf2), xxspace);
+                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNSET])));
                         }
                         else if (pwmChannel[i].recoverLastState)
                         {
-                          strcpy (buf2 + strlen(buf2), xxspace);
-                          strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_RECOVER])));
+                                strcpy (buf2 + strlen(buf2), xxspace);
+                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_RECOVER])));
                         }
                         strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_EMPTY])));
                         sendCommandPGM (17 + i, buf2, NULL);
@@ -1025,26 +1025,26 @@ static void updateHomePage() {
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
         {
                 if (waterFansStatus)
-                        sendCommandPGM_C (CMD_SET_T4, STR_EMPTY);
+                        sendCommandPGM (CMD_SHOW_P0);
                 else
-                        sendCommandPGM_C (CMD_SET_T4, STR_FAN);
+                        sendCommandPGM (CMD_HIDE_P0);
                 nxwaterFansStatus = waterFansStatus;
         }
         if (nxledFansStatus != ledFansStatus || forceRefresh)
         {
                 if (ledFansStatus)
-                sendCommandPGM_C (CMD_SET_T6, STR_EMPTY);
-        else
-                sendCommandPGM_C (CMD_SET_T6, STR_FAN);
+                        sendCommandPGM (CMD_SHOW_P1);
+                else
+                        sendCommandPGM (CMD_HIDE_P1);
                 nxledFansStatus = ledFansStatus;
         }
 
         if (nxsumpFansStatus != sumpFansStatus || forceRefresh)
         {
                 if (sumpFansStatus)
-                sendCommandPGM_C (CMD_SET_T7, STR_EMPTY);
-        else
-                sendCommandPGM_C (CMD_SET_T7, STR_FAN);
+                        sendCommandPGM (CMD_SHOW_P2);
+                else
+                        sendCommandPGM (CMD_HIDE_P2);
                 nxsumpFansStatus = sumpFansStatus;
         }
 #endif

@@ -37,11 +37,6 @@ void setup() {
 #ifndef NO_NEXTION
         nexInit();
 #endif
-#ifdef DEBUG
-        setTime( 19, 59, 0, 6, 2, 2017 );
-        RTC.set( now( ) );
-        Serial.begin(9600);
-#endif
         // launch watchdog  - 4 seconds
         wdt_enable(WDTO_4S);
 }

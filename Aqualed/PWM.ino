@@ -103,22 +103,7 @@ boolean pwmStep (byte i, long dimmingTime)
 
         }
 
-        #ifdef DEBUG
-        if (i == 3 )
-        {
-                Serial.print ("step = ");
-                Serial.print (step,10);
-                Serial.print (" pwmnow = ");
-                Serial.print (pwmChannel[i].pwmNow);
-                Serial.print (" pwmgoal = ");
-                Serial.print (pwmChannel[i].pwmGoal);
-                Serial.print (" i2c = ");
-
-                int v = mapDouble(pwmChannel[i].pwmNow, 0.0, 255.0, PWM_I2C_MIN, PWM_I2C_MAX);
-                Serial.print (v);
-                Serial.println ();
-        }
-        #endif
+        
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -160,13 +145,14 @@ static void pwm( byte i )
         pwmChannel[i].isSunrise= false;
         pwmChannel[i].isNight= false;
         boolean dimming = false;
+        long dimmingTime = (long) SETTINGS.pwmDimmingTime * (long)1000;
         long ssMillis;
         long srMillis;
         bool state = getState (i);
 
 
 
-        long dimmingTime = (long) SETTINGS.pwmDimmingTime * (long)1000;
+
         //test mode
         if (testMode)
         {
@@ -223,7 +209,7 @@ static void pwm( byte i )
                 dimming = pwmStep (i, dimmingTime);
         }
         // restore state after shutdown or forced mode
-        else if (pwmChannel[i].recoverLastState)
+      else if (pwmChannel[i].recoverLastState)
         {
                 pwmChannel[i].pwmGoal = pwmChannel[i].pwmSaved;
                 if (isDimmingStart(i))
@@ -254,7 +240,7 @@ static void pwm( byte i )
 
         else
         //sunset
-        if ( getSunsetMillis (i, ssMillis) >= 0)
+        if ( getSunsetMillis (i, ssMillis) > 0)
         {
                 // scale current pwm value
 
@@ -271,7 +257,7 @@ static void pwm( byte i )
         }
         else
         //sunrise
-        if ( getSunriseMillis(i, srMillis) >= 0)
+        if ( getSunriseMillis(i, srMillis) > 0)
         {
 
                 pwmChannel[i].isSunrise = true;
