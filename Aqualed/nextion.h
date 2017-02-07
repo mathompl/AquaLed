@@ -46,7 +46,7 @@ uint8_t nxScreen = 0;
 #define PAGE_SCREENSAVER 6
 #define PAGE_THERMO 7
 #define PAGE_SCHEDULE 8
-#define PAGE_pwmChannel 9
+#define PAGE_PWM_LIST 9
 
 // commands
 #define CMD_SET_HOUR  0
@@ -159,6 +159,7 @@ uint8_t nxScreen = 0;
 #define STR_SLASH 6
 #define STR_EMPTY 7
 #define STR_RECOVER 8
+#define STR_FAN 9
 
 #define COLOR_RED 32768
 #define COLOR_GREEN 1024
@@ -374,17 +375,18 @@ PGM_P const nxStrings[] PROGMEM
   xhp2 //99
 };
 
-char const  xon[] PROGMEM = "ON\0";
-char const  xoff[] PROGMEM = "OFF\0";
-char const  xnight[] PROGMEM = "NOC\0";
-char const  xsunrise[] PROGMEM = "WSCH\0";
-char const  xsunset[] PROGMEM = "ZACH\0";
+char const  xon[] PROGMEM = "A\0";
+char const  xoff[] PROGMEM = "T\0";
+char const  xnight[] PROGMEM = "P\0";
+char const  xsunrise[] PROGMEM = "G\0";
+char const  xsunset[] PROGMEM = "H\0";
 char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
-char const  xrecover[]  PROGMEM = "POWR\0";
+char const  xrecover[]  PROGMEM = "D\0";
+char const  xfan[] PROGMEM = "U\0";
 
-char const xcelc[]  = "'C\0";
+char const xcelc[]  = "Q\0";
 char const xpercent[]  = "%\0";
 char const  xxdash[]  = "-\0";
 char const  xxspace[]  = " \0";
@@ -399,5 +401,6 @@ PGM_P const nxConstStrings[] PROGMEM
   xdash, //5
   xslash, //6
   xempty, //7
-  xrecover //8
+  xrecover, //8
+  xfan //9
 };

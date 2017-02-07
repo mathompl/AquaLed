@@ -269,7 +269,7 @@ static void handlePage (byte pid, byte cid)
                 handleSchedulePage (cid);
                 break;
 
-        case PAGE_pwmChannel:
+        case PAGE_PWM_LIST:
                 handlePWMListPage (cid);
                 break;
 
@@ -461,15 +461,15 @@ void handlePWMPage (byte cid)
 
                 lastTouch = currentTimeSec;
                 writeEEPROMPWMConfig (i - 1);
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
-                nxScreen = PAGE_pwmChannel;
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
+                nxScreen = PAGE_PWM_LIST;
                 break;
 
         //  cancel
         case 14:
                 lastTouch = currentTimeSec;
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
-                nxScreen = PAGE_pwmChannel;
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
+                nxScreen = PAGE_PWM_LIST;
                 break;
 
 
@@ -765,7 +765,7 @@ static void handleConfigPage (byte cid)
                 break;
         // pwm config
         case 1:
-                sendCommandPGMInt (CMD_SET_PAGE, PAGE_pwmChannel, false);
+                sendCommandPGMInt (CMD_SET_PAGE, PAGE_PWM_LIST, false);
                 nxScreen = PAGE_PWM;
                 break;
 
@@ -1025,26 +1025,26 @@ static void updateHomePage() {
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
         {
                 if (waterFansStatus)
-                        sendCommandPGM (CMD_SHOW_P0);
+                        sendCommandPGM_C (CMD_SET_T4, STR_EMPTY);
                 else
-                        sendCommandPGM (CMD_HIDE_P0);
+                        sendCommandPGM_C (CMD_SET_T4, STR_FAN);
                 nxwaterFansStatus = waterFansStatus;
         }
         if (nxledFansStatus != ledFansStatus || forceRefresh)
         {
                 if (ledFansStatus)
-                        sendCommandPGM (CMD_SHOW_P1);
-                else
-                        sendCommandPGM (CMD_HIDE_P1);
+                sendCommandPGM_C (CMD_SET_T6, STR_EMPTY);
+        else
+                sendCommandPGM_C (CMD_SET_T6, STR_FAN);
                 nxledFansStatus = ledFansStatus;
         }
 
         if (nxsumpFansStatus != sumpFansStatus || forceRefresh)
         {
                 if (sumpFansStatus)
-                        sendCommandPGM (CMD_SHOW_P2);
-                else
-                        sendCommandPGM (CMD_HIDE_P2);
+                sendCommandPGM_C (CMD_SET_T7, STR_EMPTY);
+        else
+                sendCommandPGM_C (CMD_SET_T7, STR_FAN);
                 nxsumpFansStatus = sumpFansStatus;
         }
 #endif
@@ -1119,7 +1119,7 @@ void nxDisplay ()
                     && nxScreen != PAGE_SETTIME
                     && nxScreen != PAGE_THERMO
                     && nxScreen != PAGE_SCHEDULE
-                    && nxScreen != PAGE_pwmChannel
+                    && nxScreen != PAGE_PWM_LIST
                     )
                 {
                         sendCommandPGMInt (CMD_SET_PAGE, PAGE_SCREENSAVER, false);
