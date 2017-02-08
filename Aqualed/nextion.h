@@ -80,6 +80,7 @@ uint8_t nxScreen = 0;
 #define CMD_INIT2 28
 #define CMD_INIT3 58
 #define CMD_SET_PAGE 29
+#define CMD_SET_T0 100
 #define CMD_SET_T1 30
 #define CMD_SET_T2 31
 #define CMD_SET_T3 32
@@ -87,19 +88,19 @@ uint8_t nxScreen = 0;
 #define CMD_SET_T5  34
 #define CMD_SET_T6  35
 #define CMD_SET_T7  36
-#define CMD_SET_T8  47
-#define CMD_SET_T9  48
-#define CMD_SET_T10  49
-#define CMD_GET_T1 37
-#define CMD_GET_T2 38
-#define CMD_GET_T3 39
-#define CMD_GET_T4 40
-#define CMD_GET_T5 41
-#define CMD_GET_T6 42
-#define CMD_GET_T7 43
-#define CMD_GET_T8 44
-#define CMD_GET_T9 45
-#define CMD_GET_T10 46
+#define CMD_SET_T8  37
+#define CMD_SET_T9  38
+#define CMD_SET_T10 39
+#define CMD_GET_T1 40
+#define CMD_GET_T2 41
+#define CMD_GET_T3 42
+#define CMD_GET_T4 43
+#define CMD_GET_T5 44
+#define CMD_GET_T6 45
+#define CMD_GET_T7 46
+#define CMD_GET_T8 47
+#define CMD_GET_T9 48
+#define CMD_GET_T10 49
 #define CMD_SET_C0 50
 #define CMD_SET_C1 51
 #define CMD_GET_C0 52
@@ -149,6 +150,12 @@ uint8_t nxScreen = 0;
 #define CMD_HIDE_P0 97
 #define CMD_HIDE_P1 98
 #define CMD_HIDE_P2 99
+#define CMD_SET_LT_RED 101
+#define CMD_SET_LT_GREEN 102
+#define CMD_SET_ST_RED 103
+#define CMD_SET_ST_GREEN 104
+
+
 
 #define STR_ON 0
 #define STR_OFF 1
@@ -160,6 +167,9 @@ uint8_t nxScreen = 0;
 #define STR_EMPTY 7
 #define STR_RECOVER 8
 #define STR_FAN 9
+#define STR_UP 10
+#define STR_DOWN 11
+#define STR_SPACE 12
 
 #define COLOR_RED 32768
 #define COLOR_GREEN 1024
@@ -228,8 +238,8 @@ char const xgc1[] PROGMEM = "get c1.val";
 char const xhoursettext[] PROGMEM = "hour.txt=\"";
 char const xti[] PROGMEM = "ti.txt=\"";
 char const xgti[] PROGMEM = "get ti.txt";
-char const xwtred[] PROGMEM = "wt.pco=63488";
-char const xwtgreen[] PROGMEM = "wt.pco=1024";
+char const xwtred[] PROGMEM = "wt.pco=62225";
+char const xwtgreen[] PROGMEM = "wt.pco=38898";
 char const xst[] PROGMEM = "st.txt=\"";
 char const xn0[] PROGMEM = "n0.val=";
 char const xn1[] PROGMEM = "n1.val=";
@@ -270,6 +280,11 @@ char const xsp2[] PROGMEM = "vis p2,1";
 char const xhp0[] PROGMEM = "vis p0,0";
 char const xhp1[] PROGMEM = "vis p1,0";
 char const xhp2[] PROGMEM = "vis p2,0";
+char const xt0[] PROGMEM = "t0.txt=\"";
+char const xltred[] PROGMEM = "lt.pco=62225";
+char const xltgreen[] PROGMEM = "lt.pco=38892";
+char const xstred[] PROGMEM = "st.pco=62225";
+char const xstgreen[] PROGMEM = "st.pco=38898 ";
 
 PGM_P const nxStrings[] PROGMEM
 {
@@ -310,19 +325,19 @@ PGM_P const nxStrings[] PROGMEM
   xt5,  //34
   xt6,  //35
   xt7,  //36
-  xgt1, //37
-  xgt2, //38
-  xgt3,//39
-  xgt4,//40
-  xgt5,//41
-  xgt6,  //42
-  xgt7,  //43
-  xgt8,  //44
-  xgt9,  //45
-  xgt10,  //46
-  xt8,  //47
-  xt9,  //48
-  xt10,  //49
+  xt8,  //37
+  xt9,  //38
+  xt10,  //39
+  xgt1, //40
+  xgt2, //41
+  xgt3,//42
+  xgt4,//43
+  xgt5,//44
+  xgt6,  //45
+  xgt7,  //46
+  xgt8,  //47
+  xgt9,  //48
+  xgt10,  //49
   xc0, //50
   xc1, //51
   xgc0, //52
@@ -372,19 +387,29 @@ PGM_P const nxStrings[] PROGMEM
   xsp2, //96
   xhp0, //97
   xhp1, //98
-  xhp2 //99
+  xhp2, //99
+  xt0, //100
+  xltred, //101
+  xltgreen, //102
+  xstred, //103
+  xstgreen //104
+
+
 };
 
-char const  xon[] PROGMEM = "WL\0";
-char const  xoff[] PROGMEM = "WYL\0";
-char const  xnight[] PROGMEM = "NOC\0";
-char const  xsunrise[] PROGMEM = "WSCH\0";
-char const  xsunset[] PROGMEM = "ZACH\0";
+char const  xon[] PROGMEM = "A\0";
+char const  xoff[] PROGMEM = "S\0";
+char const  xnight[] PROGMEM = "P\0";
+char const  xsunrise[] PROGMEM = "G\0";
+char const  xsunset[] PROGMEM = "H\0";
 char const  xdash[] PROGMEM = "-\0";
 char const  xslash[]  PROGMEM = "/\0";
 char const  xempty[]  PROGMEM = "\0";
-char const  xrecover[]  PROGMEM = "^\0";
+char const  xrecover[]  PROGMEM = "D\0";
 char const  xfan[] PROGMEM = "U\0";
+char const  xup[] PROGMEM = "L\0";
+char const  xdown[] PROGMEM = "R\0";
+char const  xspace[] PROGMEM = " \0";
 
 char const xcelc[]  = "'C\0";
 char const xpercent[]  = "%\0";
@@ -402,5 +427,8 @@ PGM_P const nxConstStrings[] PROGMEM
   xslash, //6
   xempty, //7
   xrecover, //8
-  xfan //9
+  xfan, //9
+  xup, //10
+  xdown, //11
+  xspace //12
 };

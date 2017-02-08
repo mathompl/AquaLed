@@ -931,6 +931,7 @@ static void updateWaterTemp() {
 }
 
 static void updateHomePage() {
+#ifndef NO_TEMPERATURE
         if (nxtemperatureWater != temperatureWater  || forceRefresh)
         {
                 if (temperatureWater != TEMP_ERROR)
@@ -939,13 +940,17 @@ static void updateHomePage() {
                         dtostrf(temperatureWater, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_WT, str_temp, xcelc, NULL);
                         nxtemperatureWater = temperatureWater;
+                        if (temperatureWater > SETTINGS.max_water_temp)
+                                sendCommandPGM(CMD_SET_WT_RED);
+                        else
+                                sendCommandPGM(CMD_SET_WT_GREEN);
                 }
                 else
                 {
                         sendCommandPGM_C (CMD_SET_WT, STR_DASH);
                 }
         }
-#ifndef NO_TEMPERATURE
+
         if (nxtemperatureLed != temperatureLed  || forceRefresh)
         {
                 if (temperatureLed != TEMP_ERROR)
@@ -954,6 +959,10 @@ static void updateHomePage() {
                         dtostrf(temperatureLed, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_LT, str_temp, xcelc, NULL);
                         nxtemperatureLed = temperatureLed;
+                        if (temperatureLed > SETTINGS.max_led_temp)
+                                sendCommandPGM(CMD_SET_LT_RED);
+                        else
+                                sendCommandPGM(CMD_SET_LT_GREEN);
                 }
                 else
                 {
@@ -969,6 +978,10 @@ static void updateHomePage() {
                         dtostrf(temperatureSump, 4, 1, str_temp);
                         sendCommandPGM (CMD_SET_ST, str_temp, xcelc, NULL);
                         nxtemperatureSump = temperatureSump;
+                        if (temperatureSump > SETTINGS.max_sump_temp)
+                                sendCommandPGM(CMD_SET_ST_RED);
+                        else
+                                sendCommandPGM(CMD_SET_ST_GREEN);
                 }
                 else
                 {
@@ -976,78 +989,92 @@ static void updateHomePage() {
                 }
         }
 #endif
+
         for (int i = 0; i < PWMS; i++)
         {
+                if (pwmChannel[i].pwmStatus == 0)
+                {
+                        sendCommandPGM_C (17 + i, STR_DASH);
+                        sendCommandPGM_C (32 + i, STR_SPACE);
+                        continue;
+                }
+
                 if (pwmNxLast[i] != pwmChannel[i].pwmNow || forceRefresh)
                 {
-                        char buf2[15] = {0};
+                        char buf2[5] = {0};
                         memset(buf2, 0, sizeof (buf2));
-
-
-
                         byte percent =  mapRound((byte)pwmChannel[i].pwmNow, 0, 255, 0, 100);
                         char buf[3] = {0};
                         itoa(percent, buf, 10);
                         strcpy (buf2 + strlen(buf2), buf);
                         strcpy (buf2 + strlen(buf2), xpercent);
+                        sendCommandPGM (17 + i, buf2, NULL);
 
-                        if (pwmChannel[i].pwmNow == 0 || pwmChannel[i].pwmStatus == 0)
+                        int icon = STR_SPACE;
+                        if (pwmChannel[i].isSunrise )
                         {
-                                strcpy (buf2 + strlen(buf2), xxspace);
-                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_OFF])));
-                        }
-                        else if (pwmChannel[i].isNight)
-                        {
-                                strcpy (buf2 + strlen(buf2), xxspace);
-                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_NIGHT])));
-                        }
-                        else if (pwmChannel[i].isSunrise )
-                        {
-                                strcpy (buf2 + strlen(buf2), xxspace);
-                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNRISE])));
+                                icon = STR_SUNRISE;
                         }
                         else if (pwmChannel[i].isSunset )
                         {
-                                strcpy (buf2 + strlen(buf2), xxspace);
-                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_SUNSET])));
+                                icon = STR_SUNSET;
                         }
                         else if (pwmChannel[i].recoverLastState)
                         {
-                                strcpy (buf2 + strlen(buf2), xxspace);
-                                strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_RECOVER])));
+                                icon = STR_RECOVER;
                         }
-                        strcpy_P(buf2+ strlen(buf2), (PGM_P)pgm_read_word(&(nxConstStrings[STR_EMPTY])));
-                        sendCommandPGM (17 + i, buf2, NULL);
+                        else if (pwmChannel[i].pwmNow < pwmChannel[i].pwmGoal)
+                        {
+                                icon = STR_UP;
+                        }
+                        else if (pwmChannel[i].pwmNow > pwmChannel[i].pwmGoal)
+                        {
+                                icon = STR_DOWN;
+                        }
+                        else if (pwmChannel[i].pwmNow == 0 || pwmChannel[i].pwmStatus == 0)
+                        {
+                                icon = STR_OFF;
+                        } else if (pwmChannel[i].isNight)
+                        {
+                                icon = STR_NIGHT;
+                        }
+                        else if (pwmChannel[i].pwmNow == pwmChannel[i].pwmMax)
+                        {
+                                icon = STR_ON;
+                        }
+
                         pwmNxLast[i] = pwmChannel[i].pwmNow;
+                        sendCommandPGM_C (32+i, icon);
+
                 }
         }
-#ifndef NO_TEMPERATURE
+        #ifndef NO_TEMPERATURE
         if (nxwaterFansStatus != waterFansStatus || forceRefresh)
         {
-                if (waterFansStatus)
-                        sendCommandPGM (CMD_SHOW_P0);
+                if (!waterFansStatus)
+                        sendCommandPGM_C (CMD_SET_T0, STR_EMPTY);
                 else
-                        sendCommandPGM (CMD_HIDE_P0);
+                        sendCommandPGM_C (CMD_SET_T0, STR_FAN);
                 nxwaterFansStatus = waterFansStatus;
         }
         if (nxledFansStatus != ledFansStatus || forceRefresh)
         {
-                if (ledFansStatus)
-                        sendCommandPGM (CMD_SHOW_P1);
+                if (!ledFansStatus)
+                        sendCommandPGM_C (CMD_SET_T1, STR_EMPTY);
                 else
-                        sendCommandPGM (CMD_HIDE_P1);
+                        sendCommandPGM_C (CMD_SET_T1, STR_FAN);
                 nxledFansStatus = ledFansStatus;
         }
 
         if (nxsumpFansStatus != sumpFansStatus || forceRefresh)
         {
-                if (sumpFansStatus)
-                        sendCommandPGM (CMD_SHOW_P2);
+                if (!sumpFansStatus)
+                        sendCommandPGM_C (CMD_SET_T2, STR_EMPTY);
                 else
-                        sendCommandPGM (CMD_HIDE_P2);
+                        sendCommandPGM_C (CMD_SET_T2, STR_FAN);
                 nxsumpFansStatus = sumpFansStatus;
         }
-#endif
+        #endif
 
 }
 

@@ -103,7 +103,7 @@ boolean pwmStep (byte i, long dimmingTime)
 
         }
 
-        
+
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
