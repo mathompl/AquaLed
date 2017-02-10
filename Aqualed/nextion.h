@@ -284,7 +284,7 @@ char const xt0[] PROGMEM = "t0.txt=\"";
 char const xltred[] PROGMEM = "lt.pco=62225";
 char const xltgreen[] PROGMEM = "lt.pco=38892";
 char const xstred[] PROGMEM = "st.pco=62225";
-char const xstgreen[] PROGMEM = "st.pco=38898 ";
+char const xstgreen[] PROGMEM = "st.pco=38898";
 
 PGM_P const nxStrings[] PROGMEM
 {

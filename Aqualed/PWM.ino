@@ -208,18 +208,6 @@ static void pwm( byte i )
 
                 dimming = pwmStep (i, dimmingTime);
         }
-        // restore state after shutdown or forced mode
-      else if (pwmChannel[i].recoverLastState)
-        {
-                pwmChannel[i].pwmGoal = pwmChannel[i].pwmSaved;
-                if (isDimmingStart(i))
-                {
-                        pwmChannel[i].dimmingStart = true;
-                        pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmSaved);
-                }
-
-                dimming = pwmStep (i,dimmingTime);
-        }
         // night light
         else if (!state && pwmChannel[i].pwmKeepLight)
         {
@@ -237,40 +225,65 @@ static void pwm( byte i )
                 pwmChannel[i].isNight= true;
                 dimming = pwmStep (i, dimmingTime);
         }
-
         else
         //sunset
         if ( getSunsetMillis (i, ssMillis) > 0)
         {
                 // scale current pwm value
-
-                pwmChannel[i].isSunset = true;
-                if (pwmChannel[i].pwmKeepLight) pwmChannel[i].pwmGoal = pwmChannel[i].pwmMin; else pwmChannel[i].pwmGoal = 0;
-                if (isDimmingStart(i))
+                // restore state after shutdown or forced mode
+                if (pwmChannel[i].recoverLastState)
                 {
-                        pwmChannel[i].dimmingStart = true;
-                        pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmGoal);
-                        pwmChannel[i].dimmingTime = ssMillis;
-                }
+                        pwmChannel[i].pwmGoal = pwmChannel[i].pwmSaved;
+                        if (isDimmingStart(i))
+                        {
+                                pwmChannel[i].dimmingStart = true;
+                                pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmSaved);
+                        }
 
+                        dimming = pwmStep (i,dimmingTime);
+                }
+                else
+                {
+                        pwmChannel[i].isSunset = true;
+                        if (pwmChannel[i].pwmKeepLight) pwmChannel[i].pwmGoal = pwmChannel[i].pwmMin; else pwmChannel[i].pwmGoal = 0;
+                        if (isDimmingStart(i))
+                        {
+                                pwmChannel[i].dimmingStart = true;
+                                pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmGoal);
+                                pwmChannel[i].dimmingTime = ssMillis;
+                        }
+                }
                 dimming = pwmStep (i, pwmChannel[i].dimmingTime);
         }
         else
         //sunrise
         if ( getSunriseMillis(i, srMillis) > 0)
         {
-
-                pwmChannel[i].isSunrise = true;
-                pwmChannel[i].pwmGoal = pwmChannel[i].pwmMax;
-
-                if (isDimmingStart(i))
+                // restore state after shutdown or forced mode
+                if (pwmChannel[i].recoverLastState)
                 {
-                        pwmChannel[i].dimmingStart = true;
-                        pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmMax);
-                        pwmChannel[i].dimmingTime = srMillis;
+                        pwmChannel[i].pwmGoal = pwmChannel[i].pwmSaved;
+                        if (isDimmingStart(i))
+                        {
+                                pwmChannel[i].dimmingStart = true;
+                                pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmSaved);
+                        }
 
+                        dimming = pwmStep (i,dimmingTime);
                 }
+                else
+                {
+                        pwmChannel[i].isSunrise = true;
+                        pwmChannel[i].pwmGoal = pwmChannel[i].pwmMax;
 
+                        if (isDimmingStart(i))
+                        {
+                                pwmChannel[i].dimmingStart = true;
+                                pwmChannel[i].dimmingScale = abs(pwmChannel[i].pwmNow-pwmChannel[i].pwmMax);
+                                pwmChannel[i].dimmingTime = srMillis;
+
+                        }
+                }
                 dimming = pwmStep (i, pwmChannel[i].dimmingTime);
         }
         else if (state)
@@ -335,24 +348,24 @@ static void pwm( byte i )
 // check if scheduled on or off
 bool getState (byte i)
 {
-  boolean midnight = false;
-  long  pwmOn = (long(pwmChannel[i].pwmHOn) * 3600) + (long(pwmChannel[i].pwmMOn) * 60) ;
-  long  pwmOff = (long(pwmChannel[i].pwmHOff) * 3600) + (long(pwmChannel[i].pwmMOff) * 60);
-  long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
+        boolean midnight = false;
+        long pwmOn = (long(pwmChannel[i].pwmHOn) * 3600) + (long(pwmChannel[i].pwmMOn) * 60);
+        long pwmOff = (long(pwmChannel[i].pwmHOff) * 3600) + (long(pwmChannel[i].pwmMOff) * 60);
+        long currTime = (long)tm.Hour * 60 * 60 + (long)tm.Minute * 60 + (long)tm.Second;
 
-  if (pwmOff < pwmOn) midnight = true;
+        if (pwmOff < pwmOn) midnight = true;
 
-  if (!midnight)
-  {
-      if (currTime>=pwmOn && currTime < pwmOff) return true;
-  }
-  else
-  {
-     if (currTime>=pwmOn && currTime < 86400) return true;
-     else if (currTime>=0 && currTime < pwmOff) return true;
-  }
+        if (!midnight)
+        {
+                if (currTime>=pwmOn && currTime < pwmOff) return true;
+        }
+        else
+        {
+                if (currTime>=pwmOn && currTime < 86400) return true;
+                else if (currTime>=0 && currTime < pwmOff) return true;
+        }
 
-  return false;
+        return false;
 }
 
 // calculate remaining sunset time (if any)
@@ -441,8 +454,8 @@ void pwm ()
                 previousMillisEepromState = currentMillis;
                 for (int i = 0; i < PWMS; i++)
                 {
-                        // write state only in normal operation
-                        if (!testMode && !SETTINGS.forceOFF && !SETTINGS.forceNight && !SETTINGS.forceAmbient)
+                        // write state only in sunset/sunrise operation
+                        if (pwmChannel[i].isSunset || pwmChannel[i].isSunrise)
                         {
                                 pwmChannel[i].pwmSaved = pwmChannel[i].pwmNow;
                                 writeEEPROMPWMState(i);
