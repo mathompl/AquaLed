@@ -150,9 +150,6 @@ static void pwm( byte i )
         long srMillis;
         bool state = getState (i);
 
-
-
-
         //test mode
         if (testMode)
         {
