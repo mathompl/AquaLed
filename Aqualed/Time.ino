@@ -1,3 +1,8 @@
+/*
+AQUALED date/time functions (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
+
 #include <Arduino.h>
 
 bool isSummer() {

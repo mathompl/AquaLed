@@ -1,3 +1,8 @@
+/*
+ AQUALED MAIN configuration file (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
+
 #include <Wire.h>
 #include <Time.h>
 #include <EEPROM.h>
@@ -7,13 +12,13 @@
 #include <DallasTemperature.h>
 #include <DS18B20.h>
 
-
-/* Configuration file */
-
-// uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
-//#define USE_I2C_PWM_MODULE
-
+/*
+    USER DEFINED SETTINGS
+*/
 // modules, uncomment to disable, comment to enable
+// uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
+
+//#define USE_I2C_PWM_MODULE
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NO_I2C
@@ -62,50 +67,46 @@
     #define PWM8_I2C  1
 #endif
 
-#define PWM_MAX 255
-
 // overwrite night mode values (when 1% resolution is too much)
 //#define PWM_FORCE_NIGHT_VALUE 1
 
-// i2c
-#define PWM_I2C_MIN 0
-#define PWM_I2C_MAX 4095
-#define I2C_FREQ 333 //hz
-byte i2c_invert=0;
+#define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
 
-
+// i2c configuration
+#define PWM_I2C_MIN 0 // lower value of i2c scale
+#define PWM_I2C_MAX 4095 // uper value
+#define PWM_I2C_FREQ 333 // i2c frequency (hz)
+//#define PWM_I2C_INVERT // uncomment for inverted i2c modules
 
 // termometry
-#define ONEWIRE_PIN 4
+#define ONEWIRE_PIN 4 // ds18b20 thermometers pin
 
 // relay's pins
-#define LED_FANS_PIN 2
-#define WATER_FANS_PIN 8
-#define SUMP_FANS_PIN 7
+#define LED_FANS_PIN 2 // lamp fans relay pin
+#define WATER_FANS_PIN 8 // water  fans relay pin
+#define SUMP_FANS_PIN 7 // sump fans relay pin
 
 // resolutions
-#define PWM_RESOLUTION 500.0 //ms
-#define PWM_MIN_STEP 0.00001
-#define NX_INFO_RESOLUTION 1000 //ms
-#define EEPROM_STATE_RESOLUTION 5000 //ms
+#define PWM_RESOLUTION 500.0 //ms main PWM loop resolution
+#define PWM_MIN_STEP 0.00001 // minimum pwm change step
+#define NX_INFO_RESOLUTION 1000 //ms - nextion home page refresh time
+#define EEPROM_STATE_RESOLUTION 5000 //ms - saving of pwmNow value time
+#define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms temperature reading resolution
+#define TIME_ADJUST_INTERVAL 3600 //s daylight saving mode check
 
 // rozdzielczosc przekaznikow (s)
-#define LED_FANS_INTERVAL 300 //s
-#define WATER_FANS_INTERVAL 300 //s
-#define SUMP_FANS_INTERVAL 300 //s
+#define LED_FANS_INTERVAL 300 //s fans resolution
+#define WATER_FANS_INTERVAL 300 //s fans resolution
+#define SUMP_FANS_INTERVAL 300 //s fans resolution
 
-// probkowanie temperatury (ms)
-#define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms
+#define MAX_WATTS 200 // RFU
 
-// sprawdzeanie DST
-#define TIME_ADJUST_INTERVAL 3600 //s
-
-#define MAX_WATTS 200
+/*
+  SYSTEM VARIABLES, do not modify
+*/
 
 #define ON  true
-#define OFF  false
-
-#define WATER_TEMPERATURE_MIN 24
+#define OFF false
 
 typedef struct
 {

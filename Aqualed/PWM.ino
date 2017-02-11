@@ -1,22 +1,14 @@
+/*
+AQUALED PWM LED support functions (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
+
 #include <Arduino.h>
 
 #ifndef NO_I2C
     #include <Adafruit_PWMServoDriver.h>
 Adafruit_PWMServoDriver pwm_i2c;
 #endif
-
-/*
-      AquaLed - sterownik oswietlenia akwarium morskiego
-       - max 6 PWM,
-       - 3 czujnki termeratury,
-       - 3 przekazniki na wentylatory
-       - wyswietlacz Nextion
-     (c) 2016 Tomek Formanowski
-     Open Source public domain
-
-     Fragmenty kodu: bluetooth ze sterownika Aqma by Magu, kombatybilnosc zachowana w zakresie obslugi przez bluetooth
-
- */
 
 void setupPWMPins ()
 {
@@ -64,7 +56,7 @@ void setupPWMPins ()
         #ifndef NO_I2C
         pwm_i2c = Adafruit_PWMServoDriver();
         pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(I2C_FREQ);
+        pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
         #endif
 
         //TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00);
@@ -102,7 +94,7 @@ boolean pwmStep (byte i, long dimmingTime)
 
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
-        if (stepsLeft < 0) stepsLeft *= -1;        
+        if (stepsLeft < 0) stepsLeft *= -1;
         if (pwmGoal > pwmNow)
         {
                 pwmNow = pwmNow + step;
@@ -324,10 +316,11 @@ static void pwm( byte i )
                 if (pwmLast[i] != pwmChannel[i].pwmNow)
                 {
                         long v;
-                        if (i2c_invert == 1)
+                        #ifdef PWM_I2C_INVERT
                                 v = mapDouble(pwmChannel[i].pwmNow, 255.0, 0.0, PWM_I2C_MIN, PWM_I2C_MAX);
-                        else
+                        #else
                                 v = mapDouble(pwmChannel[i].pwmNow, 0.0, 255.0, PWM_I2C_MIN, PWM_I2C_MAX);
+                        #endif
                         pwm_i2c.setPWM(pwmChannel[i].pwmPin, 0, v );
                 }
           #endif

@@ -1,3 +1,8 @@
+/*
+AQUALED Nextion configuration file (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
+
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
@@ -19,7 +24,7 @@ unsigned long previousNxReinit= 0;
 #define NEX_RET_STRING_HEAD                 (0x70)
 #define NEX_RET_NUMBER_HEAD                 (0x71)
 
-// harmonogram
+// harmonogram / schedule
 #define min_hour 1440
 #define offset 21
 #define width  16

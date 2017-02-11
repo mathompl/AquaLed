@@ -1,8 +1,8 @@
 /*
-   Bluetooth compatibilty with AQMA LED Control by Magu, see http://magu.pl/aqma-led-control
+Aqualed Bluetooth functions (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
 
-
- */
 
 #ifndef NO_BLUETOOTH
 

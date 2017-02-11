@@ -1,20 +1,13 @@
+/*
+AQUALED Temperature && fans relay  functions (c) T. Formanowski 2016-2017
+https://github.com/mathompl/AquaLed
+*/
+
 #ifndef NO_TEMPERATURE
 
 #include <Arduino.h>
 OneWire onewire(ONEWIRE_PIN);
 DS18B20 sensors(&onewire);
-/*
-      AquaLed - sterownik oswietlenia akwarium morskiego
-       - max 6 PWM,
-       - 3 czujnki termeratury,
-       - 3 przekazniki na wentylatory
-       - wyswietlacz Nextion
-     (c) 2016 Tomek Formanowski
-     Open Source public domain
-
-     Fragmenty kodu: bluetooth ze sterownika Aqma by Magu, kombatybilnosc zachowana w zakresie obslugi przez bluetooth
-
- */
 
 void setupSensors ()
 {
