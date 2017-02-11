@@ -11,7 +11,7 @@
 /* Configuration file */
 
 // uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
- //#define USE_I2C_PWM_MODULE
+#define USE_I2C_PWM_MODULE
 
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
