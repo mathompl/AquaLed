@@ -97,18 +97,12 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwmChannel[i].dimmingStart == true)
         {
                 max = (double) pwmChannel[i].dimmingScale;
-                //max = (double) abs (pwmChannel[i].pwmGoal - pwmChannel[i].pwmNow);
-
                 step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
-
         }
-
 
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (pwmGoal - pwmNow) / step;
-        if (stepsLeft < 0) stepsLeft *= -1;
-        //long millisLeft = stepsLeft * PWM_RESOLUTION;
-        //   long estTimeEnd = currentMillis+millisLeft;
+        if (stepsLeft < 0) stepsLeft *= -1;        
         if (pwmGoal > pwmNow)
         {
                 pwmNow = pwmNow + step;
