@@ -21,7 +21,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 
 **Nextion LCD Screenshots**
  
-![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/0.jpg?? "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/1.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/2.jpg "AquaLed")
 ![Alt text](http://pifpaf.pl/ftp/aqualed/ssen/9.jpg "AquaLed")
@@ -149,16 +149,16 @@ Przykładowy program na wyświetlacz załączony.
 
 **Wygląd ekranów na wyświetlaczu **
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/0.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/1.jpg> "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/2.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/9.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/3.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/4.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/5.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/6.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/7.jpg? "AquaLed")
-![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/8.jpg? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/0.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/1.jpg?> "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/2.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/9.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/3.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/4.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/5.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/6.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/7.jpg?? "AquaLed")
+![Alt text](http://pifpaf.pl/ftp/aqualed/sspl/8.jpg?? "AquaLed")
 
 **Wymagania:**
 
