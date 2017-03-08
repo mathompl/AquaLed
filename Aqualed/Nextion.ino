@@ -21,8 +21,8 @@ static void nexInit(void)
         setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
         NEXTION_FLUSH ();
         NEXTION_BEGIN (NEXTION_BAUD_RATE);
+        delay (1500);
         toggleButtons ();
-        delay (500);
         // init names
         for (byte i = 0; i < PWMS; i++)
         {
