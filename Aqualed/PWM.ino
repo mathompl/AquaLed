@@ -31,7 +31,7 @@ void initPWM (byte i)
 }
 
 // sciemnianie/rozjasnianie
-boolean pwmStep (byte i, word dimmingTime)
+boolean pwmStep (byte i, long dimmingTime)
 {
         boolean dimming = false;
         double valueCurrent = pwmChannel[i].valueCurrent;
@@ -93,9 +93,9 @@ static void pwm( byte i )
         pwmChannel[i].isSunrise= false;
         pwmChannel[i].isNight= false;
         boolean dimming = false;
-        word dimmingTime = (word) SETTINGS.pwmDimmingTime * 1000;
-        word ssMillis;
-        word srMillis;
+        long dimmingTime = (long) SETTINGS.pwmDimmingTime * 1000;
+        long ssMillis;
+        long srMillis;
         bool state = getState (i);
 
         //test mode
@@ -256,7 +256,7 @@ static void pwm( byte i )
         if (pwmChannel[i].isI2C == 0)
         {
                 byte val = (byte) pwmChannel[i].valueCurrent;
-                // logarithmic dimming table, experimental, works best if max 100%
+                // logarithmic dimming table, experimental, longs best if max 100%
                 if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwmChannel[i].valueGoal)
                 {
                         //val = (byte)pgm_read_byte(&dimmingTable[val]);
@@ -287,39 +287,39 @@ static void pwm( byte i )
 bool getState (byte i)
 {
         boolean midnight = false;
-        word pwmOn = (word(pwmChannel[i].onHour) * 3600) + (word(pwmChannel[i].onMinute) * 60);
-        word pwmOff = (word(pwmChannel[i].offHour) * 3600) + (word(pwmChannel[i].offMinute) * 60);
-        word currTime = (word)hour ()* 60 * 60 + (word)minute () * 60 + (word)second ();
+        startTime = (long)(pwmChannel[i].onHour) * 3600 + (long)(pwmChannel[i].onMinute) * 60;
+        stopTime = (long)(pwmChannel[i].offHour) * 3600 + (long)(pwmChannel[i].offMinute) * 60;
+        currTime = (long)hour ()* 60 * 60 + (long)minute () * 60 + (long)second ();
 
-        if (pwmOff < pwmOn) midnight = true;
+        if (stopTime < startTime) midnight = true;
 
         if (!midnight)
         {
-                if (currTime>=pwmOn && currTime < pwmOff) return true;
+                if (currTime>=startTime && currTime < stopTime) return true;
         }
         else
         {
-                if (currTime>=pwmOn && currTime < 86400) return true;
-                else if (currTime>=0 && currTime < pwmOff) return true;
+                if (currTime>=startTime && currTime < 86400) return true;
+                else if (currTime>=0 && currTime < stopTime) return true;
         }
 
         return false;
 }
 
 // calculate remaining sunset time (if any)
-word getSunsetMillis (byte i, word &m)
+long getSunsetMillis (byte i, long &m)
 {
         boolean midnight = false;
-        word stopTime = (word)pwmChannel[i].offHour * 60 * 60 + (word)pwmChannel[i].offMinute * 60;
-        word currTime = (word)hour () * 60 * 60 + (word)minute () * 60 + (word)second ();
-        word startTime = stopTime - (word) pwmChannel[i].sunsetLenght * 60;
+         stopTime = (long)pwmChannel[i].offHour * 60 * 60 + (long)pwmChannel[i].offMinute * 60;
+        currTime = (long)hour () * 60 * 60 + (long)minute () * 60 + (long)second ();
+        startTime = stopTime - (long) pwmChannel[i].sunsetLenght * 60;
 
         if (startTime < 0) midnight = true;
 
         // before midnight
         if (currTime >= startTime && currTime <= stopTime)
         {
-                m = (word) (stopTime - currTime) * 1000;
+                m = (long) (stopTime - currTime) * 1000;
                 return abs(m);
         }
 
@@ -327,11 +327,11 @@ word getSunsetMillis (byte i, word &m)
         if (midnight)
         {
                 stopTime += 86400;
-                word startTime = stopTime - (word) pwmChannel[i].sunsetLenght * 60;
+                startTime = stopTime - (long) pwmChannel[i].sunsetLenght * 60;
 
                 if (currTime >= startTime && currTime <= stopTime)
                 {
-                        m = (word) (stopTime - currTime) * 1000;
+                        m = (long) (stopTime - currTime) * 1000;
                         return abs(m);
                 }
         }
@@ -342,12 +342,12 @@ word getSunsetMillis (byte i, word &m)
 }
 
 // calculate remaining sunrise time (if any)
-word getSunriseMillis (byte i, word &m)
+long getSunriseMillis (byte i, long &m)
 {
         // in seconds
-        word startTime = (word)pwmChannel[i].onHour * 60 * 60 + (word)pwmChannel[i].onMinute * 60;
-        word currTime = (word)hour () * 60 * 60 + (word)minute () * 60 + (word) second();
-        word stopTime = startTime + (word)pwmChannel[i].sunriseLenght * 60;
+         startTime = (long)pwmChannel[i].onHour * 60 * 60 + (long)pwmChannel[i].onMinute * 60;
+        currTime = (long)hour () * 60 * 60 + (long)minute () * 60 + (long) second();
+         stopTime = startTime + (long)pwmChannel[i].sunriseLenght * 60;
 
         boolean midnight = false;
 
@@ -357,7 +357,7 @@ word getSunriseMillis (byte i, word &m)
         // before midnight
         if (currTime >= startTime && currTime <= stopTime)
         {
-                m = (word) (stopTime - currTime) * 1000;
+                m = (long) (stopTime - currTime) * 1000;
                 return abs(m);
         }
 
@@ -367,7 +367,7 @@ word getSunriseMillis (byte i, word &m)
                 currTime += 86400;
                 if (currTime >= startTime && currTime <= stopTime)
                 {
-                        m = (word) (stopTime - currTime) * 1000;
+                        m = (long) (stopTime - currTime) * 1000;
                         return abs(m);
                 }
         }

@@ -15,13 +15,17 @@ static void nexInit(void)
 {
         delay (1000);
         NEXTION_BEGIN (9600);
-        sendNextionEOL ();
+        NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BKCMD, (long)0);
         setPage (PAGE_HOME);
         setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
         NEXTION_FLUSH ();
+delay (500);
         NEXTION_BEGIN (NEXTION_BAUD_RATE);
-        delay (1500);
+        NEXTION_PRINT ("\r\n");
+        NEXTION_FLUSH ();
+        sendNextionEOL ();
+        delay (500);
         toggleButtons ();
         // init names
         for (byte i = 0; i < PWMS; i++)
