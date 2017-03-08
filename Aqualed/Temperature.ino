@@ -1,7 +1,7 @@
 /*
-AQUALED Temperature && fans relay  functions (c) T. Formanowski 2016-2017
-https://github.com/mathompl/AquaLed
-*/
+   AQUALED Temperature && fans relay  functions (c) T. Formanowski 2016-2017
+   https://github.com/mathompl/AquaLed
+ */
 
 #ifndef NO_TEMPERATURE
 
@@ -41,8 +41,8 @@ void fansControl()
                 requestReadings ();
         }
 
-        if (currentTimeSec - previousMillisFans > LED_FANS_INTERVAL || previousMillisFans == 0) {
-                previousMillisFans = currentTimeSec;
+        if (currentMillis - previousMillisFans > FANS_INTERVAL || previousMillisFans == 0) {
+                previousMillisFans = currentMillis;
                 if (temperatureLed != TEMP_ERROR &&temperatureLed > SETTINGS.max_led_temp)
                 {
                         digitalWrite(LED_FANS_PIN, LOW);
@@ -53,10 +53,18 @@ void fansControl()
                         digitalWrite(LED_FANS_PIN, HIGH);
                         ledFansStatus = false;
                 }
-        }
 
-        if (currentTimeSec - previousMillisWater > WATER_FANS_INTERVAL || previousMillisWater == 0) {
-                previousMillisWater = currentTimeSec;
+                if (temperatureSump != TEMP_ERROR && temperatureSump > SETTINGS.max_sump_temp)
+                {
+                        digitalWrite(SUMP_FANS_PIN, LOW);
+                        sumpFansStatus = true;
+                }
+                else
+                {
+                        digitalWrite (SUMP_FANS_PIN, HIGH);
+                        sumpFansStatus = false;
+                }
+
                 if (temperatureWater != TEMP_ERROR && temperatureWater > SETTINGS.max_water_temp )
                 {
                         digitalWrite(WATER_FANS_PIN, LOW);
@@ -69,39 +77,15 @@ void fansControl()
                 }
         }
 
-        if (currentTimeSec - previousMillisSump > SUMP_FANS_INTERVAL || previousMillisSump == 0) {
-                previousMillisSump = currentTimeSec;
-                if (temperatureSump != TEMP_ERROR && temperatureSump > SETTINGS.max_sump_temp)
-                {
-                        digitalWrite(SUMP_FANS_PIN, LOW);
-                        sumpFansStatus = true;
-                }
-                else
-                {
-                        digitalWrite (SUMP_FANS_PIN, HIGH);
-                        sumpFansStatus = false;
-                }
-        }
+
 }
 
 static boolean checkAddr (byte s[])
 {
-        if (s[0] == 0 &&
-            s[1] == 0 &&
-            s[2] == 0 &&
-            s[3] == 0 &&
-            s[4] == 0 &&
-            s[5] == 0 &&
-            s[6] == 0 &&
-            s[7] == 0) return false;
-        else return true;
+        if (s[0] == 0 && s[1] == 0 && s[2] == 0 && s[3] == 0 && s[4] == 0 && s[5] == 0 && s[6] == 0 && s[7] == 0) return false; else return true;
 }
 
 
-static byte sensorsCheck (byte s[])
-{
-        if (OneWire::crc8( s, 7) == s[7]) return true; else return false;
-}
 /*
    byte printSensorAddr (byte s[])
    {
@@ -117,26 +101,14 @@ static byte sensorsCheck (byte s[])
 
 byte listContains (byte addr[])
 {
-        for (int i = 0; i < 7; i++)
-        {
-                if (
-                        sensorsList[i][0] == addr[0] &&
-                        sensorsList[i][1] == addr[1] &&
-                        sensorsList[i][2] == addr[2] &&
-                        sensorsList[i][3] == addr[3] &&
-                        sensorsList[i][4] == addr[4] &&
-                        sensorsList[i][5] == addr[5] &&
-                        sensorsList[i][6] == addr[6] &&
-                        sensorsList[i][7] == addr[7] )
+        for (byte i = 0; i < 7; i++)
+                if (sensorsList[i][0] == addr[0] && sensorsList[i][1] == addr[1] && sensorsList[i][2] == addr[2] &&
+                    sensorsList[i][3] == addr[3] && sensorsList[i][4] == addr[4] && sensorsList[i][5] == addr[5] &&
+                    sensorsList[i][6] == addr[6] && sensorsList[i][7] == addr[7] )
                         return i;
-        }
         return 255;
 }
 
-byte getSensorIndex (byte s[])
-{
-        if (OneWire::crc8( s, 7) == s[7]) return true; else return false;
-}
 
 byte discoverOneWireDevices() {
         byte res = 0;
@@ -146,7 +118,7 @@ byte discoverOneWireDevices() {
         memset (sensorsList, 0, 56);
 
         // pierwszy pusty
-        for (int k = 0; k < 8; k++)
+        for (byte k = 0; k < 8; k++)
         {
                 sensorsList[res][k] = 0;
                 sensorsDetected[res] = false;
@@ -154,12 +126,9 @@ byte discoverOneWireDevices() {
         res++;
 
         while (onewire.search(addr)) {
-                if ( OneWire::crc8( addr, 7) != addr[7] || !sensorsCheck (addr))
-                {
-                        continue;
-                }
+                if ( OneWire::crc8( addr, 7) != addr[7] ) continue;
 
-                for (int k = 0; k < 8; k++)
+                for (byte k = 0; k < 8; k++)
                 {
                         sensorsList[res][k] = addr[k];
                         sensorsDetected[res] = true;
@@ -170,7 +139,7 @@ byte discoverOneWireDevices() {
         if (checkAddr(SETTINGS.ledSensorAddress) && listContains (SETTINGS.ledSensorAddress) == 255)
         {
 
-                for (int k = 0; k < 8; k++)
+                for (byte k = 0; k < 8; k++)
                 {
                         sensorsList[res][k] = SETTINGS.ledSensorAddress[k];
                         sensorsDetected[res] = false;
@@ -180,7 +149,7 @@ byte discoverOneWireDevices() {
         }
         if (checkAddr(SETTINGS.sumpSensorAddress) && listContains (SETTINGS.sumpSensorAddress) == 255)
         {
-                for (int k = 0; k < 8; k++)
+                for (byte k = 0; k < 8; k++)
                 {
                         sensorsList[res][k] = SETTINGS.sumpSensorAddress[k];
                         sensorsDetected[res] = false;
@@ -189,7 +158,7 @@ byte discoverOneWireDevices() {
         }
         if (checkAddr(SETTINGS.waterSensorAddress) && listContains (SETTINGS.waterSensorAddress) == 255)
         {
-                for (int k = 0; k < 8; k++)
+                for (byte k = 0; k < 8; k++)
                 {
                         sensorsList[res][k] = SETTINGS.waterSensorAddress[k];
                         sensorsDetected[res] = false;

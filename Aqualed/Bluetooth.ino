@@ -48,18 +48,16 @@ void setupBluetooth ()
 
         if (pwmNumber < 255)
         {
-                if (val[2] >= 0 && val[2] <= 1) pwmChannel[pwmNumber].pwmStatus = val[2]; else return false;
-                if (val[3] >= 0 && val[3] <= 23) pwmChannel[pwmNumber].pwmHOn = val[3]; else return false;
-                if (val[4] >= 0 && val[4] <= 59) pwmChannel[pwmNumber].pwmMOn = val[4]; else return false;
-                if (val[5] >= 0 && val[5] <= 59) pwmChannel[pwmNumber].pwmSOn = val[5]; else return false;
-                if (val[6] >= 0 && val[6] <= 23) pwmChannel[pwmNumber].pwmHOff = val[6]; else return false;
-                if (val[7] >= 0 && val[7] <= 59) pwmChannel[pwmNumber].pwmMOff = val[7]; else return false;
-                if (val[8] >= 0 && val[8] <= 59) pwmChannel[pwmNumber].pwmSOff = val[8]; else return false;
-                if (val[9] >= 0 && val[9] <= 255) pwmChannel[pwmNumber].pwmMin = val[9]; else return false;
-                if (val[10] >= 0 && val[10] <= 255) pwmChannel[pwmNumber].pwmMax = val[10]; else return false;
-                if (val[11] >= 0 && val[11] <= 255) pwmChannel[pwmNumber].pwmSr = val[11]; else return false;
-                if (val[12] >= 0 && val[12] <= 255) pwmChannel[pwmNumber].pwmSs = val[12]; else return false;
-                if (val[13] >= 0 && val[13] <= 1) pwmChannel[pwmNumber].pwmKeepLight = val[13]; else return false;
+                if (val[2] >= 0 && val[2] <= 1) pwmChannel[pwmNumber].enabled = val[2]; else return false;
+                if (val[3] >= 0 && val[3] <= 23) pwmChannel[pwmNumber].onHour = val[3]; else return false;
+                if (val[4] >= 0 && val[4] <= 59) pwmChannel[pwmNumber].onMinute = val[4]; else return false;
+                if (val[6] >= 0 && val[6] <= 23) pwmChannel[pwmNumber].offHour = val[6]; else return false;
+                if (val[7] >= 0 && val[7] <= 59) pwmChannel[pwmNumber].offMinute = val[7]; else return false;
+                if (val[9] >= 0 && val[9] <= 255) pwmChannel[pwmNumber].valueNight = val[9]; else return false;
+                if (val[10] >= 0 && val[10] <= 255) pwmChannel[pwmNumber].valueDay = val[10]; else return false;
+                if (val[11] >= 0 && val[11] <= 255) pwmChannel[pwmNumber].sunriseLenght = val[11]; else return false;
+                if (val[12] >= 0 && val[12] <= 255) pwmChannel[pwmNumber].sunsetLenght = val[12]; else return false;
+                if (val[13] >= 0 && val[13] <= 1) pwmChannel[pwmNumber].isNightLight = val[13]; else return false;
                 writeEEPROMPWMConfig (pwmNumber);
                 return true;
         }

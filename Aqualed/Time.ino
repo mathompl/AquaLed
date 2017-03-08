@@ -6,26 +6,25 @@ https://github.com/mathompl/AquaLed
 #include <Arduino.h>
 
 bool isSummer() {
-        if (tm.Month < 3 || tm.Month > 10) return false;
-        if (tm.Month > 3 && tm.Month < 10) return true;
-        return ( (tm.Month == 3  && (tm.Hour + 24 * tm.Day) >= (1 + 24 * (31 - (5 * (tm.Year + 1970) / 4 + 4) % 7))) ||
-                 (tm.Month == 10 && (tm.Hour + 24 *  tm.Day) < (1 + 24 * (31 - (5 * (tm.Year + 1970) / 4 + 1) % 7))));
+        if (month () < 3 || month () > 10) return false;
+        if (month () > 3 && month () < 10) return true;
+        return ( (month () == 3  && (hour () + 24 * day()) >= (1 + 24 * (31 - (5 * (year() + 1970) / 4 + 4) % 7))) ||
+                 (month () == 10 && (hour () + 24 * day()) < (1 + 24 * (31 - (5 * (year () + 1970) / 4 + 1) % 7))));
 }
 
 void readTime ()
 {
         currentMillis = millis();
-        if (RTC.read(tm)) {
-                currentTimeSec = (long(tm.Hour) * 3600) + (long(tm.Minute) * 60) + long(tm.Second);
+        if (RTC.read(tm))
                 adjustDST ();
-        }
 }
 
+// adjust daylight saving time (european)
 void adjustDST ()
 {
-        if (currentTimeSec -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
+        if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
-                previousSecTimeAdjust = currentTimeSec;
+                previousSecTimeAdjust = currentMillis;
                 if (isSummer() && !SETTINGS.dst)
                 {
                         time_t t = makeTime(tm);

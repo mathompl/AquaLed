@@ -37,7 +37,9 @@ void setup() {
         writeEEPROMDefaults ();
         eEpromRead();
         setupPWMPins ();
-
+        setSyncProvider(RTC.get);
+        setSyncInterval (600);
+        //Serial.begin (9600);
 #ifndef NO_TEMPERATURE
         setupSensors ();
 #endif
@@ -68,10 +70,9 @@ void loop() {
         nxDisplay ();
         wdt_reset();
         // nextion touch istener
-        nxTouch();
+         nxTouch();
         wdt_reset();
 #endif
-
 
         // temperature and fans control
 #ifndef NO_TEMPERATURE
@@ -84,5 +85,4 @@ void loop() {
         bluetoothServe ();
         wdt_reset();
 #endif
-
 }

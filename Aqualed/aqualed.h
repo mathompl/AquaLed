@@ -1,105 +1,18 @@
 /*
- AQUALED MAIN configuration file (c) T. Formanowski 2016-2017
+ AQUALED system configuration file (c) T. Formanowski 2016-2017
 https://github.com/mathompl/AquaLed
 */
 
+
 #include <Wire.h>
+#include <OneWire.h>
 #include <Time.h>
 #include <EEPROM.h>
 #include <DS1307RTC.h>
-#include <OneWire.h>
 #include <avr/wdt.h>
-#include <DallasTemperature.h>
 #include <DS18B20.h>
-
-/*
-    USER DEFINED SETTINGS
-*/
-// modules, uncomment to disable, comment to enable
-// uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
-
-//#define USE_I2C_PWM_MODULE
-#define NO_BLUETOOTH
-//#define NO_NEXTION
-//#define NO_I2C
-//#define NO_TEMPERATURE
-//#define DEBUG
-
-// ARDUINO build-in PWM pins config
-#ifdef USE_I2C_PWM_MODULE
-    #define PWMS 8
-    #define PWM1_PIN  0
-    #define PWM2_PIN  1
-    #define PWM3_PIN  2
-    #define PWM4_PIN  3
-    #define PWM5_PIN  4
-    #define PWM6_PIN  5
-    #define PWM7_PIN  6
-    #define PWM8_PIN  7
-
-    #define PWM1_I2C  1
-    #define PWM2_I2C  1
-    #define PWM3_I2C  1
-    #define PWM4_I2C  1
-    #define PWM5_I2C  1
-    #define PWM6_I2C  1
-    #define PWM7_I2C  1
-    #define PWM8_I2C  1
-#else
-// PWM MODULE pins config
-    #define PWMS 8
-    #define PWM1_PIN  3
-    #define PWM2_PIN  5
-    #define PWM3_PIN  6
-    #define PWM4_PIN  9
-    #define PWM5_PIN  10
-    #define PWM6_PIN  11
-    #define PWM7_PIN  1
-    #define PWM8_PIN  2
-
-    #define PWM1_I2C  0
-    #define PWM2_I2C  0
-    #define PWM3_I2C  0
-    #define PWM4_I2C  0
-    #define PWM5_I2C  0
-    #define PWM6_I2C  0
-    #define PWM7_I2C  1
-    #define PWM8_I2C  1
-#endif
-
-// overwrite night mode values (when 1% resolution is too much)
-//#define PWM_FORCE_NIGHT_VALUE 1
-
-#define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
-
-// i2c configuration
-#define PWM_I2C_MIN 0 // lower value of i2c scale
-#define PWM_I2C_MAX 4095 // uper value
-#define PWM_I2C_FREQ 333 // i2c frequency (hz)
-//#define PWM_I2C_INVERT // uncomment for inverted i2c modules
-
-// termometry
-#define ONEWIRE_PIN 4 // ds18b20 thermometers pin
-
-// relay's pins
-#define LED_FANS_PIN 2 // lamp fans relay pin
-#define WATER_FANS_PIN 8 // water  fans relay pin
-#define SUMP_FANS_PIN 7 // sump fans relay pin
-
-// resolutions
-#define PWM_RESOLUTION 500.0 //ms main PWM loop resolution
-#define PWM_MIN_STEP 0.00001 // minimum pwm change step
-#define NX_INFO_RESOLUTION 1000 //ms - nextion home page refresh time
-#define EEPROM_STATE_RESOLUTION 5000 //ms - saving of pwmNow value time
-#define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms temperature reading resolution
-#define TIME_ADJUST_INTERVAL 3600 //s daylight saving mode check
-
-// rozdzielczosc przekaznikow (s)
-#define LED_FANS_INTERVAL 300 //s fans resolution
-#define WATER_FANS_INTERVAL 300 //s fans resolution
-#define SUMP_FANS_INTERVAL 300 //s fans resolution
-
-#define MAX_WATTS 200 // RFU
+#include "config.h"
+#include <Adafruit_PWMServoDriver.h>
 
 /*
   SYSTEM VARIABLES, do not modify
@@ -108,40 +21,56 @@ https://github.com/mathompl/AquaLed
 #define ON  true
 #define OFF false
 
+
+// i2c controller
+Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
+
+// structure for storing channel information
 typedef struct
 {
-        byte pwmPin;
-        bool pwmI2C;
-        byte pwmStatus;
-        byte pwmHOn;
-        byte pwmMOn;
-        byte pwmSOn;
-        byte pwmHOff;
-        byte pwmMOff;
-        byte pwmSOff;
-        byte pwmMin;
-        byte pwmMax;
-        byte pwmSr;
-        byte pwmSs;
-        byte pwmKeepLight;
-        byte pwmInvert;
-        double pwmNow;
-        byte pwmGoal;
-        byte pwmSaved;
-        byte pwmTest;
+        byte pin ; // pwm pin
+        byte isI2C; // use build in bin or i2c module pin
+        byte enabled; // is channel enabled
+        byte invertPwm; // invert pwm values
+        byte onHour; // channel daylight start hour
+        byte onMinute; // channel daylight start minute
+        byte offHour;  // channel daylight stop hour
+        byte offMinute; // channel daylight stop minute
+        byte valueNight; // nightlight value
+        byte valueDay; // daylight value
+        byte valueProg; // additional program value
+        byte sunriseLenght; // minutes
+        byte sunsetLenght;  // minutes
+        byte isNightLight; // is channel a nightlight
+        byte isProg;
+        byte valueGoal; // runtime used for dimming
+        byte valueTest;
+        bool testMode;
+        double valueCurrent;
         byte isSunrise;
         byte isSunset;
         byte isNight;
-        byte pwmAmbient;
         byte dimmingScale;
         bool dimmingStart;
-        long dimmingTime;
+        word dimmingTime;
         bool recoverLastState;
+        byte watts;
 } PWM;
-PWM pwmChannel[PWMS];
+PWM pwmChannel[PWMS] = {
+ {3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+ {2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};
 
-double pwmLast[PWMS] = {0};
-double pwmNxLast[PWMS] = {0};
+bool recovery = false;
+
+double pwmLast[PWMS] = {-1,-1,-1,-1,-1,-1,-1,-1};
+double pwmNxLast[PWMS] = {-1,-1,-1,-1,-1,-1,-1,-1};
 
 struct SETTINGS_STRUCT
 {
@@ -160,51 +89,28 @@ struct SETTINGS_STRUCT
         byte waterSensorAddress[8];
 };
 
-byte sensorsList[7][8];
-bool sensorsDetected[7];
+byte sensorsList[7][8] = {0};
+bool sensorsDetected[7]  = {0};
 
-SETTINGS_STRUCT SETTINGS =
-{
-        0,
-        0,
-        0,
-        35,
-        30,
-        30,
-        35,
-        30,
-        0,
-        0,
-        {0x28, 0x32, 0x78, 0x04, 0x00, 0x00, 0x80, 0x4C},
-        {0x28, 0x12, 0x50, 0x28, 0x00, 0x00, 0x80, 0x5E},
-        {0x28, 0xFF, 0xBE, 0xCD, 0x6D, 0x14, 0x04, 0x02}
-};
+SETTINGS_STRUCT SETTINGS = {0,0,0,35,30,30,35,30,0,0,{0},{0},{0}};
 
+long unsigned currentMillis = 0;
 unsigned long previousPwmResolution = 0;
 unsigned long previousNxInfo = 0;
 unsigned long previousTemperature = 0;
 unsigned long previousMillisFans = 0;
-unsigned long previousMillisWater = 0;
-unsigned long previousMillisSump = 0;
 unsigned long previousMillisNextion = 0;
-unsigned long previousMillisEepromState = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
-
 tmElements_t tm;
-long unsigned currentMillis;
-long unsigned currentTimeSec;
-bool  testMode = false;
-byte nxLastHour = 0, nxLastMinute = 0;
-bool  justTurnedOn = true;
 
 // sensors
-float temperatureLed;
-float temperatureWater;
-float temperatureSump;
-float nxtemperatureLed;
-float nxtemperatureWater;
-float nxtemperatureSump;
+float temperatureLed = 0;
+float temperatureWater = 0;
+float temperatureSump = 0;
+float nxtemperatureLed = 0;
+float nxtemperatureWater = 0;
+float nxtemperatureSump= 0;
 
 bool  ledFansStatus = false;
 bool  waterFansStatus = false;
@@ -213,9 +119,9 @@ bool  nxledFansStatus = false;
 bool  nxwaterFansStatus = false;
 bool  nxsumpFansStatus = false;
 
-// logarithmic dimming table
-const byte dimmingTable [] PROGMEM = {
-//const byte dimmingTable [] = {
+// logarithmic dimming table (dont use with I2C module)
+//const byte dimmingTable [] PROGMEM = {
+const byte dimmingTable [] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01,
