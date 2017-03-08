@@ -123,11 +123,7 @@ static void pwm( byte i )
         {
                 if (pwmChannel[i].isNightLight)
                 {
-                  #ifdef PWM_FORCE_NIGHT_VALUE
-                        pwmChannel[i].valueGoal = PWM_FORCE_NIGHT_VALUE;
-                  #else
                         pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
-                  #endif
                 }
                 else
                         pwmChannel[i].valueGoal = 0;
@@ -161,6 +157,7 @@ static void pwm( byte i )
         // night light
         else if (!state && pwmChannel[i].isNightLight)
         {
+                pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
                 if (isDimmingStart(i))
                 {
                         pwmChannel[i].dimmingStart = true;

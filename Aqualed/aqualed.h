@@ -52,7 +52,7 @@ typedef struct
         byte isNight;
         byte dimmingScale;
         bool dimmingStart;
-        word dimmingTime;
+        long dimmingTime;
         bool recoverLastState;
         byte watts;
 } PWM;
