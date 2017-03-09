@@ -59,54 +59,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 Driver configuration is in file aqualed.h
 
 ####PINS SETUP:
-#####To use arduino built-in PWM pins (arduino ATmega328 or ATmega168 has 6 PWM channels, MEGA 2560 has 15 PWM channels):
-```
-// PWM
-#define PWMS 6
-#define PWM1_PIN  3
-#define PWM2_PIN  5
-#define PWM3_PIN  6
-#define PWM4_PIN  9
-#define PWM5_PIN  10
-#define PWM6_PIN  11
-#define PWM7_PIN  1
-#define PWM8_PIN  2
-
-#define PWM1_I2C  0
-#define PWM2_I2C  0
-#define PWM3_I2C  0
-#define PWM4_I2C  0
-#define PWM5_I2C  0
-#define PWM6_I2C  0
-#define PWM7_I2C  1
-#define PWM8_I2C  1
-```
-
-#####To use I2C PWM module (PCA9635, PCA9685 etc. modules) pins:
-```
-// PWM pins config
-#define PWMS 8
-#define PWM1_PIN  0
-#define PWM2_PIN  1
-#define PWM3_PIN  2
-#define PWM4_PIN  3
-#define PWM5_PIN  4
-#define PWM6_PIN  5
-#define PWM7_PIN  6
-#define PWM8_PIN  7
-
-// 0 - Arduino PWM pins
-// 1 - i2c PWM module, eg. PCA9685
-
-#define PWM1_I2C  1
-#define PWM2_I2C  1
-#define PWM3_I2C  1
-#define PWM4_I2C  1
-#define PWM5_I2C  1
-#define PWM6_I2C  1
-#define PWM7_I2C  1
-#define PWM8_I2C  1
-```
+Configuration on LCD.
 
 
 ####Modules (uncomment to disable). As for now bluetooth and nextion support does not fit into Arduino Nano/UNO etc. flash memory. Use arduino Mega or disable one module support.
@@ -114,7 +67,6 @@ Driver configuration is in file aqualed.h
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
 //#define NO_NEXTION
-//#define NO_I2C
 //#define NO_TEMPERATURE
 ```
 ####Other
@@ -187,62 +139,13 @@ Przykładowy program na wyświetlacz załączony.
 Konfiguracja w pliku aqualed.h i nextion.h
 
 ####Ustawienia pinów PWM:
-#####Jeśli chcesz używać wbudowanych w Arduino pinów PWM (arduino ATmega328 lub ATmega168 posiada wyjść 6 PWM, MEGA 2560 posiada 15 wyjść PWM):
-```
-// PWM
-#define PWMS 6
-#define PWM1_PIN  3
-#define PWM2_PIN  5
-#define PWM3_PIN  6
-#define PWM4_PIN  9
-#define PWM5_PIN  10
-#define PWM6_PIN  11
-#define PWM7_PIN  1
-#define PWM8_PIN  2
-
-#define PWM1_I2C  0
-#define PWM2_I2C  0
-#define PWM3_I2C  0
-#define PWM4_I2C  0
-#define PWM5_I2C  0
-#define PWM6_I2C  0
-#define PWM7_I2C  1
-#define PWM8_I2C  1
-```
-
-#####Jeśli chcesz użyć modułu I2C (PCA9635, PCA9685):
-```
-// PWM pins config
-#define PWMS 8
-#define PWM1_PIN  0
-#define PWM2_PIN  1
-#define PWM3_PIN  2
-#define PWM4_PIN  3
-#define PWM5_PIN  4
-#define PWM6_PIN  5
-#define PWM7_PIN  6
-#define PWM8_PIN  7
-
-// 0 - Arduino PWM pins
-// 1 - i2c PWM module, eg. PCA9685
-
-#define PWM1_I2C  1
-#define PWM2_I2C  1
-#define PWM3_I2C  1
-#define PWM4_I2C  1
-#define PWM5_I2C  1
-#define PWM6_I2C  1
-#define PWM7_I2C  1
-#define PWM8_I2C  1
-```
-
+Konfiguracja z poziomu wyświetlacza.
 
 ####Moduły (odkomentuj żeby wyłączyć). Uwaga! Obsługa bluetooth i nextio nie mieści się jednocześnie w pamięcy flash Arduino Nano/Uno itd. wchodzi tylko do Arduino Mega lub podobnego.
 ```
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
 //#define NO_NEXTION
-//#define NO_I2C
 //#define NO_TEMPERATURE
 ```
 ####Inne
