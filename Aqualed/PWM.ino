@@ -31,7 +31,7 @@ void initPWM (byte i)
 }
 
 // sciemnianie/rozjasnianie
-boolean pwmStep (byte i, long dimmingTime)
+boolean pwmStep (byte i, byte dimmingTime)
 {
         boolean dimming = false;
         double valueCurrent = pwmChannel[i].valueCurrent;
@@ -54,7 +54,7 @@ boolean pwmStep (byte i, long dimmingTime)
         if (pwmChannel[i].dimmingStart == true)
         {
                 max = (double) pwmChannel[i].dimmingScale;
-                step = (double) ( (double) max / (double) (dimmingTime / PWM_RESOLUTION));
+                step = (double) ( (double) max / (double) ((dimmingTime * 1000) / PWM_RESOLUTION));
         }
 
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
@@ -93,7 +93,6 @@ static void pwm( byte i )
         pwmChannel[i].isSunrise= false;
         pwmChannel[i].isNight= false;
         boolean dimming = false;
-        long dimmingTime = (long) SETTINGS.pwmDimmingTime * 1000;
         long ssMillis;
         long srMillis;
         bool state = getState (i);
@@ -115,7 +114,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = pwmChannel[i].valueCurrent;
                 }
 
-                dimming = pwmStep (i, dimmingTime);
+                dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
         }
         else
         // force night
@@ -134,7 +133,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueNight);
                 }
                 pwmChannel[i].isNight= true;
-                dimming = pwmStep (i, dimmingTime);
+                dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
         }
         else
         // ambient/user program
@@ -147,12 +146,12 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueProg);
                 }
 
-                dimming = pwmStep (i, dimmingTime);
+                dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
         }
         else
         if (pwmChannel[i].recoverLastState)
         {
-                dimming = pwmStep (i,dimmingTime);
+                dimming = pwmStep (i,SETTINGS.pwmDimmingTime);
         }
         // night light
         else if (!state && pwmChannel[i].isNightLight)
@@ -164,7 +163,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueNight);
                 }
                 pwmChannel[i].isNight= true;
-                dimming = pwmStep (i, dimmingTime);
+                dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
         }
         else
         //sunset
@@ -232,7 +231,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueDay);
                 }
 
-                dimming = pwmStep (i,dimmingTime);
+                dimming = pwmStep (i,SETTINGS.pwmDimmingTime);
         }
         // scheduled off
         else if (!state && !pwmChannel[i].isNightLight)
@@ -244,7 +243,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingStart = true;
                         pwmChannel[i].dimmingScale = pwmChannel[i].valueCurrent;
                 }
-                dimming = pwmStep (i,dimmingTime);
+                dimming = pwmStep (i,SETTINGS.pwmDimmingTime);
         }
 
         // no change
@@ -283,9 +282,12 @@ static void pwm( byte i )
 // check if scheduled on or off
 bool getState (byte i)
 {
+        unsigned long currTime = 0;
+        unsigned long startTime = 0;
+        unsigned long stopTime = 0;
         boolean midnight = false;
-        startTime = (long)(pwmChannel[i].onHour) * 3600 + (long)(pwmChannel[i].onMinute) * 60;
-        stopTime = (long)(pwmChannel[i].offHour) * 3600 + (long)(pwmChannel[i].offMinute) * 60;
+        startTime = (long)(pwmChannel[i].onHour) * 60 * 60 + (long)(pwmChannel[i].onMinute)* 60 ;
+        stopTime = (long)(pwmChannel[i].offHour) * 60 * 60 + (long)(pwmChannel[i].offMinute)* 60 ;
         currTime = (long)hour ()* 60 * 60 + (long)minute () * 60 + (long)second ();
 
         if (stopTime < startTime) midnight = true;
@@ -306,10 +308,13 @@ bool getState (byte i)
 // calculate remaining sunset time (if any)
 long getSunsetMillis (byte i, long &m)
 {
+        unsigned long currTime = 0;
+        unsigned long startTime = 0;
+        unsigned long stopTime = 0;
         boolean midnight = false;
-         stopTime = (long)pwmChannel[i].offHour * 60 * 60 + (long)pwmChannel[i].offMinute * 60;
+        stopTime = (long)pwmChannel[i].offHour * 60 * 60 + (long)pwmChannel[i].offMinute * 60 ;
         currTime = (long)hour () * 60 * 60 + (long)minute () * 60 + (long)second ();
-        startTime = stopTime - (long) pwmChannel[i].sunsetLenght * 60;
+        startTime = stopTime - (long) pwmChannel[i].sunsetLenght * 60 ;
 
         if (startTime < 0) midnight = true;
 
@@ -341,10 +346,13 @@ long getSunsetMillis (byte i, long &m)
 // calculate remaining sunrise time (if any)
 long getSunriseMillis (byte i, long &m)
 {
+        unsigned long currTime = 0;
+        unsigned long startTime = 0;
+        unsigned long stopTime = 0;
         // in seconds
-         startTime = (long)pwmChannel[i].onHour * 60 * 60 + (long)pwmChannel[i].onMinute * 60;
+        startTime = (long)pwmChannel[i].onHour * 60* 60  + (long)pwmChannel[i].onMinute* 60 ;
         currTime = (long)hour () * 60 * 60 + (long)minute () * 60 + (long) second();
-         stopTime = startTime + (long)pwmChannel[i].sunriseLenght * 60;
+        stopTime = startTime + (long)pwmChannel[i].sunriseLenght * 60;
 
         boolean midnight = false;
 

@@ -5,9 +5,7 @@ https://github.com/mathompl/AquaLed
 
 #include <Arduino.h>
 
-bool isSummer() {
-        if (month () < 3 || month () > 10) return false;
-        if (month () > 3 && month () < 10) return true;
+bool isSummer() {        
         return ( (month () == 3  && (hour () + 24 * day()) >= (1 + 24 * (31 - (5 * (year() + 1970) / 4 + 4) % 7))) ||
                  (month () == 10 && (hour () + 24 * day()) < (1 + 24 * (31 - (5 * (year () + 1970) / 4 + 1) % 7))));
 }

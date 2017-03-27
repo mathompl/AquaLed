@@ -104,11 +104,6 @@ unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
 tmElements_t tm;
 
-unsigned long currTime = 0;
-unsigned long startTime = 0;
-unsigned long stopTime = 0;
-
-
 // sensors
 float temperatureLed = 0;
 float temperatureWater = 0;

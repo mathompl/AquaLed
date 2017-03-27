@@ -13,14 +13,14 @@
 // init nextion lcd
 static void nexInit(void)
 {
-        delay (1000);
+        delay (500);
         NEXTION_BEGIN (9600);
         NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BKCMD, (long)0);
         setPage (PAGE_HOME);
         setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
         NEXTION_FLUSH ();
-delay (500);
+        delay (500);
         NEXTION_BEGIN (NEXTION_BAUD_RATE);
         NEXTION_PRINT ("\r\n");
         NEXTION_FLUSH ();
@@ -54,20 +54,13 @@ static void nxTouch()
                 delay(10);
                 c = NEXTION_READ ();
                 wdt_reset();
-                if (c == NEX_RET_EVENT_TOUCH_HEAD)
-                {
-
-                        touchEvent = true;
-                }
+                if (c == NEX_RET_EVENT_TOUCH_HEAD) touchEvent = true;
                 if (touchEvent)
                 {
                         __buffer[i] = c;
                         i++;
                 }
-                if (i > 6)
-                {
-                        break;
-                }
+                if (i > 6) break;
         }
         if (0xFF == __buffer[4] && 0xFF == __buffer[5] && 0xFF == __buffer[6])
         {
@@ -324,7 +317,7 @@ static void handlePWMPage (byte cid)
                 pwmChannel[i - 1].invertPwm = t;
 
                 if (lastPin != pwmChannel[i - 1].pin || lastI2C != pwmChannel[i - 1].isI2C)
-                  initPWM ( i-1 );
+                        initPWM ( i-1 );
 
                 lastTouch = currentMillis;
                 writeEEPROMPWMConfig (i - 1);
@@ -995,7 +988,7 @@ static void setPercent (byte field, double percent)
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
-        NEXTION_PRINTF( percent , 1);
+        NEXTION_PRINTF( percent, 1);
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_PERCENT])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
         sendNextionEOL ();
