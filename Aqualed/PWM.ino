@@ -31,7 +31,7 @@ void initPWM (byte i)
 }
 
 // sciemnianie/rozjasnianie
-boolean pwmStep (byte i, byte dimmingTime)
+boolean pwmStep (byte i, long dimmingTime)
 {
         boolean dimming = false;
         double valueCurrent = pwmChannel[i].valueCurrent;
