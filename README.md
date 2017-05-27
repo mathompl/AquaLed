@@ -74,7 +74,7 @@ There are many other options for eg. timers resolution, most of them are pretty 
 
 **Wiring:**
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg?"AquaLed wiring")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg? "AquaLed wiring")
 
 
 
@@ -153,7 +153,7 @@ W pliku konfiguracyjnym można ustawić wiele opcji w tym czasy działania timer
 
 **Podłączenie:**
 
-![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg?"AquaLed wiring")
+![Alt text](http://pifpaf.pl/ftp/aqualed/ss/wiring.jpg? "AquaLed wiring")
 
 
 
