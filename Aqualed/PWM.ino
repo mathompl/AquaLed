@@ -55,8 +55,19 @@ boolean pwmStep (byte i, long dimmingTime)
         {
                 max = (double) pwmChannel[i].dimmingScale;
                 step = (double) ( (double) max / (double) ((dimmingTime * 1000) / PWM_RESOLUTION));
-        }
-
+        }/*
+        if (pwmChannel[i].isSunrise)
+        {
+        Serial.println();
+                        Serial.print (i);
+                        Serial.print (" ");
+                        Serial.print (pwmChannel[i].valueDay);
+                        Serial.print (" ");
+                        Serial.print (pwmChannel[i].valueCurrent);
+                        Serial.print (" ");
+                        Serial.print (step);
+                        Serial.println();
+}*/
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (valueGoal - valueCurrent) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -133,7 +144,7 @@ static void pwm( byte i )
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueNight);
                 }
                 pwmChannel[i].isNight= true;
-                dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
+                dimming = pwmStep (i, SETTINGS.pwmDimmingTime );
         }
         else
         // ambient/user program
@@ -190,7 +201,7 @@ static void pwm( byte i )
                                 pwmChannel[i].dimmingTime = ssMillis;
                         }
                 }
-                dimming = pwmStep (i, pwmChannel[i].dimmingTime);
+                dimming = pwmStep (i, pwmChannel[i].dimmingTime / 1000);
         }
         else
         //sunrise
@@ -218,8 +229,14 @@ static void pwm( byte i )
                                 pwmChannel[i].dimmingTime = srMillis;
 
                         }
+
                 }
-                dimming = pwmStep (i, pwmChannel[i].dimmingTime);
+
+
+
+                dimming = pwmStep (i, pwmChannel[i].dimmingTime  / 1000);
+
+
         }
         else if (state)
         {

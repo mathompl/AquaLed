@@ -27,8 +27,8 @@ https://github.com/mathompl/AquaLed
 #define PWM_3_NAME "Royal Blue 1\0"
 #define PWM_4_NAME "Royal Blue 2\0"
 #define PWM_5_NAME "Royal Blue 3\0"
-#define PWM_6_NAME "UV 1\0"
-#define PWM_7_NAME "Red/BLue\0"
+#define PWM_6_NAME "Blue\0"
+#define PWM_7_NAME "Red\0"
 #define PWM_8_NAME "Sump\0"
 
 #define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
