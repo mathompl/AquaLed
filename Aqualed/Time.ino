@@ -4,11 +4,7 @@ https://github.com/mathompl/AquaLed
 */
 
 #include <Arduino.h>
-
-bool isSummer() {        
-        return ( (month () == 3  && (hour () + 24 * day()) >= (1 + 24 * (31 - (5 * (year() + 1970) / 4 + 4) % 7))) ||
-                 (month () == 10 && (hour () + 24 * day()) < (1 + 24 * (31 - (5 * (year () + 1970) / 4 + 1) % 7))));
-}
+#define dayOfWeek(_time_)  ((( _time_ / SECS_PER_DAY + 4)  % DAYS_PER_WEEK)+1) // 1 = Sunday
 
 void readTime ()
 {
@@ -20,23 +16,26 @@ void readTime ()
 // adjust daylight saving time (european)
 void adjustDST ()
 {
-        if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
+      //  if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
                 previousSecTimeAdjust = currentMillis;
-                if (isSummer() && !SETTINGS.dst)
+
+                if (dayOfWeek(now()) == 1 && month() == 3 && day() >= 25 && day() <=31 && hour() == 1 && SETTINGS.dst==0)
                 {
-                        time_t t = makeTime(tm);
-                        t += 3600;
-                        setTime (t);
+                        //time_t t = makeTime(tm);
+                        //t += 3600;
+                        //setTime (t);
+                        setTime( hour()+1, minute(), second (), day(), month(), year() );
                         RTC.set( now () );
                         SETTINGS.dst = 1;
                         writeEEPROMSettings ();
                 }
-                else if (!isSummer() && SETTINGS.dst)
+                else if (dayOfWeek(now()) == 1 && month() == 10 && day() >= 25 && day() <=31 && hour() == 1 && SETTINGS.dst==1)
                 {
-                        time_t t = makeTime(tm);
-                        t -= 3600;
-                        setTime (t);
+                        //time_t t = makeTime(tm);
+                        //t -= 3600;
+                        //setTime (t);
+                        setTime( hour()-1, minute(), second (), day(), month(), year() );
                         RTC.set( now () );
                         SETTINGS.dst = 0;
                         writeEEPROMSettings ();

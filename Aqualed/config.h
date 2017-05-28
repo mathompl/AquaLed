@@ -56,7 +56,7 @@ https://github.com/mathompl/AquaLed
 #define NX_INFO_RESOLUTION 1000 //ms - nextion home page refresh time
 #define EEPROM_STATE_RESOLUTION 5000 //ms - saving of valueCurrent value time
 #define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms temperature reading resolution
-#define TIME_ADJUST_INTERVAL 3600000 //s daylight saving mode check
+#define TIME_ADJUST_INTERVAL 900000 //s daylight saving mode check
 
 // rozdzielczosc przekaznikow (s)
 #define FANS_INTERVAL 300000 //ms fans resolution

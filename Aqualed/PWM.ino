@@ -112,6 +112,7 @@ static void pwm( byte i )
         if (pwmChannel[i].testMode)
         {
                 pwmChannel[i].valueCurrent = pwmChannel[i].valueTest;
+                pwmChannel[i].recoverLastState = 0;
                 pwmChannel[i].dimmingStart = false;
         }
         else
@@ -123,6 +124,7 @@ static void pwm( byte i )
                 {
                         pwmChannel[i].dimmingStart = true;
                         pwmChannel[i].dimmingScale = pwmChannel[i].valueCurrent;
+                        pwmChannel[i].recoverLastState = 0;
                 }
 
                 dimming = pwmStep (i, SETTINGS.pwmDimmingTime);
@@ -141,6 +143,7 @@ static void pwm( byte i )
                 if (isDimmingStart(i))
                 {
                         pwmChannel[i].dimmingStart = true;
+                        pwmChannel[i].recoverLastState = 0;
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueNight);
                 }
                 pwmChannel[i].isNight= true;
@@ -154,6 +157,7 @@ static void pwm( byte i )
                 if (isDimmingStart(i))
                 {
                         pwmChannel[i].dimmingStart = true;
+                        pwmChannel[i].recoverLastState = 0;
                         pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueProg);
                 }
 
@@ -165,7 +169,7 @@ static void pwm( byte i )
                 dimming = pwmStep (i,SETTINGS.pwmDimmingTime);
         }
         // night light
-        else if (!state && pwmChannel[i].isNightLight)
+        else if (!state && pwmChannel[i].isNightLight == 1)
         {
                 pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
                 if (isDimmingStart(i))
@@ -183,16 +187,18 @@ static void pwm( byte i )
                 if (recovery)
                 {
                         pwmChannel[i].valueGoal =  (byte) (( (ssMillis/1000/60) * pwmChannel[i].valueDay) / pwmChannel[i].sunsetLenght);
-                        if (pwmChannel[i].isNightLight && pwmChannel[i].valueGoal <= pwmChannel[i].valueNight) pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
+                        //if (pwmChannel[i].isNightLight && pwmChannel[i].valueGoal <= pwmChannel[i].valueNight) pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
+                        if (pwmChannel[i].isNightLight == 1) pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
                         pwmChannel[i].dimmingStart = true;
                         pwmChannel[i].recoverLastState = true;
+
                         pwmChannel[i].dimmingScale = abs (pwmChannel[i].valueCurrent-pwmChannel[i].valueGoal);
                         return;
                 }
                 else
                 {
                         pwmChannel[i].isSunset = true;
-                        if (pwmChannel[i].isNightLight) pwmChannel[i].valueGoal = pwmChannel[i].valueNight; else pwmChannel[i].valueGoal = 0;
+                        if (pwmChannel[i].isNightLight == 1) pwmChannel[i].valueGoal = pwmChannel[i].valueNight; else pwmChannel[i].valueGoal = 0;
 
                         if (isDimmingStart(i))
                         {
@@ -213,8 +219,8 @@ static void pwm( byte i )
                         pwmChannel[i].valueGoal =  (byte) ( abs( pwmChannel[i].valueDay - (pwmChannel[i].sunriseLenght - srMillis/1000/60) * pwmChannel[i].valueDay) / pwmChannel[i].sunriseLenght);
                         pwmChannel[i].dimmingStart = true;
                         pwmChannel[i].recoverLastState = true;
-                        pwmChannel[i].dimmingScale = pwmChannel[i].valueGoal;
-
+                    //    pwmChannel[i].dimmingScale = pwmChannel[i].valueGoal;
+                        pwmChannel[i].dimmingScale = abs (pwmChannel[i].valueCurrent-pwmChannel[i].valueGoal);
                         return;
                 }
                 else
@@ -227,16 +233,9 @@ static void pwm( byte i )
                                 pwmChannel[i].dimmingStart = true;
                                 pwmChannel[i].dimmingScale = abs(pwmChannel[i].valueCurrent-pwmChannel[i].valueDay);
                                 pwmChannel[i].dimmingTime = srMillis;
-
                         }
-
                 }
-
-
-
                 dimming = pwmStep (i, pwmChannel[i].dimmingTime  / 1000);
-
-
         }
         else if (state)
         {
@@ -251,7 +250,7 @@ static void pwm( byte i )
                 dimming = pwmStep (i,SETTINGS.pwmDimmingTime);
         }
         // scheduled off
-        else if (!state && !pwmChannel[i].isNightLight)
+        else if (!state && pwmChannel[i].isNightLight == 0)
         {
                 pwmChannel[i].valueGoal = 0;
 

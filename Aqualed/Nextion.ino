@@ -802,7 +802,12 @@ static void updateHomePage() {
                         else if (pwmChannel[i].isNight) icon = NX_STR_NIGHT;
                         else if (pwmChannel[i].valueCurrent == pwmChannel[i].valueDay) icon = NX_STR_ON;
                         pwmNxLast[i] = pwmChannel[i].valueCurrent;
-                        setPercent (valueField,  percent);
+//                        if (pwmChannel[i].recoverLastState)
+                        //setPercent (valueField,  pwmChannel[i].valueGoal);
+
+
+                       setPercent (valueField,  percent);
+
                         setText (iconField, icon);
                 }
         }
