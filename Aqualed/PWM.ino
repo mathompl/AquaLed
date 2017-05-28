@@ -45,6 +45,8 @@ boolean pwmStep (byte i, long dimmingTime)
                 return dimming;
         }
 
+
+
         double step;
 
 // full pwm scale dimming when no other data
@@ -55,19 +57,7 @@ boolean pwmStep (byte i, long dimmingTime)
         {
                 max = (double) pwmChannel[i].dimmingScale;
                 step = (double) ( (double) max / (double) ((dimmingTime * 1000) / PWM_RESOLUTION));
-        }/*
-        if (pwmChannel[i].isSunrise)
-        {
-        Serial.println();
-                        Serial.print (i);
-                        Serial.print (" ");
-                        Serial.print (pwmChannel[i].valueDay);
-                        Serial.print (" ");
-                        Serial.print (pwmChannel[i].valueCurrent);
-                        Serial.print (" ");
-                        Serial.print (step);
-                        Serial.println();
-}*/
+        }
         if (step < PWM_MIN_STEP) step = PWM_MIN_STEP;
         byte stepsLeft = (valueGoal - valueCurrent) / step;
         if (stepsLeft < 0) stepsLeft *= -1;
@@ -81,7 +71,20 @@ boolean pwmStep (byte i, long dimmingTime)
                 valueCurrent = valueCurrent - step;
                 if (valueCurrent <= 0 || valueCurrent < 0.1) valueCurrent = 0;
         }
+
         pwmChannel[i].valueCurrent = valueCurrent;
+
+        if (pwmLast[i] > pwmChannel[i].valueCurrent && pwmChannel[i].valueCurrent <= pwmChannel[i].valueGoal)
+        {
+            pwmChannel[i].valueCurrent = valueGoal;
+        }
+
+        if (pwmLast[i] < pwmChannel[i].valueCurrent && pwmChannel[i].valueCurrent >= pwmChannel[i].valueGoal)
+        {
+            pwmChannel[i].valueCurrent = valueGoal;
+        }
+
+
         return true;
 }
 
@@ -292,6 +295,8 @@ static void pwm( byte i )
                         pwm_i2c.setPWM(pwmChannel[i].pin, 0, v );
                 }
         }
+    
+
         pwmLast[i] = pwmChannel[i].valueCurrent;
 }
 
