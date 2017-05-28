@@ -16,7 +16,7 @@ void readTime ()
 // adjust daylight saving time (european)
 void adjustDST ()
 {
-      //  if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
+        if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
                 previousSecTimeAdjust = currentMillis;
 
