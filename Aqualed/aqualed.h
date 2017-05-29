@@ -50,7 +50,7 @@ typedef struct
         byte isSunrise;
         byte isSunset;
         byte isNight;
-        byte dimmingScale;
+        double dimmingScale;
         bool dimmingStart;
         long dimmingTime;
         bool recoverLastState;

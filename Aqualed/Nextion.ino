@@ -238,6 +238,7 @@ static void handleTestPage (byte cid)
                         pwmChannel[i].testMode = false;
                 }
                 forcePWMRecovery ();
+                cancelPWMRecovery ();
                 setPage (PAGE_CONFIG);
                 break;
 
@@ -677,6 +678,7 @@ static void handleHomePage (byte cid)
                 }
                 else
                         SETTINGS.forceNight = 1;
+                        cancelPWMRecovery();
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -690,6 +692,7 @@ static void handleHomePage (byte cid)
                         forcePWMRecovery ();
                 }
                 else SETTINGS.forceAmbient = 1;
+                cancelPWMRecovery();
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -703,6 +706,7 @@ static void handleHomePage (byte cid)
                 }
                 else SETTINGS.forceOFF = 1;
                 toggleButtons();
+                cancelPWMRecovery();
                 writeEEPROMSettings ();
                 break;
 
