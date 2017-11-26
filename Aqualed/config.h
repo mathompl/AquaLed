@@ -14,8 +14,8 @@ https://github.com/mathompl/AquaLed
 
 #define NO_BLUETOOTH
 //#define NO_NEXTION
-#define NEXTION_SOFTWARE_SERIAL
-#define NO_DIMMING_TABLE
+//#define NEXTION_SOFTWARE_SERIAL
+//#define NO_DIMMING_TABLE
 //#define NO_TEMPERATURE
 //#define DEBUG
 
