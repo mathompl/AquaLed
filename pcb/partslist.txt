@@ -1,0 +1,70 @@
+Partlist
+
+Exported from AquaLEd-drivers.sch at 2017-11-26 09:05
+
+EAGLE Version 8.4.1 Copyright (c) 1988-2017 Autodesk, Inc.
+
+Assembly variant:
+
+Part     Value          Device     Package  Library          Sheet
+
+DRIVER1                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER2                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER3                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER4                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER5                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER6                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER7                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+DRIVER8                 LDD-H      LDD-H    meanwell_dcdc_v8 1
+POWERIN                 W237-102   W237-102 con-wago-500     1
+PWM1                    JACK-PLUG1 SPC4078  con-jack         1
+PWM2                    JACK-PLUG1 SPC4078  con-jack         1
+PWM3                    JACK-PLUG1 SPC4078  con-jack         1
+PWM4                    JACK-PLUG1 SPC4078  con-jack         1
+PWM5                    JACK-PLUG1 SPC4078  con-jack         1
+PWM6                    JACK-PLUG1 SPC4078  con-jack         1
+PWM7                    JACK-PLUG1 SPC4078  con-jack         1
+PWM8                    JACK-PLUG1 SPC4078  con-jack         1
+
+Partlist
+
+Exported from AquaLed-logic.sch at 2017-11-26 09:06
+
+EAGLE Version 8.4.1 Copyright (c) 1988-2017 Autodesk, Inc.
+
+Assembly variant:
+
+Part           Value                 Device                  Package               Library             Sheet
+
+5V_NEXTION_VCC 5V                    CONN_022.54MM_SCREWTERM 1X02_2.54_SCREWTERM   SparkFun-Connectors 1
+D2             1N4004                1N4004                  DO41-10               diode               1
+D3             1N4004                1N4004                  DO41-10               diode               1
+D4             1N4004                1N4004                  DO41-10               diode               1
+JP1                                  JP1Q                    JP1                   jumper              1
+LAMPFANPWR                           JACK-PLUG1              SPC4078               con-jack            1
+LAMPFANRELAY   RELAYPTH              RELAYPTH                SRD-05VDC-SL-C        SRD-05VDC-SL-C      1
+LAMPFAN_VIN    12V                   CONN_022.54MM_SCREWTERM 1X02_2.54_SCREWTERM   SparkFun-Connectors 1
+NEXTION_COM    RJ9PTH                RJ9PTH                  RJ9                   SparkFun-Retired    1
+PWMI2C         PWM-SERVO-DRIVER-16CH PWM-SERVO-DRIVER-16CH   PWM-SERVO-DRIVER-16CH diy-modules         1
+Q2             BC547                 BC547                   TO92                  transistor-npn      1
+Q3             BC547                 BC547                   TO92                  transistor-npn      1
+Q4             BC547                 BC547                   TO92                  transistor-npn      1
+R1             10k                   10KOHM-HORIZ-1/6W-5%    AXIAL-0.3             SparkFun-Resistors  1
+R2             4.7k                  RESISTORAXIAL-0.3       AXIAL-0.3             SparkFun-Resistors  1
+R5             1k                    10KOHM-HORIZ-1/4W-1%    AXIAL-0.3             SparkFun-Resistors  1
+R6             1k                    10KOHM-HORIZ-1/4W-1%    AXIAL-0.3             SparkFun-Resistors  1
+R7             1k                    10KOHM-HORIZ-1/4W-1%    AXIAL-0.3             SparkFun-Resistors  1
+R8             10k                   10KOHM-HORIZ-1/6W-5%    AXIAL-0.3             SparkFun-Resistors  1
+RTC1           RTC-DS3231-AT24C32    RTC-DS3231-AT24C32      RTC-DS3231-AT24C32    diy-modules         1
+SUMPFANPWR                           JACK-PLUG1              SPC4078               con-jack            1
+SUMPFANRELAY   RELAYPTH              RELAYPTH                SRD-05VDC-SL-C        SRD-05VDC-SL-C      1
+SUMPFAN_VIN    12V                   CONN_022.54MM_SCREWTERM 1X02_2.54_SCREWTERM   SparkFun-Connectors 1
+THERMOMETER1   RJ9PTH                RJ9PTH                  RJ9                   SparkFun-Retired    1
+THERMOMETER2   RJ9PTH                RJ9PTH                  RJ9                   SparkFun-Retired    1
+THERMOMETER3   RJ9PTH                RJ9PTH                  RJ9                   SparkFun-Retired    1
+U$1            NANO                  NANO                    NANO                  Arduino-clone       1
+U$29           PCB                   PCB                     PCB                   aqualed             1
+VIN_5V         5V-9V                 CONN_022.54MM_SCREWTERM 1X02_2.54_SCREWTERM   SparkFun-Connectors 1
+WATERFANPWR                          JACK-PLUG1              SPC4078               con-jack            1
+WATERFANRELAY  RELAYPTH              RELAYPTH                SRD-05VDC-SL-C        SRD-05VDC-SL-C      1
+WATERFAN_VIN   12V                   CONN_022.54MM_SCREWTERM 1X02_2.54_SCREWTERM   SparkFun-Connectors 1
