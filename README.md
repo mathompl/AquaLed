@@ -159,6 +159,6 @@ W pliku konfiguracyjnym można ustawić wiele opcji w tym czasy działania timer
 
 **PCB Prototype boards:**
 ![Alt text](http://pifpaf.pl/ftp/aqualed/pcb/pcb-logic.png? "AquaLed Logic PCB")
-![Alt text](http://pifpaf.pl/ftp/aqualed/pcb/pcb-drivers.png? "AquaLed DRIVERS PCB")
+![Alt text](http://pifpaf.pl/ftp/aqualed/pcb/pcb-drivers.png?? "AquaLed DRIVERS PCB")
 
 Support:http://nano-reef.pl/topic/88904-a-qualed-sterownik-led-termometry-lcd-nextion/
