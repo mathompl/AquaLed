@@ -8,10 +8,10 @@
 
 #ifdef NEXTION_SOFTWARE_SERIAL
   #include "SoftwareSerial.h"
-SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
+  SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_BEGIN(x) nx.begin(x)
-  #define NEXTION_BEGIN(x) nx.read()
-  #define NEXTION_READ(x) nx.flush()
+  #define NEXTION_READ(x) nx.read()
+  #define NEXTION_FLUSH(x) nx.flush()
   #define NEXTION_READBYTES(x,y) nx.readBytes(x,y)
   #define NEXTION_SETTIMEOUT(x) nx.setTimeout(x)
   #define NEXTION_AVAIL() nx.available()
@@ -41,7 +41,8 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
 #define hour_stopx 180
 
 #define DEFAULT_BAUD_RATE 9600
-#define NEXTION_BAUD_RATE 115200
+//#define NEXTION_BAUD_RATE 115200
+#define NEXTION_BAUD_RATE 9600
 
 // uncomment for use nextion editor simulator
 // needs additional settings for non-standard baud rates
@@ -318,38 +319,38 @@ const char f_l7[] PROGMEM = "l7";
 const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
 
-const char cmd_comma[] PROGMEM= ",\0";
-const char cmd_parenth[] PROGMEM = "\"\0";
-const char cmd_space[] PROGMEM = " \0";
-const char cmd_eq[] PROGMEM = "=\0";
-const char cmd_txt[] PROGMEM = ".txt\0";
-const char cmd_pic[] PROGMEM = ".pic\0";
-const char cmd_pco[] PROGMEM = ".pco\0";
-const char cmd_get[] PROGMEM = "get\0";
-const char cmd_val[] PROGMEM = ".val\0";
-const char cmd_vis[] PROGMEM = "vis\0";
-const char cmd_page[] PROGMEM = "page\0";
-const char cmd_fill[] PROGMEM = "fill\0";
+const char cmd_comma[] PROGMEM= ",";
+const char cmd_parenth[] PROGMEM = "\"";
+const char cmd_space[] PROGMEM = " ";
+const char cmd_eq[] PROGMEM = "=";
+const char cmd_txt[] PROGMEM = ".txt";
+const char cmd_pic[] PROGMEM = ".pic";
+const char cmd_pco[] PROGMEM = ".pco";
+const char cmd_get[] PROGMEM = "get";
+const char cmd_val[] PROGMEM = ".val";
+const char cmd_vis[] PROGMEM = "vis";
+const char cmd_page[] PROGMEM = "page";
+const char cmd_fill[] PROGMEM = "fill";
 
 
 // constant strings
-const char str_degree[] PROGMEM = "EC\0";
-const char str_on[] PROGMEM = "A\0";
-const char str_off[] PROGMEM = "S\0";
-const char str_night[] PROGMEM = "P\0";
-const char str_sunrise[] PROGMEM = "G\0";
-const char str_sunset[] PROGMEM = "H\0";
-const char str_dash[] PROGMEM = "-\0";
-const char str_slash[]  PROGMEM = "/\0";
-const char str_empty[]  PROGMEM = "\0";
-const char str_recover[]  PROGMEM = "D\0";
-const char str_fan[] PROGMEM = "U\0";
-const char str_up[] PROGMEM = "L\0";
-const char str_down[] PROGMEM = "R\0";
-const char str_celc[]  PROGMEM= "'C\0";
-const char str_percent[] PROGMEM = "%\0";
-const char str_watts[] PROGMEM = "W\0";
-const char str_space[] PROGMEM = " \0";
+const char str_degree[] PROGMEM = "EC";
+const char str_on[] PROGMEM = "A";
+const char str_off[] PROGMEM = "S";
+const char str_night[] PROGMEM = "P";
+const char str_sunrise[] PROGMEM = "G";
+const char str_sunset[] PROGMEM = "H";
+const char str_dash[] PROGMEM = "-";
+const char str_slash[]  PROGMEM = "/";
+const char str_empty[]  PROGMEM = "";
+const char str_recover[]  PROGMEM = "D";
+const char str_fan[] PROGMEM = "U";
+const char str_up[] PROGMEM = "L";
+const char str_down[] PROGMEM = "R";
+const char str_celc[]  PROGMEM= "'C";
+const char str_percent[] PROGMEM = "%";
+const char str_watts[] PROGMEM = "W";
+const char str_space[] PROGMEM = " ";
 
 char const pwm_1_name[] PROGMEM = PWM_1_NAME;
 char const pwm_2_name[] PROGMEM = PWM_2_NAME;

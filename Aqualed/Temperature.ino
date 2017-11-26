@@ -30,8 +30,8 @@ static void requestReadings ()
 
 void fansControl()
 {
-        if (currentMillis - previousTemperature < TEMPERATURE_SAMPLE_INTERVAL) return;
 
+        if (currentMillis - previousTemperature < TEMPERATURE_SAMPLE_INTERVAL) return;
         previousTemperature = currentMillis;
 
         if (sensors.available()) {
@@ -40,6 +40,10 @@ void fansControl()
                 temperatureSump = sensors.readTemperature(SETTINGS.sumpSensorAddress);;
                 requestReadings ();
         }
+
+        // lamp overheating (for eg due to fans failure)
+        if (temperatureLed >= LAMP_TEMPERATURE_MAX || temperatureSump >= LAMP_TEMPERATURE_MAX) lampOverheating = true;
+        else lampOverheating = false;
 
         if (currentMillis - previousMillisFans > FANS_INTERVAL || previousMillisFans == 0) {
                 previousMillisFans = currentMillis;

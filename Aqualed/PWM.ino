@@ -147,6 +147,14 @@ static void pwm( byte i )
         bool state = getState (i);
 
         //test mode
+        if (lampOverheating == true)
+        {
+                pwmChannel[i].valueCurrent = 0;
+                pwmChannel[i].recoverLastState = 0;
+                pwmChannel[i].dimmingStart = false;
+        }
+        else
+        //test mode
         if (pwmChannel[i].testMode)
         {
                 pwmChannel[i].valueCurrent = pwmChannel[i].valueTest;
@@ -310,7 +318,11 @@ static void pwm( byte i )
                 if (dimming && SETTINGS.softDimming == 1 && (byte) val != pwmChannel[i].valueGoal)
                 {
                         //val = (byte)pgm_read_byte(&dimmingTable[val]);
+                        #ifndef NO_DIMMING_TABLE
                         val = dimmingTable[val];
+                        #else
+                        val = val;
+                        #endif
                 }
                 if (pwmChannel[i].invertPwm == 1)
                         analogWrite( pwmChannel[i].pin,  mapDoubleToInt (val, 255.0,0.0, 0,255));

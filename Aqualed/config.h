@@ -15,6 +15,7 @@ https://github.com/mathompl/AquaLed
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NEXTION_SOFTWARE_SERIAL
+//#define NO_DIMMING_TABLE
 //#define NO_TEMPERATURE
 //#define DEBUG
 
@@ -22,28 +23,32 @@ https://github.com/mathompl/AquaLed
 #define PWMS 8
 
 // PWM channels displayed names
-#define PWM_1_NAME "Cool white 1\0"
-#define PWM_2_NAME "Cool white 2\0"
-#define PWM_3_NAME "Royal Blue 1\0"
-#define PWM_4_NAME "Royal Blue 2\0"
-#define PWM_5_NAME "Royal Blue 3\0"
+#define PWM_1_NAME "CoolWhite 1\0"
+#define PWM_2_NAME "CoolWhite 2\0"
+#define PWM_3_NAME "RoyalBlue 1\0"
+#define PWM_4_NAME "RoyalBlue 2\0"
+#define PWM_5_NAME "RoyalBlue 3\0"
 #define PWM_6_NAME "Blue\0"
-#define PWM_7_NAME "Red\0"
+#define PWM_7_NAME "Act\0"
 #define PWM_8_NAME "Sump\0"
 
+
 #define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
+#define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown
+
 
 // i2c configuration
 #define PWM_I2C_MIN 0.0 // lower value of i2c scale
 #define PWM_I2C_MAX 4095.0 // uper value
 #define PWM_I2C_FREQ 333 // i2c frequency (hz)
 
+
 // termometry
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
 
 // if NEXTION_SOFTWARE_SERIAL defined, configure pins (for use with different pins - not stanard arduino Serial port)
-#define NEXTION_SOFTWARE_PIN_TX A2
-#define NEXTION_SOFTWARE_PIN_RX A1
+#define NEXTION_SOFTWARE_PIN_TX 12
+#define NEXTION_SOFTWARE_PIN_RX 11
 
 // relay's pins
 #define LED_FANS_PIN 2 // lamp fans relay pin

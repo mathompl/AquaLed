@@ -1,7 +1,7 @@
 /*
- AQUALED system configuration file (c) T. Formanowski 2016-2017
-https://github.com/mathompl/AquaLed
-*/
+   AQUALED system configuration file (c) T. Formanowski 2016-2017
+   https://github.com/mathompl/AquaLed
+ */
 
 
 #include <Wire.h>
@@ -15,8 +15,8 @@ https://github.com/mathompl/AquaLed
 #include <Adafruit_PWMServoDriver.h>
 
 /*
-  SYSTEM VARIABLES, do not modify
-*/
+   SYSTEM VARIABLES, do not modify
+ */
 
 #define ON  true
 #define OFF false
@@ -28,7 +28,7 @@ Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
 // structure for storing channel information
 typedef struct
 {
-        byte pin ; // pwm pin
+        byte pin;  // pwm pin
         byte isI2C; // use build in bin or i2c module pin
         byte enabled; // is channel enabled
         byte invertPwm; // invert pwm values
@@ -57,14 +57,14 @@ typedef struct
         byte watts;
 } PWM;
 PWM pwmChannel[PWMS] = {
- {3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
- {2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        {3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 };
 
 bool recovery = false;
@@ -112,15 +112,18 @@ float nxtemperatureLed = 0;
 float nxtemperatureWater = 0;
 float nxtemperatureSump= 0;
 
-bool  ledFansStatus = false;
-bool  waterFansStatus = false;
-bool  sumpFansStatus = false;
-bool  nxledFansStatus = false;
-bool  nxwaterFansStatus = false;
-bool  nxsumpFansStatus = false;
+bool lampOverheating = false;
+
+bool ledFansStatus = false;
+bool waterFansStatus = false;
+bool sumpFansStatus = false;
+bool nxledFansStatus = false;
+bool nxwaterFansStatus = false;
+bool nxsumpFansStatus = false;
 
 // logarithmic dimming table (dont use with I2C module)
 //const byte dimmingTable [] PROGMEM = {
+#ifndef NO_DIMMING_TABLE
 const byte dimmingTable [] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -155,3 +158,4 @@ const byte dimmingTable [] = {
         0xDB, 0xDD, 0xE0, 0xE2, 0xE4, 0xE7, 0xE9, 0xEB,
         0xEE, 0xF0, 0xF3, 0xF5, 0xF8, 0xFA, 0xFD, 0xFF,
 };
+#endif
