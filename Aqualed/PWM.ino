@@ -147,7 +147,7 @@ static void pwm( byte i )
         bool state = getState (i);
 
         //test mode
-        if (lampOverheating == true)
+        if (lampOverheating == true || max_watts_exceeded == true)
         {
                 pwmChannel[i].valueCurrent = 0;
                 pwmChannel[i].recoverLastState = 0;
@@ -217,7 +217,11 @@ static void pwm( byte i )
         // night light
         else if (!state && pwmChannel[i].isNightLight == 1)
         {
-                pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
+                if (pwmChannel[i].useLunarPhase==0) pwmChannel[i].valueGoal = pwmChannel[i].valueNight;
+                else
+                {
+                        pwmChannel[i].valueGoal = pwmChannel[i].valueNight * moonPhases[moonPhase]/100;
+                }
                 if (isDimmingStart(i))
                 {
                         pwmChannel[i].dimmingStart = true;

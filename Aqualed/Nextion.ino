@@ -118,6 +118,10 @@ static void handlePage (byte pid, byte cid)
                 handlePWMListPage (cid);
                 break;
 
+        case PAGE_ERROR:
+                handleScreenSaver (cid);
+                break;
+
         default:
                 break;
         }
@@ -317,6 +321,9 @@ static void handlePWMPage (byte cid)
                 if (!getNumber(NX_FIELD_C4, &t)) return;
                 pwmChannel[i - 1].invertPwm = t;
 
+                if (!getNumber(NX_FIELD_C5, &t)) return;
+                pwmChannel[i - 1].useLunarPhase = t;
+
                 if (lastPin != pwmChannel[i - 1].pin || lastI2C != pwmChannel[i - 1].isI2C)
                         initPWM ( i-1 );
 
@@ -511,7 +518,7 @@ static void handleConfigPage (byte cid)
         byte s;
         byte idxLed, idxSump, idxWater;
 
-        char tempbuff[200] = {0};
+        char tempbuff[150] = {0};
         switch (cid)
         {
         // schedule
@@ -643,6 +650,7 @@ static void handlePWMListPage (byte cid)
                 setValue (NX_FIELD_N11, pwmChannel[cid - 1].watts);
                 setValue (NX_FIELD_C3, pwmChannel[cid - 1].isI2C);
                 setValue (NX_FIELD_C4, pwmChannel[cid - 1].invertPwm);
+                setValue (NX_FIELD_C5, pwmChannel[cid - 1].useLunarPhase);
                 setText (NX_FIELD_T4,  (char*)pgm_read_word(&(nx_pwm_names[cid -1])));
                 break;
 
@@ -678,7 +686,7 @@ static void handleHomePage (byte cid)
                 }
                 else
                         SETTINGS.forceNight = 1;
-                        cancelPWMRecovery();
+                cancelPWMRecovery();
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -810,7 +818,7 @@ static void updateHomePage() {
                         //setPercent (valueField,  pwmChannel[i].valueGoal);
 
 
-                       setPercent (valueField,  percent);
+                        setPercent (valueField,  percent);
 
                         setText (iconField, icon);
                 }
@@ -840,7 +848,7 @@ static void updateHomePage() {
 
 static void displayWats ()
 {
-        float watts = 0;
+        watts = 0;
         for (byte i = 0; i < PWMS; i++)
         {
                 if (pwmChannel[i].enabled && pwmChannel[i].watts && pwmChannel[i].valueCurrent)
@@ -848,6 +856,9 @@ static void displayWats ()
                         watts+=(float)(((float)pwmChannel[i].valueCurrent / (float)255) * (float)pwmChannel[i].watts);
                 }
         }
+        if (watts > MAX_WATTS) max_watts_exceeded = true;
+        else max_watts_exceeded = false;
+
         if(watts!=lastWatts) setWatts (NX_FIELD_WA, watts);
 }
 
@@ -866,6 +877,21 @@ static void nxDisplay ()
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
         {
                 previousNxInfo = currentMillis;
+
+                if (lampOverheating)
+                {
+                        nxScreen = PAGE_ERROR;
+                        setPage (PAGE_ERROR);
+                        setText (NX_FIELD_T1, (char*)pgm_read_word(&(nx_errors[0])) );
+                }
+
+                if (max_watts_exceeded)
+                {
+                        nxScreen = PAGE_ERROR;
+                        setPage (PAGE_ERROR);
+                        setText (NX_FIELD_T1, (char*)pgm_read_word(&(nx_errors[1])) );
+                }
+
 
                 if (nxScreen == PAGE_SCREENSAVER )
                 {
@@ -891,6 +917,7 @@ static void nxDisplay ()
                     && nxScreen != PAGE_THERMO
                     && nxScreen != PAGE_SCHEDULE
                     && nxScreen != PAGE_PWM_LIST
+                    && nxScreen != PAGE_ERROR
                     )
                 {
                         setPage (PAGE_SCREENSAVER);

@@ -53,6 +53,7 @@ void setup() {
 #endif
         // launch watchdog  - 4 seconds
         wdt_enable(WDTO_4S);
+        moonPhase = toMoonPhase (year(), month(), day());
 }
 
 void loop() {

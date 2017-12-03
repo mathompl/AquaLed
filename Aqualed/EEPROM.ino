@@ -27,6 +27,7 @@ static void writeEEPROMPWMConfig (byte pwmNumber)
         EEPROM.write( startAddr + 2,  pwmChannel[pwmNumber].enabled );
         EEPROM.write( startAddr + 3,  pwmChannel[pwmNumber].onHour );
         EEPROM.write( startAddr + 4,  pwmChannel[pwmNumber].onMinute );
+        EEPROM.write( startAddr + 5,  pwmChannel[pwmNumber].useLunarPhase );
         EEPROM.write( startAddr + 6,  pwmChannel[pwmNumber].offHour );
         EEPROM.write( startAddr + 7,  pwmChannel[pwmNumber].offMinute );
         EEPROM.write( startAddr + 9,  pwmChannel[pwmNumber].valueNight );
@@ -41,7 +42,6 @@ static void writeEEPROMPWMConfig (byte pwmNumber)
         EEPROM.write( startAddr + 19,  pwmChannel[pwmNumber].invertPwm );
         EEPROM.write( startAddr + 20,  pwmChannel[pwmNumber].watts );
 }
-
 
 static boolean isFirstRun ()
 {
@@ -153,6 +153,7 @@ static void eEpromRead( ) {
                 pwmChannel[i].enabled = EEPROM.read( startAddr + 2 );
                 pwmChannel[i].onHour = EEPROM.read( startAddr + 3 );
                 pwmChannel[i].onMinute = EEPROM.read( startAddr + 4 );
+                pwmChannel[i].useLunarPhase = EEPROM.read( startAddr + 5 );
                 pwmChannel[i].offHour = EEPROM.read( startAddr + 6 );
                 pwmChannel[i].offMinute = EEPROM.read( startAddr + 7 );
                 pwmChannel[i].valueNight = EEPROM.read( startAddr + 9 );
@@ -167,6 +168,7 @@ static void eEpromRead( ) {
                 pwmChannel[i].isI2C = EEPROM.read( startAddr + 18 );
                 pwmChannel[i].invertPwm = EEPROM.read( startAddr + 19 );
                 pwmChannel[i].watts = EEPROM.read( startAddr + 20 );
+
         }
         readEEPROMSettings ();
 }
