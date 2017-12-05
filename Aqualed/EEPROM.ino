@@ -6,7 +6,7 @@
  */
 
 // kompatybilnosc z AQMA
- static int getEEPROMAddr( byte n ) {
+static int getEEPROMAddr( byte n ) {
         if (n == 0) return 280;
         if (n == 1) return 300;
         if (n == 2) return 330;
@@ -16,7 +16,6 @@
         // nie aqma
         if (n == 6) return 450;
         if (n == 7) return 470;
-
         return 0;
 }
 
@@ -45,7 +44,7 @@ static void writeEEPROMPWMConfig (byte pwmNumber)
 
 static boolean isFirstRun ()
 {
-    //  return true;
+        //  return true;
         if (EEPROM.read( 100 ) != 255) return true;
         else return false;
 }

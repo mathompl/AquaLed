@@ -6,16 +6,13 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
-/*
-    USER DEFINED SETTINGS
-*/
+
 // modules, uncomment to disable, comment to enable
 // uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
-
 #define NO_BLUETOOTH
 //#define NO_NEXTION
-#define NEXTION_SOFTWARE_SERIAL
-#define NO_DIMMING_TABLE
+//#define NEXTION_SOFTWARE_SERIAL
+//#define NO_DIMMING_TABLE
 //#define NO_TEMPERATURE
 //#define DEBUG
 
@@ -32,16 +29,12 @@
 #define PWM_7_NAME "Actinic\0"
 #define PWM_8_NAME "Sump\0"
 
-
 #define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
-#define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown
-
 
 // i2c configuration
 #define PWM_I2C_MIN 0.0 // lower value of i2c scale
 #define PWM_I2C_MAX 4095.0 // uper value
 #define PWM_I2C_FREQ 333 // i2c frequency (hz)
-
 
 // termometry
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
@@ -59,11 +52,13 @@
 #define PWM_RESOLUTION 500.0 //ms main PWM loop resolution
 #define PWM_MIN_STEP 0.00001 // minimum pwm change step
 #define NX_INFO_RESOLUTION 1000 //ms - nextion home page refresh time
-#define EEPROM_STATE_RESOLUTION 5000 //ms - saving of valueCurrent value time
+#define EEPROM_STATE_RESOLUTION 300000 //ms - saving of valueCurrent value time
 #define TEMPERATURE_SAMPLE_INTERVAL 1000 //ms temperature reading resolution
 #define TIME_ADJUST_INTERVAL 900000 //s daylight saving mode check
 
 // rozdzielczosc przekaznikow (s)
 #define FANS_INTERVAL 300000 //ms fans resolution
 
-#define MAX_WATTS 200 // RFU
+// max lamp parameters
+#define MAX_WATTS 200 // max lamp wattage, used for lamp shutdown (psu protection)
+#define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown

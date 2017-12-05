@@ -36,10 +36,10 @@ void setup() {
         wdt_disable();
         writeEEPROMDefaults ();
         eEpromRead();
-        setupPWMPins ();
         setSyncProvider(RTC.get);
         setSyncInterval (600);
-        //Serial.begin (9600);
+        getMoonPhase ();
+
 #ifndef NO_TEMPERATURE
         setupSensors ();
 #endif
@@ -51,9 +51,10 @@ void setup() {
 #ifndef NO_NEXTION
         nexInit();
 #endif
-        // launch watchdog  - 4 seconds
+
+      // launch watchdog  - 4 seconds
         wdt_enable(WDTO_4S);
-        moonPhase = toMoonPhase (year(), month(), day());
+        setupPWMPins ();
 }
 
 void loop() {

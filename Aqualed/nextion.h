@@ -8,7 +8,7 @@
 
 #ifdef NEXTION_SOFTWARE_SERIAL
   #include "SoftwareSerial.h"
-  SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
+SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_BEGIN(x) nx.begin(x)
   #define NEXTION_READ(x) nx.read()
   #define NEXTION_FLUSH(x) nx.flush()
@@ -242,7 +242,7 @@ float lastWatts = 0;
 #define NX_PIC_BN_OFF 4
 #define NX_PIC_BN_ON 5
 
-
+// nextion fields
 const char f_t0[] PROGMEM = "t0";
 const char f_t1[] PROGMEM = "t1";
 const char f_t2[] PROGMEM = "t2";
@@ -320,6 +320,7 @@ const char f_l7[] PROGMEM = "l7";
 const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
 
+// nextion commands
 const char cmd_comma[] PROGMEM= ",";
 const char cmd_parenth[] PROGMEM = "\"";
 const char cmd_space[] PROGMEM = " ";
@@ -332,7 +333,6 @@ const char cmd_val[] PROGMEM = ".val";
 const char cmd_vis[] PROGMEM = "vis";
 const char cmd_page[] PROGMEM = "page";
 const char cmd_fill[] PROGMEM = "fill";
-
 
 // constant strings
 const char str_degree[] PROGMEM = "EC";
@@ -353,6 +353,7 @@ const char str_percent[] PROGMEM = "%";
 const char str_watts[] PROGMEM = "W";
 const char str_space[] PROGMEM = " ";
 
+// nextion error descriptions
 const char str_er1[] PROGMEM = "OVERHEAT";
 const char str_er2[] PROGMEM = "MAXPOWER";
 

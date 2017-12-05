@@ -2,8 +2,6 @@
    AQUALED system configuration file (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
  */
-
-
 #include <Wire.h>
 #include <OneWire.h>
 #include <Time.h>
@@ -16,11 +14,11 @@
 
 /*
    SYSTEM VARIABLES, do not modify
- */
+   User configuration in file config.h
+*/
 
 #define ON  true
 #define OFF false
-
 
 // i2c controller
 Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
@@ -59,21 +57,8 @@ typedef struct
 } PWM;
 
 PWM pwmChannel[PWMS] = {0} ;
-/*        {3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-        {2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}*/
-
-bool recovery = false;
-
 double pwmLast[PWMS]={0};
-// = {-1,-1,-1,-1,-1,-1,-1,-1};
 double pwmNxLast[PWMS]={0};
-// = {-1,-1,-1,-1,-1,-1,-1,-1};
 
 struct SETTINGS_STRUCT
 {
@@ -92,11 +77,21 @@ struct SETTINGS_STRUCT
         byte waterSensorAddress[8];
 };
 
-byte sensorsList[7][8] = {0};
-bool sensorsDetected[7]  = {0};
-
 SETTINGS_STRUCT SETTINGS = {0,0,0,35,30,30,35,30,0,0,{0},{0},{0}};
 
+// sensors
+#define LED_TEMPERATURE_FAN 0
+#define SUMP_TEMPERATURE_FAN 1
+#define WATER_TEMPERATURE_FAN 2
+
+byte sensorsList[7][8] = {0};
+bool sensorsDetected[7]  = {0};
+float temperatures[3]={0};
+float nxTemperatures[3]={0};
+bool fansStatuses[3]={0};
+bool nxFansStatuses[3]={0};
+
+// time variables
 long unsigned currentMillis = 0;
 unsigned long previousPwmResolution = 0;
 unsigned long previousNxInfo = 0;
@@ -105,29 +100,21 @@ unsigned long previousMillisFans = 0;
 unsigned long previousMillisNextion = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
+unsigned long lastStateWrite[8] = {0};
 tmElements_t tm;
 
-// sensors
-float temperatureLed = 0;
-float temperatureWater = 0;
-float temperatureSump = 0;
-float nxtemperatureLed = 0;
-float nxtemperatureWater = 0;
-float nxtemperatureSump= 0;
+// sunset/sunrise values
+long ssMillis;
+long srMillis;
+double ssValue;
+double srValue;
 
 bool lampOverheating = false;
-
-bool ledFansStatus = false;
-bool waterFansStatus = false;
-bool sumpFansStatus = false;
-bool nxledFansStatus = false;
-bool nxwaterFansStatus = false;
-bool nxsumpFansStatus = false;
-
 float watts = 0;
 bool max_watts_exceeded = false;
-byte moonPhase = 0;
 
+// moonphases 
+byte moonPhase = 0;
 const byte moonPhases[] = {0,1,4,9,16,25,36,50,58,69,79,88,94,99,100,99,95,90,83,75,66,57,50,38,29,21,13,7,3,1};
 
 // logarithmic dimming table (dont use with I2C module)

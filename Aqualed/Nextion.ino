@@ -242,7 +242,6 @@ static void handleTestPage (byte cid)
                         pwmChannel[i].testMode = false;
                 }
                 forcePWMRecovery ();
-                cancelPWMRecovery ();
                 setPage (PAGE_CONFIG);
                 break;
 
@@ -580,6 +579,7 @@ static void handleConfigPage (byte cid)
                         setValue (NX_FIELD_C1+i, mapRound (pwmChannel[i].valueCurrent, 0, 255, 0, 100));
                         pwmChannel[i].valueTest = pwmChannel[i].valueCurrent;
                 }
+
                 break;
 
         // hour and date setup
@@ -685,8 +685,10 @@ static void handleHomePage (byte cid)
                         forcePWMRecovery ();
                 }
                 else
+                {
                         SETTINGS.forceNight = 1;
-                cancelPWMRecovery();
+                }
+
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -699,8 +701,11 @@ static void handleHomePage (byte cid)
                         SETTINGS.forceAmbient = 0;
                         forcePWMRecovery ();
                 }
-                else SETTINGS.forceAmbient = 1;
-                cancelPWMRecovery();
+                else
+                {
+                        SETTINGS.forceAmbient = 1;
+                }
+
                 toggleButtons();
                 writeEEPROMSettings ();
                 break;
@@ -712,9 +717,11 @@ static void handleHomePage (byte cid)
                         SETTINGS.forceOFF = 0;
                         forcePWMRecovery ();
                 }
-                else SETTINGS.forceOFF = 1;
+                else
+                {
+                        SETTINGS.forceOFF = 1;
+                }
                 toggleButtons();
-                cancelPWMRecovery();
                 writeEEPROMSettings ();
                 break;
 
@@ -735,58 +742,44 @@ static void toggleButtons()
         else setPic(NX_FIELD_BN, NX_PIC_BN_OFF);
 }
 
-static void updateWaterTemp() {
-    #ifndef NO_TEMPERATURE
-        if (nxtemperatureWater != temperatureWater  || forceRefresh)
+#ifndef NO_TEMPERATURE
+void updateTempField (byte field, byte sensor, byte max, byte min)
+{
+        if (nxTemperatures[sensor] != temperatures[sensor]  || forceRefresh)
         {
-                if (temperatureWater != TEMP_ERROR)
+                if (temperatures[sensor] != TEMP_ERROR)
                 {
-                        setTemperature(NX_FIELD_WT, temperatureWater);
-                        nxtemperatureWater = temperatureWater;
-                        if (temperatureWater < WATER_TEMPERATURE_MIN || temperatureWater > SETTINGS.max_water_temp)
-                                setColor (NX_FIELD_WT, COLOR_LIGHTRED);
+                        setTemperature(field, temperatures[sensor]);
+                        nxTemperatures[sensor] = temperatures[sensor];
+                        if (temperatures[sensor] < min || temperatures[sensor] > max)
+                                setColor (field, COLOR_LIGHTRED);
                         else
-                                setColor (NX_FIELD_WT, COLOR_LIGHTGREEN);
+                                setColor (field, COLOR_LIGHTGREEN);
                 }
                 else
-                        setText(NX_FIELD_WT, NX_STR_DASH);
+                        setText(field, NX_STR_DASH);
         }
-        #endif
+}
+
+void updateFanField (byte field, byte sensor)
+{
+        if (!fansStatuses[sensor]) setText (field, NX_STR_EMPTY);
+        else setText (field, NX_STR_FAN);
+        nxFansStatuses[sensor] = fansStatuses[sensor];
+}
+#endif
+static void updateWaterTemp() {
+    #ifndef NO_TEMPERATURE
+        updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,SETTINGS.max_water_temp, WATER_TEMPERATURE_MIN);
+    #endif
 }
 
 static void updateHomePage() {
 #ifndef NO_TEMPERATURE
         updateWaterTemp();
+        updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,SETTINGS.max_led_temp, 0);
+        updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,SETTINGS.max_sump_temp, 0);
 
-        if (nxtemperatureLed != temperatureLed  || forceRefresh)
-        {
-                if (temperatureLed != TEMP_ERROR)
-                {
-                        setTemperature(NX_FIELD_LT, temperatureLed);
-                        nxtemperatureLed = temperatureLed;
-                        if (temperatureLed > SETTINGS.max_led_temp)
-                                setColor (NX_FIELD_LT, COLOR_LIGHTRED);
-                        else
-                                setColor (NX_FIELD_LT, COLOR_LIGHTGREEN);
-                }
-                else
-                        setText(NX_FIELD_LT, NX_STR_DASH);
-        }
-
-        if (nxtemperatureSump != temperatureSump  || forceRefresh)
-        {
-                if (temperatureSump != TEMP_ERROR)
-                {
-                        setTemperature(NX_FIELD_ST, temperatureSump);
-                        nxtemperatureSump = temperatureSump;
-                        if (temperatureSump > SETTINGS.max_sump_temp)
-                                setColor (NX_FIELD_ST, COLOR_LIGHTRED);
-                        else
-                                setColor (NX_FIELD_ST, COLOR_LIGHTGREEN);
-                }
-                else
-                        setText(NX_FIELD_ST, NX_STR_DASH);
-        }
 #endif
 
         for (byte i = 0; i < PWMS; i++)
@@ -824,25 +817,9 @@ static void updateHomePage() {
                 }
         }
         #ifndef NO_TEMPERATURE
-        if (nxwaterFansStatus != waterFansStatus || forceRefresh)
-        {
-                if (!waterFansStatus) setText (NX_FIELD_T0, NX_STR_EMPTY);
-                else setText (NX_FIELD_T0, NX_STR_FAN);
-                nxwaterFansStatus = waterFansStatus;
-        }
-        if (nxledFansStatus != ledFansStatus || forceRefresh)
-        {
-                if (!ledFansStatus) setText (NX_FIELD_T1, NX_STR_EMPTY);
-                else setText (NX_FIELD_T1, NX_STR_FAN);
-                nxledFansStatus = ledFansStatus;
-        }
-
-        if (nxsumpFansStatus != sumpFansStatus || forceRefresh)
-        {
-                if (!sumpFansStatus) setText (NX_FIELD_T2, NX_STR_EMPTY);
-                else setText (NX_FIELD_T2, NX_STR_FAN);
-                nxsumpFansStatus = sumpFansStatus;
-        }
+        updateFanField (NX_FIELD_T0, WATER_TEMPERATURE_FAN);
+        updateFanField (NX_FIELD_T1, LED_TEMPERATURE_FAN);
+        updateFanField (NX_FIELD_T2, SUMP_TEMPERATURE_FAN);
         #endif
 }
 
@@ -950,9 +927,7 @@ static void setColor (byte field, unsigned int color)
 static void setTemperature (byte field, float temp)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         NEXTION_PRINTF (temp, 1);
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_DEGREE])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
@@ -962,9 +937,7 @@ static void setTemperature (byte field, float temp)
 static void setText (byte field, String text)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         NEXTION_PRINT(text);
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
         sendNextionEOL ();
@@ -973,9 +946,7 @@ static void setText (byte field, String text)
 static void setText (byte field, const char * txt)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         printPGM (txt);
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
         sendNextionEOL ();
@@ -984,9 +955,7 @@ static void setText (byte field, const char * txt)
 static void setText (byte field, int nx_string_id)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         printPGM( (char*)pgm_read_word(&(nx_strings[nx_string_id])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
         sendNextionEOL ();
@@ -1021,9 +990,7 @@ static void setPic (byte field, byte val)
 static void setPercent (byte field, double percent)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         NEXTION_PRINTF( percent, 1);
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_PERCENT])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
@@ -1033,9 +1000,7 @@ static void setPercent (byte field, double percent)
 static void setWatts (byte field, float watts)
 {
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+        _writeTxt ();
         NEXTION_PRINTF( watts, 1 );
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_WATTS])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
@@ -1049,6 +1014,14 @@ static void setPage (byte number)
         NEXTION_PRINT(number);
         sendNextionEOL ();
         nxScreen = number;
+}
+
+static void _writeTxt ()
+{
+        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_TXT])));
+        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
+        printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
+
 }
 
 static bool getNumber (byte field, int *result)
