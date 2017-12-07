@@ -20,24 +20,18 @@ void adjustDST ()
         {
                 previousSecTimeAdjust = currentMillis;
                 getMoonPhase ();
-                if (dayOfWeek(now()) == 1 && month() == 3 && day() >= 25 && day() <=31 && hour() == 1 && SETTINGS.dst==0)
+                if (dayOfWeek(now()) == 1 && month() == 3 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==0)
                 {
-                        //time_t t = makeTime(tm);
-                        //t += 3600;
-                        //setTime (t);
                         setTime( hour()+1, minute(), second (), day(), month(), year() );
                         RTC.set( now () );
-                        SETTINGS.dst = 1;
+                        settings.dst = 1;
                         writeEEPROMSettings ();
                 }
-                else if (dayOfWeek(now()) == 1 && month() == 10 && day() >= 25 && day() <=31 && hour() == 1 && SETTINGS.dst==1)
+                else if (dayOfWeek(now()) == 1 && month() == 10 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==1)
                 {
-                        //time_t t = makeTime(tm);
-                        //t -= 3600;
-                        //setTime (t);
                         setTime( hour()-1, minute(), second (), day(), month(), year() );
                         RTC.set( now () );
-                        SETTINGS.dst = 0;
+                        settings.dst = 0;
                         writeEEPROMSettings ();
                 }
         }

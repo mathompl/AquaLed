@@ -22,26 +22,27 @@ static int getEEPROMAddr( byte n ) {
 static void writeEEPROMPWMConfig (byte pwmNumber)
 {
         int startAddr = getEEPROMAddr( pwmNumber );
-        EEPROM.write( startAddr + 1,  pwmChannel[pwmNumber].pin );
-        EEPROM.write( startAddr + 2,  pwmChannel[pwmNumber].enabled );
-        EEPROM.write( startAddr + 3,  pwmChannel[pwmNumber].onHour );
-        EEPROM.write( startAddr + 4,  pwmChannel[pwmNumber].onMinute );
-        EEPROM.write( startAddr + 5,  pwmChannel[pwmNumber].useLunarPhase );
-        EEPROM.write( startAddr + 6,  pwmChannel[pwmNumber].offHour );
-        EEPROM.write( startAddr + 7,  pwmChannel[pwmNumber].offMinute );
-        EEPROM.write( startAddr + 9,  pwmChannel[pwmNumber].valueNight );
-        EEPROM.write( startAddr + 10,  pwmChannel[pwmNumber].valueDay );
-        EEPROM.write( startAddr + 11,  pwmChannel[pwmNumber].sunriseLenght );
-        EEPROM.write( startAddr + 12,  pwmChannel[pwmNumber].sunsetLenght );
-        EEPROM.write( startAddr + 13,  pwmChannel[pwmNumber].isNightLight );
-        EEPROM.write( startAddr + 15,  pwmChannel[pwmNumber].valueProg );
-        EEPROM.write( startAddr + 16,  pwmChannel[pwmNumber].isProg );
-        EEPROM.write( startAddr + 17,  pwmChannel[pwmNumber].pin );
-        EEPROM.write( startAddr + 18,  pwmChannel[pwmNumber].isI2C );
-        EEPROM.write( startAddr + 19,  pwmChannel[pwmNumber].invertPwm );
-        EEPROM.write( startAddr + 20,  pwmChannel[pwmNumber].watts );
+        EEPROM.write( startAddr + 1,  pwmSettings[pwmNumber].pin );
+        EEPROM.write( startAddr + 2,  pwmSettings[pwmNumber].enabled );
+        EEPROM.write( startAddr + 3,  pwmSettings[pwmNumber].onHour );
+        EEPROM.write( startAddr + 4,  pwmSettings[pwmNumber].onMinute );
+        EEPROM.write( startAddr + 5,  pwmSettings[pwmNumber].useLunarPhase );
+        EEPROM.write( startAddr + 6,  pwmSettings[pwmNumber].offHour );
+        EEPROM.write( startAddr + 7,  pwmSettings[pwmNumber].offMinute );
+        EEPROM.write( startAddr + 8,  pwmSettings[pwmNumber].valueNight );
+        EEPROM.write( startAddr + 9,  highByte (pwmSettings[pwmNumber].valueDay ));
+        EEPROM.write( startAddr + 10, lowByte (pwmSettings[pwmNumber].valueDay ));
+        EEPROM.write( startAddr + 11, pwmSettings[pwmNumber].sunriseLenght );
+        EEPROM.write( startAddr + 12, pwmSettings[pwmNumber].sunsetLenght );
+        EEPROM.write( startAddr + 13, pwmSettings[pwmNumber].isNightLight );
+        EEPROM.write( startAddr + 14, highByte(pwmSettings[pwmNumber].valueProg ));
+        EEPROM.write( startAddr + 15, lowByte(pwmSettings[pwmNumber].valueProg ));
+        EEPROM.write( startAddr + 16, pwmSettings[pwmNumber].isProg );
+        EEPROM.write( startAddr + 17, pwmSettings[pwmNumber].pin );
+        EEPROM.write( startAddr + 18, pwmSettings[pwmNumber].isI2C );
+        EEPROM.write( startAddr + 19, pwmSettings[pwmNumber].invertPwm );
+        EEPROM.write( startAddr + 20, pwmSettings[pwmNumber].watts );
 }
-
 static boolean isFirstRun ()
 {
         //  return true;
@@ -57,117 +58,107 @@ static void writeEEPROMDefaults ()
                         EEPROM.write(i, 0);
                 }
                 //defaults
-                SETTINGS.forceNight = 0;
-                SETTINGS.forceAmbient = 0;
-                SETTINGS.forceOFF = 0;
-                SETTINGS.max_led_temp = 35;
-                SETTINGS.max_sump_temp = 35;
-                SETTINGS.max_water_temp = 26;
-                SETTINGS.pwmDimmingTime = 30;
-                SETTINGS.screenSaverTime = 30;
-                SETTINGS.softDimming = 0;
-                SETTINGS.dst = 0;
-                for (byte i = 0; i < 8; i++)
-                {
-                        SETTINGS.waterSensorAddress[i] = 0;
-                        SETTINGS.ledSensorAddress[i] = 0;
-                        SETTINGS.sumpSensorAddress[i] = 0;
-                }
+                memset (&settings, 0, sizeof(settings));
 
                 for (byte i = 0; i < PWMS; i++ )
                 {
+                        memset (&pwmSettings[i], 0, sizeof(pwmSettings[i]));
                         writeEEPROMPWMConfig (i);
                 }
+
                 writeEEPROMSettings ();
                 EEPROM.write( 100, 255 );
         }
 }
 
+static void writeEEPROMForceNight ()
+{
+        EEPROM.write( 101, settings.forceNight);
+}
+
+static void writeEEPROMForceOff ()
+{
+        EEPROM.write( 101, settings.forceOFF);
+}
+
+static void writeEEPROMForceAmbient ()
+{
+        EEPROM.write( 101, settings.forceAmbient);
+}
+
+static void writeEEPROMSensor (byte startAddr, byte addr[])
+{
+        for (byte i = 0; i < 8; i++)
+        {
+                EEPROM.write( startAddr + i, addr[i]);
+        }
+}
+static void readEEPROMSensor (byte startAddr, byte addr[])
+{
+        for (byte i = 0; i < 8; i++)
+        {
+                addr[i] = EEPROM.read( startAddr + i);
+        }
+}
+
+static void writeEEPROMSensors ()
+{
+        writeEEPROMSensor (120,  settings.ledSensorAddress);
+        writeEEPROMSensor (130,  settings.sumpSensorAddress);
+        writeEEPROMSensor (140,  settings.waterSensorAddress);
+}
+
 static void writeEEPROMSettings ()
 {
-        EEPROM.write( 101, SETTINGS.forceNight);
-        EEPROM.write( 102, SETTINGS.forceAmbient);
-        EEPROM.write( 103, SETTINGS.forceOFF);
-        EEPROM.write( 104, SETTINGS.max_led_temp);
-        EEPROM.write( 105, SETTINGS.max_water_temp);
-        EEPROM.write( 106, SETTINGS.pwmDimmingTime);
-        EEPROM.write( 107, SETTINGS.max_sump_temp);
-        EEPROM.write( 108, SETTINGS.screenSaverTime);
-        EEPROM.write( 109, SETTINGS.softDimming);
-        EEPROM.write( 110, SETTINGS.dst);
-
-        // 24 bajty adresy sensoow
-        byte startAddr = 120;
-        for (byte i = 0; i < 8; i++)
-        {
-                EEPROM.write( startAddr + i, SETTINGS.ledSensorAddress[i]);
-        }
-        startAddr = 130;
-        for (byte i = 0; i < 8; i++)
-        {
-                EEPROM.write( startAddr + i, SETTINGS.sumpSensorAddress[i]);
-        }
-        startAddr = 140;
-        for (byte i = 0; i < 8; i++)
-        {
-                EEPROM.write( startAddr + i, SETTINGS.waterSensorAddress[i]);
-        }
+        EEPROM.write( 104, settings.max_led_temp);
+        EEPROM.write( 105, settings.max_water_temp);
+        EEPROM.write( 106, settings.pwmDimmingTime);
+        EEPROM.write( 107, settings.max_sump_temp);
+        EEPROM.write( 108, settings.screenSaverTime);
+        EEPROM.write( 109, settings.softDimming);
+        EEPROM.write( 110, settings.dst);
 }
 
 static void readEEPROMSettings ()
 {
-        SETTINGS.forceNight = EEPROM.read( 101 );
-        SETTINGS.forceAmbient = EEPROM.read( 102);
-        SETTINGS.forceOFF = EEPROM.read( 103);
-        SETTINGS.max_led_temp = EEPROM.read( 104);
-        SETTINGS.max_water_temp = EEPROM.read( 105);
-        SETTINGS.pwmDimmingTime = EEPROM.read( 106);
-        SETTINGS.max_sump_temp = EEPROM.read( 107);
-        SETTINGS.screenSaverTime = EEPROM.read( 108);
-        SETTINGS.softDimming = EEPROM.read( 109);
-        SETTINGS.dst = EEPROM.read( 110);
+        settings.forceNight = EEPROM.read( 101 );
+        settings.forceAmbient = EEPROM.read( 102);
+        settings.forceOFF = EEPROM.read( 103);
+        settings.max_led_temp = EEPROM.read( 104);
+        settings.max_water_temp = EEPROM.read( 105);
+        settings.pwmDimmingTime = EEPROM.read( 106);
+        settings.max_sump_temp = EEPROM.read( 107);
+        settings.screenSaverTime = EEPROM.read( 108);
+        settings.softDimming = EEPROM.read( 109);
+        settings.dst = EEPROM.read( 110);
 
         // 24 bajty adresy sensoow
-        byte startAddr = 120;
-        for (byte i = 0; i < 8; i++)
-        {
-                SETTINGS.ledSensorAddress[i] = EEPROM.read( startAddr + i);
-        }
-        startAddr = 130;
-        for (byte i = 0; i < 8; i++)
-        {
-                SETTINGS.sumpSensorAddress[i] = EEPROM.read( startAddr + i);
-        }
-        startAddr = 140;
-        for (byte i = 0; i < 8; i++)
-        {
-                SETTINGS.waterSensorAddress[i] = EEPROM.read( startAddr + i);
-        }
+        readEEPROMSensor (120,  settings.ledSensorAddress);
+        readEEPROMSensor (130, settings.sumpSensorAddress);
+        readEEPROMSensor (140, settings.waterSensorAddress);
 }
 
 static void eEpromRead( ) {
         for (byte i = 0; i < PWMS; i++)
         {
                 int startAddr = getEEPROMAddr( i );
-                pwmChannel[i].enabled = EEPROM.read( startAddr + 2 );
-                pwmChannel[i].onHour = EEPROM.read( startAddr + 3 );
-                pwmChannel[i].onMinute = EEPROM.read( startAddr + 4 );
-                pwmChannel[i].useLunarPhase = EEPROM.read( startAddr + 5 );
-                pwmChannel[i].offHour = EEPROM.read( startAddr + 6 );
-                pwmChannel[i].offMinute = EEPROM.read( startAddr + 7 );
-                pwmChannel[i].valueNight = EEPROM.read( startAddr + 9 );
-                pwmChannel[i].valueDay = EEPROM.read( startAddr + 10 );
-                pwmChannel[i].sunriseLenght = EEPROM.read( startAddr + 11 );
-                pwmChannel[i].sunsetLenght = EEPROM.read( startAddr + 12 );
-                pwmChannel[i].isNightLight = EEPROM.read( startAddr + 13 );
-                pwmChannel[i].valueTest = EEPROM.read( startAddr + 14 );
-                pwmChannel[i].valueProg = EEPROM.read( startAddr + 15 );
-                pwmChannel[i].isProg = EEPROM.read( startAddr + 16 );
-                pwmChannel[i].pin = EEPROM.read( startAddr + 17 );
-                pwmChannel[i].isI2C = EEPROM.read( startAddr + 18 );
-                pwmChannel[i].invertPwm = EEPROM.read( startAddr + 19 );
-                pwmChannel[i].watts = EEPROM.read( startAddr + 20 );
-
+                pwmSettings[i].enabled = EEPROM.read( startAddr + 2 );
+                pwmSettings[i].onHour = EEPROM.read( startAddr + 3 );
+                pwmSettings[i].onMinute = EEPROM.read( startAddr + 4 );
+                pwmSettings[i].useLunarPhase = EEPROM.read( startAddr + 5 );
+                pwmSettings[i].offHour = EEPROM.read( startAddr + 6 );
+                pwmSettings[i].offMinute = EEPROM.read( startAddr + 7 );
+                pwmSettings[i].valueNight = EEPROM.read( startAddr + 8 );
+                pwmSettings[i].valueDay = word(EEPROM.read( startAddr + 9 ),EEPROM.read( startAddr + 10) );
+                pwmSettings[i].sunriseLenght = EEPROM.read( startAddr + 11 );
+                pwmSettings[i].sunsetLenght = EEPROM.read( startAddr + 12 );
+                pwmSettings[i].isNightLight = EEPROM.read( startAddr + 13 );
+                pwmSettings[i].valueProg = word(EEPROM.read( startAddr + 14 ),EEPROM.read( startAddr + 15) );
+                pwmSettings[i].isProg = EEPROM.read( startAddr + 16 );
+                pwmSettings[i].pin = EEPROM.read( startAddr + 17 );
+                pwmSettings[i].isI2C = EEPROM.read( startAddr + 18 );
+                pwmSettings[i].invertPwm = EEPROM.read( startAddr + 19 );
+                pwmSettings[i].watts = EEPROM.read( startAddr + 20 );
         }
         readEEPROMSettings ();
 }

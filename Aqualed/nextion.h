@@ -74,6 +74,12 @@ float lastWatts = 0;
 #define PAGE_SCHEDULE 8
 #define PAGE_PWM_LIST 9
 #define PAGE_ERROR 10
+#define PAGE_SAVING 11
+
+#define NX_PAGE_PWM 0
+#define NX_PAGE_SETTINGS 1
+#define NX_PAGE_TIME 2
+#define NX_PAGE_THERMO 3
 
 //buttons
 #define THERMOPAGE_BUTTON_SAVE 9
@@ -125,6 +131,7 @@ float lastWatts = 0;
 #define COLOR_BLUE 34815
 #define COLOR_DARKBLUE 16
 #define COLOR_DARKGRAY 12678
+#define COLOR_WHITE 65535
 
 #define NX_CMD_COMMA 0
 #define NX_CMD_PARENTH 1
@@ -138,6 +145,7 @@ float lastWatts = 0;
 #define NX_CMD_VIS 9
 #define NX_CMD_PAGE 10
 #define NX_CMD_FILL 11
+#define NX_CMD_DOT 12
 
 #define NX_STR_DEGREE 0
 #define NX_STR_ON 1
@@ -234,7 +242,6 @@ float lastWatts = 0;
 #define NX_FIELD_N11 74
 #define NX_FIELD_WA 75
 
-
 #define NX_PIC_BO_OFF 3
 #define NX_PIC_BO_ON 2
 #define NX_PIC_BA_OFF 6
@@ -320,6 +327,11 @@ const char f_l7[] PROGMEM = "l7";
 const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
 
+const char p_pwmcfg[] PROGMEM = "pwm";
+const char p_set[] PROGMEM = "settings";
+const char p_time[] PROGMEM = "time";
+const char p_thermo[] PROGMEM = "thermo";
+
 // nextion commands
 const char cmd_comma[] PROGMEM= ",";
 const char cmd_parenth[] PROGMEM = "\"";
@@ -333,6 +345,7 @@ const char cmd_val[] PROGMEM = ".val";
 const char cmd_vis[] PROGMEM = "vis";
 const char cmd_page[] PROGMEM = "page";
 const char cmd_fill[] PROGMEM = "fill";
+const char cmd_dot[] PROGMEM= ".";
 
 // constant strings
 const char str_degree[] PROGMEM = "EC";
@@ -368,6 +381,7 @@ char const pwm_8_name[] PROGMEM = PWM_8_NAME;
 
 const char* const nx_pwm_names[] PROGMEM {pwm_1_name,pwm_2_name,pwm_3_name,pwm_4_name,pwm_5_name,pwm_6_name,pwm_7_name,pwm_8_name};
 const char* const nx_strings[] PROGMEM {str_degree,str_on,str_off,str_night,str_sunrise,str_sunset,str_dash,str_slash,str_empty,str_recover,str_fan,str_up,str_down,str_celc,str_percent,str_watts,str_space};
-const char* const nx_commands[] PROGMEM {cmd_comma, cmd_parenth,cmd_space,cmd_eq,cmd_txt,cmd_pic,cmd_pco,cmd_get,cmd_val,cmd_vis,cmd_page, cmd_fill};
+const char* const nx_commands[] PROGMEM {cmd_comma, cmd_parenth,cmd_space,cmd_eq,cmd_txt,cmd_pic,cmd_pco,cmd_get,cmd_val,cmd_vis,cmd_page, cmd_fill,cmd_dot};
 const char* const nx_fields[] PROGMEM {f_t0,f_t1,f_t2,f_t3,f_t4,f_t5,f_t6,f_t7,f_t8,f_t9,f_t10,f_p0,f_p1,f_p2,f_va0,f_va1,f_va2,f_va3,f_c0,f_c1,f_c2,f_c3,f_c4,f_c5,f_c6,f_c7,f_c8,f_c9,f_c10,f_n0,f_n1,f_n2,f_n3,f_n4,f_n5,f_n6,f_n7,f_n8,f_n9,f_n10,f_wt,f_lt,f_st,f_ti,f_h,f_bo,f_ba,f_bn,f_ld1,f_ld2,f_ld3,f_ld4,f_ld5,f_ld6,f_ld7,f_ld8,f_bld1,f_bld2,f_bld3,f_bld4,f_bld5,f_bld6,f_bld7,f_bld8,f_bauds,f_bkcmd,f_l1,f_l2,f_l3,f_l4,f_l5,f_l6,f_l7,f_l8,f_n11,f_wa};
 const char* const nx_errors[] PROGMEM {str_er1, str_er2};
+const char* const nx_pages[] PROGMEM {p_pwmcfg, p_set, p_time, p_thermo};

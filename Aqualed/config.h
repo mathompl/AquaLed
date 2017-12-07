@@ -1,7 +1,7 @@
 /*
- AQUALED user configuration file (c) T. Formanowski 2016-2017
- https://github.com/mathompl/AquaLed
-*/
+   AQUALED user configuration file (c) T. Formanowski 2016-2017
+   https://github.com/mathompl/AquaLed
+ */
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
@@ -12,7 +12,7 @@
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NEXTION_SOFTWARE_SERIAL
-//#define NO_DIMMING_TABLE
+#define NO_DIMMING_TABLE
 //#define NO_TEMPERATURE
 //#define DEBUG
 

@@ -15,7 +15,7 @@
 /*
    SYSTEM VARIABLES, do not modify
    User configuration in file config.h
-*/
+ */
 
 #define ON  true
 #define OFF false
@@ -35,32 +35,43 @@ typedef struct
         byte offHour;  // channel daylight stop hour
         byte offMinute; // channel daylight stop minute
         byte valueNight; // nightlight value
-        byte valueDay; // daylight value
-        byte valueProg; // additional program value
+        int valueDay; // daylight value
+        int valueProg; // additional program value
         byte sunriseLenght; // minutes
         byte sunsetLenght;  // minutes
         byte isNightLight; // is channel a nightlight
         byte isProg;
-        byte valueGoal; // runtime used for dimming
-        byte valueTest;
-        bool testMode;
-        double valueCurrent;
-        byte isSunrise;
-        byte isSunset;
-        byte isNight;
-        double dimmingScale;
+        byte watts;
+        byte useLunarPhase;
+} PWM_SETTINGS;
+
+typedef struct
+{
+        long startTime;
+        long stopTime;
+        long sunriseTime;
+        long sunsetTime;
         bool dimmingStart;
         long dimmingTime;
         bool recoverLastState;
-        byte watts;
-        byte useLunarPhase;
-} PWM;
+        double valueGoal; // runtime used for dimming
+        double valueCurrent;
+        double dimmingScale;
+        double pwmLast;
+        double nxPwmLast;
+        byte isSunrise;
+        byte isSunset;
+        byte isNight;
+        bool testMode;
+        byte valueTest;
+        // sunset/sunrise values
+        long sunsetSecondsLeft;
+        long sunriseSecondsLeft;
+        double sunsetValue;
+        double sunriseValue;
+} PWM_RUNTIME;
 
-PWM pwmChannel[PWMS] = {0} ;
-double pwmLast[PWMS]={0};
-double pwmNxLast[PWMS]={0};
-
-struct SETTINGS_STRUCT
+typedef struct
 {
         byte forceNight;
         byte forceAmbient;
@@ -75,21 +86,36 @@ struct SETTINGS_STRUCT
         byte ledSensorAddress[8];
         byte sumpSensorAddress[8];
         byte waterSensorAddress[8];
-};
+} SETTINGS;
 
-SETTINGS_STRUCT SETTINGS = {0,0,0,35,30,30,35,30,0,0,{0},{0},{0}};
+
+PWM_SETTINGS pwmSettings[PWMS] = {0};
+PWM_RUNTIME pwmRuntime[PWMS] = {0};
+SETTINGS settings = {0};
 
 // sensors
 #define LED_TEMPERATURE_FAN 0
 #define SUMP_TEMPERATURE_FAN 1
 #define WATER_TEMPERATURE_FAN 2
 
-byte sensorsList[7][8] = {0};
-bool sensorsDetected[7]  = {0};
-float temperatures[3]={0};
-float nxTemperatures[3]={0};
-bool fansStatuses[3]={0};
-bool nxFansStatuses[3]={0};
+typedef struct
+{
+        byte address[8];
+        boolean detected;
+} SENSORS;
+
+SENSORS sensorsList[7] = {0};
+
+typedef struct
+{
+        float temperature;
+        float nxTemperature;
+        bool fanStatus;
+        bool nxFanStatus;
+
+} TEMPERATURES_FANS;
+
+TEMPERATURES_FANS temperaturesFans[3]={0};
 
 // time variables
 long unsigned currentMillis = 0;
@@ -103,17 +129,15 @@ unsigned long lastTouch = 0;
 unsigned long lastStateWrite[8] = {0};
 tmElements_t tm;
 
-// sunset/sunrise values
-long ssMillis;
-long srMillis;
-double ssValue;
-double srValue;
+
+
+long currTime = 0;
 
 bool lampOverheating = false;
 float watts = 0;
 bool max_watts_exceeded = false;
 
-// moonphases 
+// moonphases
 byte moonPhase = 0;
 const byte moonPhases[] = {0,1,4,9,16,25,36,50,58,69,79,88,94,99,100,99,95,90,83,75,66,57,50,38,29,21,13,7,3,1};
 

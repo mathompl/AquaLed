@@ -54,7 +54,7 @@ void setup() {
 
       // launch watchdog  - 4 seconds
         wdt_enable(WDTO_4S);
-        setupPWMPins ();
+        setupPWMPins ();    
 }
 
 void loop() {

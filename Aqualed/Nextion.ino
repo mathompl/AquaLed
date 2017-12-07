@@ -13,19 +13,17 @@
 // init nextion lcd
 static void nexInit(void)
 {
-        delay (500);
+        //delay (500);
         NEXTION_BEGIN (9600);
+        NEXTION_PRINT ("\r\n");
+        setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
+        NEXTION_FLUSH ();
+        NEXTION_BEGIN ((long)NEXTION_BAUD_RATE);
         NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BKCMD, (long)0);
         setPage (PAGE_HOME);
-        setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
-        NEXTION_FLUSH ();
-        delay (500);
-        NEXTION_BEGIN (NEXTION_BAUD_RATE);
-        NEXTION_PRINT ("\r\n");
-        NEXTION_FLUSH ();
-        sendNextionEOL ();
-        delay (500);
+        //sendNextionEOL ();
+        //delay (500);
         toggleButtons ();
         // init names
         for (byte i = 0; i < PWMS; i++)
@@ -137,37 +135,41 @@ static void handleScreenSaver (byte cid)
 
 static void handleThermoPage (byte cid)
 {
+        boolean status = false;
         switch (cid)
         {
         // save
         case THERMOPAGE_BUTTON_SAVE:
-
-                if (!getNumber(NX_FIELD_N0, &t)) return;
+                setPage (PAGE_SAVING);
+                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N0, &t)) break;
                 for (byte k = 0; k < 8; k++)
-                        SETTINGS.ledSensorAddress[k] = sensorsList[t][k];
+                        settings.ledSensorAddress[k] = sensorsList[t].address[k];
 
-                if (!getNumber(NX_FIELD_N1, &t)) return;
+                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N1, &t)) break;
                 for (byte k = 0; k < 8; k++)
-                        SETTINGS.sumpSensorAddress[k] = sensorsList[t][k];
+                        settings.sumpSensorAddress[k] = sensorsList[t].address[k];
 
-                if (!getNumber(NX_FIELD_N2, &t)) return;
+                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N2, &t)) break;
                 for (byte k = 0; k < 8; k++)
-                        SETTINGS.waterSensorAddress[k] = sensorsList[t][k];
+                        settings.waterSensorAddress[k] = sensorsList[t].address[k];
 
-                writeEEPROMSettings ();
+                writeEEPROMSensors ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
+                status = true;
                 break;
 
         //cancel
         case THERMOPAGE_BUTTON_CANCEL:
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
+                status = true;
                 break;
 
         default:
                 break;
         }
+        if (!status) setPage (PAGE_THERMO);
 }
 
 static void handleSchedulePage (byte cid)
@@ -185,50 +187,43 @@ static void handleSchedulePage (byte cid)
         }
 }
 
+static boolean handleTestSlider (int field, byte i)
+{
+        if (!getNumber(field, &t)) return false;
+        pwmRuntime[i].valueTest = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
+        pwmRuntime[i].testMode = true;
+        return true;
+
+}
+
 static void handleTestPage (byte cid)
 {
         switch (cid)
         {
         // pwms
         case TESTPAGE_SLIDER_PWM_1:
-                if (!getNumber(NX_FIELD_N0, &t)) return;
-                pwmChannel[0].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[0].testMode = true;
+                handleTestSlider (NX_FIELD_N0, 0);
                 break;
         case TESTPAGE_SLIDER_PWM_2:
-                if (!getNumber(NX_FIELD_N1, &t)) return;
-                pwmChannel[1].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[1].testMode = true;
+                handleTestSlider (NX_FIELD_N1, 1);
                 break;
         case TESTPAGE_SLIDER_PWM_3:
-                if (!getNumber(NX_FIELD_N2, &t)) return;
-                pwmChannel[2].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[2].testMode = true;
+                handleTestSlider (NX_FIELD_N2, 2);
                 break;
         case TESTPAGE_SLIDER_PWM_4:
-                if (!getNumber(NX_FIELD_N3, &t)) return;
-                pwmChannel[3].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[3].testMode = true;
+                handleTestSlider (NX_FIELD_N3, 3);
                 break;
         case TESTPAGE_SLIDER_PWM_5:
-                if (!getNumber(NX_FIELD_N4, &t)) return;
-                pwmChannel[4].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[4].testMode = true;
+                handleTestSlider (NX_FIELD_N4, 4);
                 break;
         case TESTPAGE_SLIDER_PWM_6:
-                if (!getNumber(NX_FIELD_N5, &t)) return;
-                pwmChannel[5].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[5].testMode = true;
+                handleTestSlider (NX_FIELD_N5, 5);
                 break;
         case TESTPAGE_SLIDER_PWM_7:
-                if (!getNumber(NX_FIELD_N6, &t)) return;
-                pwmChannel[6].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[6].testMode = true;
+                handleTestSlider (NX_FIELD_N6, 6);
                 break;
         case TESTPAGE_SLIDER_PWM_8:
-                if (!getNumber(NX_FIELD_N7, &t)) return;
-                pwmChannel[7].valueTest = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[7].testMode = true;
+                handleTestSlider (NX_FIELD_N7, 7);
                 break;
 
         // close
@@ -238,10 +233,11 @@ static void handleTestPage (byte cid)
 
                 for (byte i = 0; i < PWMS; i++)
                 {
-                        pwmChannel[i].valueTest = 0;
-                        pwmChannel[i].testMode = false;
+                        pwmRuntime[i].valueTest = 0;
+                        pwmRuntime[i].testMode = false;
                 }
                 forcePWMRecovery ();
+                forceDimmingRestart ();
                 setPage (PAGE_CONFIG);
                 break;
 
@@ -253,161 +249,174 @@ static void handleTestPage (byte cid)
 
 static void handlePWMPage (byte cid)
 {
-        byte tmax, tamb;
+        uint16_t tmax, tamb;
         int i;
         byte lastPin;
         byte lastI2C;
+        boolean status = false;
         switch (cid)
         {
         // save
         case PWMPAGE_BUTTON_SAVE:
+                setPage (PAGE_SAVING);
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N9, &i)) break;
 
-                if (!getNumber(NX_FIELD_N9, &i)) return;
+                if (i < 1 || i > PWMS) break;
 
-                if (i < 1 || i > PWMS) return;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C0, &t)) break;
+                pwmSettings[i - 1].enabled = t;
 
-                if (!getNumber(NX_FIELD_C0, &t)) return;
-                pwmChannel[i - 1].enabled = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C1, &t)) break;
+                pwmSettings[i - 1].isNightLight = t;
 
-                if (!getNumber(NX_FIELD_C1, &t)) return;
-                pwmChannel[i - 1].isNightLight = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C2, &t)) break;
+                pwmSettings[i - 1].isProg = t;
 
-                if (!getNumber(NX_FIELD_C2, &t)) return;
-                pwmChannel[i - 1].isProg = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N0, &t)) break;
+                pwmSettings[i - 1].onHour = t;
 
-                if (!getNumber(NX_FIELD_N0, &t)) return;
-                pwmChannel[i - 1].onHour = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N1, &t)) break;
+                pwmSettings[i - 1].onMinute = t;
 
-                if (!getNumber(NX_FIELD_N1, &t)) return;
-                pwmChannel[i - 1].onMinute = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N2, &t)) break;
+                pwmSettings[i - 1].offHour = t;
 
-                if (!getNumber(NX_FIELD_N2, &t)) return;
-                pwmChannel[i - 1].offHour = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N3, &t)) break;
+                pwmSettings[i - 1].offMinute = t;
 
-                if (!getNumber(NX_FIELD_N3, &t)) return;
-                pwmChannel[i - 1].offMinute = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N4, &t)) break;
+                pwmSettings[i - 1].sunriseLenght = t;
 
-                if (!getNumber(NX_FIELD_N4, &t)) return;
-                pwmChannel[i - 1].sunriseLenght = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N5, &t)) break;
+                pwmSettings[i - 1].sunsetLenght = t;
 
-                if (!getNumber(NX_FIELD_N5, &t)) return;
-                pwmChannel[i - 1].sunsetLenght = t;
-
-                if (!getNumber(NX_FIELD_N6, &t)) return;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N6, &t)) break;
                 //  tmin = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[i - 1].valueNight = t;
+                //pwmSettings[i - 1].valueNight = mapRound ((byte)t, 0, 255, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueNight = (byte)t;
 
-                if (!getNumber(NX_FIELD_N7, &t)) return;
-                tmax = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[i - 1].valueDay = tmax;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N7, &t)) break;
+                tmax = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueDay = tmax;
 
-                if (!getNumber(NX_FIELD_N8, &t)) return;
-                tamb = mapRound ((byte)t, 0, 100, 0, 255);
-                pwmChannel[i - 1].valueProg = tamb;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N8, &t)) return;
+                tamb = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueProg = tamb;
 
-                lastPin = pwmChannel[i - 1].pin;
-                lastI2C = pwmChannel[i - 1].isI2C;
+                lastPin = pwmSettings[i - 1].pin;
+                lastI2C = pwmSettings[i - 1].isI2C;
 
-                if (!getNumber(NX_FIELD_N10, &t)) return;
-                pwmChannel[i - 1].pin = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N10, &t)) break;
+                pwmSettings[i - 1].pin = t;
 
-                if (!getNumber(NX_FIELD_N11, &t)) return;
-                pwmChannel[i - 1].watts = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_N11, &t)) break;
+                pwmSettings[i - 1].watts = t;
 
-                if (!getNumber(NX_FIELD_C3, &t)) return;
-                pwmChannel[i - 1].isI2C = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C3, &t)) break;
+                pwmSettings[i - 1].isI2C = t;
 
-                if (!getNumber(NX_FIELD_C4, &t)) return;
-                pwmChannel[i - 1].invertPwm = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C4, &t)) break;
+                pwmSettings[i - 1].invertPwm = t;
 
-                if (!getNumber(NX_FIELD_C5, &t)) return;
-                pwmChannel[i - 1].useLunarPhase = t;
+                if (!getNumber(NX_PAGE_PWM, NX_FIELD_C5, &t)) break;
+                pwmSettings[i - 1].useLunarPhase = t;
 
-                if (lastPin != pwmChannel[i - 1].pin || lastI2C != pwmChannel[i - 1].isI2C)
+                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C)
                         initPWM ( i-1 );
 
                 lastTouch = currentMillis;
                 writeEEPROMPWMConfig (i - 1);
+                updateChannelTimes (i-1);
                 setPage (PAGE_PWM_LIST);
-
+                status = true;
                 break;
 
         //  cancel
         case PWMPAGE_BUTTON_CANCEL:
                 lastTouch = currentMillis;
                 setPage (PAGE_PWM_LIST);
+                status = true;
                 break;
 
         default:
+                status = true;
                 break;
         }
+        if (!status) setPage (PAGE_PWM_LIST);
 }
 
 static void handleSettingsPage (byte cid)
 {
+        boolean status = false;
         switch (cid)
         {
         // save
         case SETTINGSPAGE_BUTTON_SAVE:
-                if (!getNumber(NX_FIELD_N0, &t)) return;
-                SETTINGS.max_led_temp = t;
+                setPage (PAGE_SAVING);
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N0, &t)) break;
+                settings.max_led_temp = t;
 
-                if (!getNumber(NX_FIELD_N1, &t)) return;
-                SETTINGS.max_sump_temp = t;
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N1, &t)) break;
+                settings.max_sump_temp = t;
 
-                if (!getNumber(NX_FIELD_N2, &t)) return;
-                SETTINGS.max_water_temp = t;
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N2, &t)) break;
+                settings.max_water_temp = t;
 
-                if (!getNumber(NX_FIELD_N3, &t)) return;
-                SETTINGS.pwmDimmingTime = t;
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N3, &t)) break;
+                settings.pwmDimmingTime = t;
 
-                if (!getNumber(NX_FIELD_N4, &t)) return;
-                SETTINGS.screenSaverTime = t;
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N4, &t)) break;
+                settings.screenSaverTime = t;
 
-                if (!getNumber(NX_FIELD_C0, &t)) return;
-                SETTINGS.softDimming  = t;
+                if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_C0, &t)) break;
+                settings.softDimming  = t;
 
                 writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
-
+                status = true;
                 break;
 
         // cancel
         case SETTINGSPAGE_BUTTON_CANCEL:
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
+                status = true;
                 break;
 
         default:
                 break;
         }
+        if (!status) setPage (PAGE_SETTINGS);
 }
 
 static void handleSetTimePage (byte cid)
 {
 
         int setHour, setMinute, setYear, setMonth, setDay;
+        boolean status = false;
         switch (cid)
         {
         // save
         case TIMEPAGE_BUTTON_SAVE:
-                if (!getNumber(NX_FIELD_N0, &setHour)) return;
-                if (!getNumber(NX_FIELD_N1, &setMinute)) return;
-                if (!getNumber(NX_FIELD_N2, &setDay)) return;
-                if (!getNumber(NX_FIELD_N3, &setMonth)) return;
-                if (!getNumber(NX_FIELD_N4, &setYear)) return;
+                setPage (PAGE_SAVING);
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_N0, &setHour)) break;
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_N1, &setMinute)) break;
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_N2, &setDay)) break;
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_N3, &setMonth)) break;
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_N4, &setYear)) break;
 
                 setTime( setHour, setMinute, 0, setDay, setMonth, setYear );
                 RTC.set( now( ) );
-                if (!getNumber(NX_FIELD_C0, &t)) return;
-                SETTINGS.dst =t;
+                if (!getNumber(NX_PAGE_TIME, NX_FIELD_C0, &t)) break;
+                settings.dst =t;
                 readTime ();
                 adjustDST ();
                 writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 lastTouch = currentMillis;
+                status = true;
                 break;
 
         // cancel
@@ -415,11 +424,14 @@ static void handleSetTimePage (byte cid)
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 lastTouch = currentMillis;
+                status = true;
                 break;
 
         default:
+                status = true;
                 break;
         }
+        if (!status) setPage (PAGE_SETTIME);
 }
 
 
@@ -427,17 +439,17 @@ static void drawSchedule ()
 {
         for (byte i = 0; i < PWMS; i++)
         {
-                int min_start = (int)pwmChannel[i].onHour * (int)60 + (int)pwmChannel[i].onMinute;
-                int min_stop = (int)pwmChannel[i].offHour * (int)60 + (int)pwmChannel[i].offMinute;
+                int min_start = (int)pwmSettings[i].onHour * (int)60 + (int)pwmSettings[i].onMinute;
+                int min_stop = (int)pwmSettings[i].offHour * (int)60 + (int)pwmSettings[i].offMinute;
 
                 // background
-                if (pwmChannel[i].isNightLight == 1)
+                if (pwmSettings[i].isNightLight == 1)
                         fillRect (offset * i + startx, starty, width, height, COLOR_DARKBLUE);
                 else
                         fillRect (offset * i + startx, starty, width, height, COLOR_RED);
 
                 // off
-                if (pwmChannel[i].enabled == 0) continue;
+                if (pwmSettings[i].enabled == 0) continue;
 
                 // light
                 boolean midnight = false;
@@ -460,7 +472,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_GREEN);
                 }
                 // sunrise
-                int min_sunrise  = min_start + (int)pwmChannel[i].sunriseLenght;
+                int min_sunrise  = min_start + (int)pwmSettings[i].sunriseLenght;
                 if (min_sunrise > min_hour) midnight = true; else midnight = false;
 
                 if (!midnight)
@@ -481,7 +493,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, starty, width, stopL, COLOR_BLUE);
                 }
                 // sunset
-                int min_sunset  = min_stop - (int)pwmChannel[i].sunsetLenght;
+                int min_sunset  = min_stop - (int)pwmSettings[i].sunsetLenght;
                 if (min_sunset < 0) midnight = true; else midnight = false;
                 if (!midnight)
                 {
@@ -546,20 +558,19 @@ static void handleConfigPage (byte cid)
                         if (i == 0)
                         {
                                 strcpy (tempbuff + strlen (tempbuff), "BRAK ");
-
                         }
                         else
                         {
-                                if (sensorsDetected[i])
+                                if (sensorsList[i].detected)
                                         strcpy (tempbuff + strlen (tempbuff), "* ");
                                 for (byte k = 0; k < 8; k++)
-                                        sprintf (tempbuff + strlen (tempbuff), "%02x ", sensorsList[i][k]);
+                                        sprintf (tempbuff + strlen (tempbuff), "%02x ", sensorsList[i].address[k]);
                         }
                         strcpy  (tempbuff + strlen (tempbuff), "\r\n");
                 }
-                idxLed = listContains (SETTINGS.ledSensorAddress);
-                idxSump = listContains (SETTINGS.sumpSensorAddress);
-                idxWater = listContains (SETTINGS.waterSensorAddress);
+                idxLed = listContains (settings.ledSensorAddress);
+                idxSump = listContains (settings.sumpSensorAddress);
+                idxWater = listContains (settings.waterSensorAddress);
                 if (idxLed == 255) idxLed = 0;
                 if (idxSump == 255) idxSump = 0;
                 if (idxWater == 255) idxWater = 0;
@@ -575,9 +586,9 @@ static void handleConfigPage (byte cid)
                 setPage (PAGE_TEST);
                 for (byte i = 0; i < PWMS; i++)
                 {
-                        setValue (NX_FIELD_N0+i, mapRound (pwmChannel[i].valueCurrent, 0, 255, 0, 100));
-                        setValue (NX_FIELD_C1+i, mapRound (pwmChannel[i].valueCurrent, 0, 255, 0, 100));
-                        pwmChannel[i].valueTest = pwmChannel[i].valueCurrent;
+                        setValue (NX_FIELD_N0+i, mapRound (pwmRuntime[i].valueCurrent, 0, PWM_I2C_MAX, 0, 100));
+                        setValue (NX_FIELD_C1+i, mapRound (pwmRuntime[i].valueCurrent, 0, PWM_I2C_MAX, 0, 100));
+                        pwmRuntime[i].valueTest = pwmRuntime[i].valueCurrent;
                 }
 
                 break;
@@ -590,18 +601,18 @@ static void handleConfigPage (byte cid)
                 setValue (NX_FIELD_N2, day ());
                 setValue (NX_FIELD_N3, month ());
                 setValue (NX_FIELD_N4, year());
-                setValue (NX_FIELD_C0, SETTINGS.dst);
+                setValue (NX_FIELD_C0, settings.dst);
                 break;
 
         // other settings
         case CONFIGPAGE_BUTTON_SETTINGS:
                 setPage (PAGE_SETTINGS);
-                setValue (NX_FIELD_N0, SETTINGS.max_led_temp);
-                setValue (NX_FIELD_N1, SETTINGS.max_sump_temp);
-                setValue (NX_FIELD_N2, SETTINGS.max_water_temp);
-                setValue (NX_FIELD_N3, SETTINGS.pwmDimmingTime);
-                setValue (NX_FIELD_N4, SETTINGS.screenSaverTime);
-                setValue (NX_FIELD_C0, SETTINGS.softDimming);
+                setValue (NX_FIELD_N0, settings.max_led_temp);
+                setValue (NX_FIELD_N1, settings.max_sump_temp);
+                setValue (NX_FIELD_N2, settings.max_water_temp);
+                setValue (NX_FIELD_N3, settings.pwmDimmingTime);
+                setValue (NX_FIELD_N4, settings.screenSaverTime);
+                setValue (NX_FIELD_C0, settings.softDimming);
                 break;
 
         // pwm config
@@ -629,28 +640,29 @@ static void handlePWMListPage (byte cid)
         case PWMCONFIGPAGE_BUTTON_PWM_6:
         case PWMCONFIGPAGE_BUTTON_PWM_7:
         case PWMCONFIGPAGE_BUTTON_PWM_8:
-                tmin = pwmChannel[cid - 1].valueNight;
-                tmax = mapRound (pwmChannel[cid - 1].valueDay, 0, 255, 0, 100);
-                tamb = mapRound (pwmChannel[cid - 1].valueProg, 0, 255, 0, 100);
+                tmin = pwmSettings[cid - 1].valueNight;
+                tmax = (byte) mapRound (pwmSettings[cid - 1].valueDay, 0, PWM_I2C_MAX, 0, 100);
+                tamb = (byte) mapRound (pwmSettings[cid - 1].valueProg, 0, PWM_I2C_MAX, 0, 100);
                 setPage (PAGE_PWM);
-                setValue (NX_FIELD_C0, pwmChannel[cid - 1].enabled);
-                setValue (NX_FIELD_C1, pwmChannel[cid - 1].isNightLight);
-                setValue (NX_FIELD_C2, pwmChannel[cid - 1].isProg);
-                setValue (NX_FIELD_N0, pwmChannel[cid - 1].onHour);
-                setValue (NX_FIELD_N1, pwmChannel[cid - 1].onMinute);
-                setValue (NX_FIELD_N2, pwmChannel[cid - 1].offHour);
-                setValue (NX_FIELD_N3, pwmChannel[cid - 1].offMinute);
-                setValue (NX_FIELD_N4, pwmChannel[cid - 1].sunriseLenght);
-                setValue (NX_FIELD_N5, pwmChannel[cid - 1].sunsetLenght);
+
+                setValue (NX_FIELD_C0, pwmSettings[cid - 1].enabled);
+                setValue (NX_FIELD_C1, pwmSettings[cid - 1].isNightLight);
+                setValue (NX_FIELD_C2, pwmSettings[cid - 1].isProg);
+                setValue (NX_FIELD_N0, pwmSettings[cid - 1].onHour);
+                setValue (NX_FIELD_N1, pwmSettings[cid - 1].onMinute);
+                setValue (NX_FIELD_N2, pwmSettings[cid - 1].offHour);
+                setValue (NX_FIELD_N3, pwmSettings[cid - 1].offMinute);
+                setValue (NX_FIELD_N4, pwmSettings[cid - 1].sunriseLenght);
+                setValue (NX_FIELD_N5, pwmSettings[cid - 1].sunsetLenght);
                 setValue (NX_FIELD_N6, tmin);
                 setValue (NX_FIELD_N7, tmax);
                 setValue (NX_FIELD_N8, tamb);
                 setValue (NX_FIELD_N9, cid);
-                setValue (NX_FIELD_N10, pwmChannel[cid - 1].pin);
-                setValue (NX_FIELD_N11, pwmChannel[cid - 1].watts);
-                setValue (NX_FIELD_C3, pwmChannel[cid - 1].isI2C);
-                setValue (NX_FIELD_C4, pwmChannel[cid - 1].invertPwm);
-                setValue (NX_FIELD_C5, pwmChannel[cid - 1].useLunarPhase);
+                setValue (NX_FIELD_N10, pwmSettings[cid - 1].pin);
+                setValue (NX_FIELD_N11, pwmSettings[cid - 1].watts);
+                setValue (NX_FIELD_C3, pwmSettings[cid - 1].isI2C);
+                setValue (NX_FIELD_C4, pwmSettings[cid - 1].invertPwm);
+                setValue (NX_FIELD_C5, pwmSettings[cid - 1].useLunarPhase);
                 setText (NX_FIELD_T4,  (char*)pgm_read_word(&(nx_pwm_names[cid -1])));
                 break;
 
@@ -678,80 +690,84 @@ static void handleHomePage (byte cid)
 
         //toggle night mode
         case HOMEPAGE_BUTTON_NIGHT:
-                if (SETTINGS.forceAmbient  == 1 || SETTINGS.forceOFF  == 1) return;
-                if (SETTINGS.forceNight == 1)
+                if (settings.forceAmbient  == 1 || settings.forceOFF  == 1) return;
+                if (settings.forceNight == 1)
                 {
-                        SETTINGS.forceNight = 0;
+                        settings.forceNight = 0;
                         forcePWMRecovery ();
                 }
                 else
                 {
-                        SETTINGS.forceNight = 1;
+                        settings.forceNight = 1;
+                        forceDimmingRestart ();
                 }
 
                 toggleButtons();
-                writeEEPROMSettings ();
+                writeEEPROMForceNight ();
                 break;
 
         // ambient toggle
         case HOMEPAGE_BUTTON_AMBIENT:
-                if (SETTINGS.forceOFF == 1 || SETTINGS.forceNight == 1) return;
-                if (SETTINGS.forceAmbient == 1)
+                if (settings.forceOFF == 1 || settings.forceNight == 1) return;
+                if (settings.forceAmbient == 1)
                 {
-                        SETTINGS.forceAmbient = 0;
+                        settings.forceAmbient = 0;
                         forcePWMRecovery ();
                 }
                 else
                 {
-                        SETTINGS.forceAmbient = 1;
+                        settings.forceAmbient = 1;
+                        forceDimmingRestart ();
                 }
 
                 toggleButtons();
-                writeEEPROMSettings ();
+                writeEEPROMForceAmbient ();
                 break;
 
         // off/on toggle
         case HOMEPAGE_BUTTON_OFF:
-                if (SETTINGS.forceOFF == 1)
+                if (settings.forceOFF == 1)
                 {
-                        SETTINGS.forceOFF = 0;
+                        settings.forceOFF = 0;
                         forcePWMRecovery ();
                 }
                 else
                 {
-                        SETTINGS.forceOFF = 1;
+                        settings.forceOFF = 1;
+                        forceDimmingRestart ();
                 }
                 toggleButtons();
-                writeEEPROMSettings ();
+                writeEEPROMForceOff ();
                 break;
 
         default:
                 break;
         }
 }
+
+static void toggleButton (byte value, byte field, byte pic_on, byte pic_off)
+{
+        if (value == 1) setPic(field,pic_on); else setPic(field, pic_off);
+}
+
 // toggle home page buttons images
 static void toggleButtons()
 {
-        if (SETTINGS.forceOFF == 1) setPic(NX_FIELD_BO, NX_PIC_BO_ON);
-        else setPic(NX_FIELD_BO, NX_PIC_BO_OFF);
-
-        if (SETTINGS.forceAmbient == 1) setPic(NX_FIELD_BA, NX_PIC_BA_ON);
-        else setPic(NX_FIELD_BA, NX_PIC_BA_OFF);
-
-        if (SETTINGS.forceNight == 1) setPic(NX_FIELD_BN, NX_PIC_BN_ON);
-        else setPic(NX_FIELD_BN, NX_PIC_BN_OFF);
+        toggleButton (settings.forceOFF, NX_FIELD_BO, NX_PIC_BO_ON, NX_PIC_BO_OFF);
+        toggleButton (settings.forceAmbient, NX_FIELD_BA, NX_PIC_BA_ON, NX_PIC_BA_OFF);
+        toggleButton (settings.forceNight, NX_FIELD_BN, NX_PIC_BN_ON, NX_PIC_BN_OFF);
 }
 
 #ifndef NO_TEMPERATURE
 void updateTempField (byte field, byte sensor, byte max, byte min)
 {
-        if (nxTemperatures[sensor] != temperatures[sensor]  || forceRefresh)
+        if (temperaturesFans[sensor].nxTemperature != temperaturesFans[sensor].temperature  || forceRefresh)
         {
-                if (temperatures[sensor] != TEMP_ERROR)
+                if (temperaturesFans[sensor].temperature != TEMP_ERROR)
                 {
-                        setTemperature(field, temperatures[sensor]);
-                        nxTemperatures[sensor] = temperatures[sensor];
-                        if (temperatures[sensor] < min || temperatures[sensor] > max)
+                        setTemperature(field, temperaturesFans[sensor].temperature);
+                        temperaturesFans[sensor].nxTemperature = temperaturesFans[sensor].temperature;
+                        if (temperaturesFans[sensor].temperature < min || temperaturesFans[sensor].temperature > max)
                                 setColor (field, COLOR_LIGHTRED);
                         else
                                 setColor (field, COLOR_LIGHTGREEN);
@@ -763,22 +779,22 @@ void updateTempField (byte field, byte sensor, byte max, byte min)
 
 void updateFanField (byte field, byte sensor)
 {
-        if (!fansStatuses[sensor]) setText (field, NX_STR_EMPTY);
+        if (!temperaturesFans[sensor].fanStatus) setText (field, NX_STR_EMPTY);
         else setText (field, NX_STR_FAN);
-        nxFansStatuses[sensor] = fansStatuses[sensor];
+        temperaturesFans[sensor].nxFanStatus = temperaturesFans[sensor].fanStatus;
 }
 #endif
 static void updateWaterTemp() {
     #ifndef NO_TEMPERATURE
-        updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,SETTINGS.max_water_temp, WATER_TEMPERATURE_MIN);
+        updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,settings.max_water_temp, WATER_TEMPERATURE_MIN);
     #endif
 }
 
 static void updateHomePage() {
 #ifndef NO_TEMPERATURE
         updateWaterTemp();
-        updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,SETTINGS.max_led_temp, 0);
-        updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,SETTINGS.max_sump_temp, 0);
+        updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,settings.max_led_temp, 0);
+        updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,settings.max_sump_temp, 0);
 
 #endif
 
@@ -786,34 +802,38 @@ static void updateHomePage() {
         {
                 byte valueField = 66+i;
                 byte iconField =  3+i;
-                if (!pwmChannel[i].valueCurrent && pwmChannel[i].enabled == 0 && (pwmNxLast[i] != 0 || forceRefresh))
+                if (!pwmRuntime[i].valueCurrent && pwmSettings[i].enabled == 0 && (pwmRuntime[i].nxPwmLast != 0 || forceRefresh))
                 {
                         setText (valueField, NX_STR_DASH);
                         setText (iconField, NX_STR_SPACE);
-                        pwmNxLast[i] = 0;
+                        pwmRuntime[i].nxPwmLast = 0;
                         continue;
                 }
 
-                if (pwmNxLast[i] != pwmChannel[i].valueCurrent || forceRefresh)
+                if (pwmRuntime[i].nxPwmLast != pwmRuntime[i].valueCurrent || forceRefresh)
                 {
-                        double percent =  mapDouble(pwmChannel[i].valueCurrent, 0.0, 255.0, 0.0, 100.0);
+                        uint16_t color = COLOR_WHITE;
+                        double percent =  mapDouble((double)pwmRuntime[i].valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
                         byte icon = NX_STR_SPACE;
-                        if (pwmChannel[i].isSunrise ) icon = NX_STR_SUNRISE;
-                        else if (pwmChannel[i].isSunset ) icon = NX_STR_SUNSET;
-                        else if (pwmChannel[i].recoverLastState) icon = NX_STR_RECOVER;
-                        else if (pwmChannel[i].valueCurrent < pwmChannel[i].valueGoal) icon = NX_STR_UP;
-                        else if (pwmChannel[i].valueCurrent > pwmChannel[i].valueGoal) icon = NX_STR_DOWN;
-                        else if (pwmChannel[i].valueCurrent == 0 || pwmChannel[i].enabled == 0) icon = NX_STR_OFF;
-                        else if (pwmChannel[i].isNight) icon = NX_STR_NIGHT;
-                        else if (pwmChannel[i].valueCurrent == pwmChannel[i].valueDay) icon = NX_STR_ON;
-                        pwmNxLast[i] = pwmChannel[i].valueCurrent;
-//                        if (pwmChannel[i].recoverLastState)
-                        //setPercent (valueField,  pwmChannel[i].valueGoal);
-
-
+                        if (pwmRuntime[i].isSunrise ) icon = NX_STR_SUNRISE;
+                        else if (pwmRuntime[i].isSunset ) icon = NX_STR_SUNSET;
+                        else if (pwmRuntime[i].recoverLastState) icon = NX_STR_RECOVER;
+                        else if (pwmRuntime[i].valueCurrent < pwmRuntime[i].valueGoal) icon = NX_STR_UP;
+                        else if (pwmRuntime[i].valueCurrent > pwmRuntime[i].valueGoal) icon = NX_STR_DOWN;
+                        else if (pwmRuntime[i].valueCurrent == 0 || pwmSettings[i].enabled == 0) icon = NX_STR_OFF;
+                        else if (pwmRuntime[i].isNight)
+                        {
+                                if (pwmSettings[i].useLunarPhase)
+                                {
+                                        color = rgb565 (map (moonPhases[moonPhase], 0,100,150,255));
+                                }
+                                icon = NX_STR_NIGHT;
+                        }
+                        else if (pwmRuntime[i].valueCurrent == pwmSettings[i].valueDay) icon = NX_STR_ON;
+                        pwmRuntime[i].nxPwmLast = pwmRuntime[i].valueCurrent;
                         setPercent (valueField,  percent);
-
                         setText (iconField, icon);
+                        setColor (iconField, color);
                 }
         }
         #ifndef NO_TEMPERATURE
@@ -823,14 +843,22 @@ static void updateHomePage() {
         #endif
 }
 
+uint16_t rgb565( byte rgb)
+{
+        uint16_t ret  = (rgb & 0xF8) << 8;// 5 bits
+        ret |= (rgb & 0xFC) << 3;       // 6 bits
+        ret |= (rgb & 0xF8) >> 3;       // 5 bits
+        return( ret);
+}
+
 static void displayWats ()
 {
         watts = 0;
         for (byte i = 0; i < PWMS; i++)
         {
-                if (pwmChannel[i].enabled && pwmChannel[i].watts && pwmChannel[i].valueCurrent)
+                if (pwmSettings[i].enabled && pwmSettings[i].watts && pwmRuntime[i].valueCurrent)
                 {
-                        watts+=(float)(((float)pwmChannel[i].valueCurrent / (float)255) * (float)pwmChannel[i].watts);
+                        watts+=(float)(((float)pwmRuntime[i].valueCurrent / (float)PWM_I2C_MAX) * (float)pwmSettings[i].watts);
                 }
         }
         if (watts > MAX_WATTS) max_watts_exceeded = true;
@@ -886,7 +914,7 @@ static void nxDisplay ()
                         forceRefresh = false;
                 }
                 // screensaver
-                if (currentMillis - lastTouch > SETTINGS.screenSaverTime*1000 && nxScreen != PAGE_SCREENSAVER && SETTINGS.screenSaverTime > 0
+                if (currentMillis - lastTouch > settings.screenSaverTime*1000 && nxScreen != PAGE_SCREENSAVER && settings.screenSaverTime > 0
                     && nxScreen != PAGE_TEST
                     && nxScreen != PAGE_SETTINGS
                     && nxScreen != PAGE_PWM
@@ -895,6 +923,7 @@ static void nxDisplay ()
                     && nxScreen != PAGE_SCHEDULE
                     && nxScreen != PAGE_PWM_LIST
                     && nxScreen != PAGE_ERROR
+                    && nxScreen != PAGE_SAVING
                     )
                 {
                         setPage (PAGE_SCREENSAVER);
@@ -1026,8 +1055,19 @@ static void _writeTxt ()
 
 static bool getNumber (byte field, int *result)
 {
+        return getNumber (255,  field, result);
+}
+
+static bool getNumber (byte page, byte field, int *result)
+{
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_GET])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
+        if (page!=255)
+        {
+                printPGM( (char*)pgm_read_word(&(nx_pages[page])));
+                printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_DOT])));
+        }
+
         printPGM( (char*)pgm_read_word(&(nx_fields[field])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_VAL])));
         sendNextionEOL ();
@@ -1064,12 +1104,12 @@ static void fillRect (int x, int y, int w, int h, int color)
         sendNextionEOL ();
 }
 
-static void printPGM (const char * x)
+static void printPGM (const char * str)
 {
-        char tempbuff[30] = {0};
-        memset(tempbuff, 0, sizeof (tempbuff));
-        strcpy_P(tempbuff, x);
-        NEXTION_PRINT ( tempbuff );
+        char c;
+        if (!str) return;
+        while ((c = pgm_read_byte(str++)))
+                NEXTION_PRINT (c);
 }
 
 #endif

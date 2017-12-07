@@ -23,9 +23,9 @@ void setupSensors ()
 
 static void requestReadings ()
 {
-        sensors.request(SETTINGS.ledSensorAddress);
-        sensors.request(SETTINGS.waterSensorAddress);
-        sensors.request(SETTINGS.sumpSensorAddress);
+        sensors.request(settings.ledSensorAddress);
+        sensors.request(settings.waterSensorAddress);
+        sensors.request(settings.sumpSensorAddress);
 }
 
 void fansControl()
@@ -35,45 +35,46 @@ void fansControl()
         previousTemperature = currentMillis;
 
         if (sensors.available()) {
-                temperatures[LED_TEMPERATURE_FAN] = sensors.readTemperature(SETTINGS.ledSensorAddress);
-                temperatures[WATER_TEMPERATURE_FAN] = sensors.readTemperature(SETTINGS.waterSensorAddress);
-                temperatures[SUMP_TEMPERATURE_FAN] = sensors.readTemperature(SETTINGS.sumpSensorAddress);;
+                temperaturesFans[LED_TEMPERATURE_FAN].temperature = sensors.readTemperature(settings.ledSensorAddress);
+                temperaturesFans[WATER_TEMPERATURE_FAN].temperature = sensors.readTemperature(settings.waterSensorAddress);
+                temperaturesFans[SUMP_TEMPERATURE_FAN].temperature = sensors.readTemperature(settings.sumpSensorAddress);;
                 requestReadings ();
         }
 
         // lamp overheating (for eg due to fans failure)
-        if (temperatures[LED_TEMPERATURE_FAN] >= LAMP_TEMPERATURE_MAX || temperatures[SUMP_TEMPERATURE_FAN] >= LAMP_TEMPERATURE_MAX) lampOverheating = true;
+        if (temperaturesFans[LED_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX ||
+            temperaturesFans[SUMP_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX) lampOverheating = true;
         else lampOverheating = false;
 
         if (currentMillis - previousMillisFans > FANS_INTERVAL || previousMillisFans == 0)
         {
                 previousMillisFans = currentMillis;
 
-                fansSwitch (LED_TEMPERATURE_FAN, LED_FANS_PIN,SETTINGS.max_led_temp);
-                fansSwitch (SUMP_TEMPERATURE_FAN, SUMP_FANS_PIN,SETTINGS.max_sump_temp);
-                fansSwitch (WATER_TEMPERATURE_FAN, WATER_FANS_PIN,SETTINGS.max_water_temp);
+                fansSwitch (LED_TEMPERATURE_FAN, LED_FANS_PIN,settings.max_led_temp);
+                fansSwitch (SUMP_TEMPERATURE_FAN, SUMP_FANS_PIN,settings.max_sump_temp);
+                fansSwitch (WATER_TEMPERATURE_FAN, WATER_FANS_PIN,settings.max_water_temp);
         }
 
 }
 
 void fansSwitch (byte sensor, byte pin, byte max)
 {
-        if (temperatures[sensor] != TEMP_ERROR && temperatures[sensor] > max )
+        if (temperaturesFans[sensor].temperature != TEMP_ERROR && temperaturesFans[sensor].temperature > max )
         {
                 digitalWrite(pin, LOW);
-                fansStatuses[sensor] = true;
+                temperaturesFans[sensor].fanStatus = true;
         }
         else
         {
                 digitalWrite(pin, HIGH);
-                fansStatuses[sensor] = false;
+                temperaturesFans[sensor].fanStatus = false;
         }
 }
 
 byte listContains (byte addr[])
 {
         for (byte i = 0; i < 7; i++)
-          if(memcmp (sensorsList[i], addr, 8) == 0) return i;
+          if(memcmp (sensorsList[i].address, addr, 8) == 0) return i;
 
         return 255;
 }
@@ -85,8 +86,8 @@ void isDiscovered (byte &res, byte addr[])
         {
                 for (byte k = 0; k < 8; k++)
                 {
-                        sensorsList[res][k] = addr[k];
-                        sensorsDetected[res] = false;
+                          sensorsList[res].address[k] = addr[k];
+                          sensorsList[res].detected = false;
                 }
                 res++;
         }
@@ -97,13 +98,13 @@ byte discoverOneWireDevices() {
         byte addr[8];
         // pierwszy pusty
 
-        memset (sensorsList, 0, 56);
+        memset (sensorsList, 0, sizeof (sensorsList));
 
         // pierwszy pusty
         for (byte k = 0; k < 8; k++)
         {
-                sensorsList[res][k] = 0;
-                sensorsDetected[res] = false;
+                sensorsList[res].address[k] = 0;
+                sensorsList[res].detected = false;
         }
         res++;
 
@@ -112,14 +113,14 @@ byte discoverOneWireDevices() {
 
                 for (byte k = 0; k < 8; k++)
                 {
-                        sensorsList[res][k] = addr[k];
-                        sensorsDetected[res] = true;
+                        sensorsList[res].address[k] = addr[k];
+                        sensorsList[res].detected = true;
                 }
                 res++;
         }
-        isDiscovered (res, SETTINGS.ledSensorAddress);
-        isDiscovered (res, SETTINGS.sumpSensorAddress);
-        isDiscovered (res, SETTINGS.waterSensorAddress);
+        isDiscovered (res, settings.ledSensorAddress);
+        isDiscovered (res, settings.sumpSensorAddress);
+        isDiscovered (res, settings.waterSensorAddress);
         onewire.reset_search();
         return res;
 }
