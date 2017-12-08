@@ -31,6 +31,8 @@ void updateChannelTimes (int i)
         pwmRuntime[i].sunriseTime =  (long)pwmSettings[i].sunriseLenght * 60;
 }
 
+
+
 void recoverSunsetAndSunrise (int i)
 {
         if ( getSunsetSeconds (i)  == true)
@@ -45,7 +47,7 @@ void recoverSunsetAndSunrise (int i)
         if ( getSunriseSeconds (i)  == true)
         {
                 pwmRuntime[i].recoverLastState = true;
-                pwmRuntime[i].valueGoal = (int) (pwmRuntime[i].sunriseValue*pwmSettings[i].valueDay);
+                pwmRuntime[i].valueGoal = (int) (pwmRuntime[i].sunriseSecondsLeft*pwmSettings[i].valueDay);
                 pwmRuntime[i].dimmingStart = true;
                 pwmRuntime[i].dimmingScale = abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal);
         }
@@ -178,12 +180,10 @@ static void pwm( byte i )
         // force night
         if (settings.forceNight == 1)
         {
-                pwmRuntime[i].valueGoal = 0;
-                if (pwmSettings[i].isNightLight)
-                        pwmRuntime[i].valueGoal = getNightValue(i);
-
-                initDimming (i, abs(pwmRuntime[i].valueCurrent-pwmSettings[i].valueNight),-1);
                 pwmRuntime[i].isNight= true;
+                pwmRuntime[i].valueGoal = 0;
+                pwmRuntime[i].valueGoal = getNightValue(i);
+                initDimming (i, abs(pwmRuntime[i].valueCurrent-pwmSettings[i].valueNight),-1);                
                 pwmStep (i, settings.pwmDimmingTime );
         }
         else

@@ -99,21 +99,22 @@ static void readEEPROMSensor (byte startAddr, byte addr[])
         {
                 addr[i] = EEPROM.read( startAddr + i);
         }
+
 }
 
 static void writeEEPROMSensors ()
 {
-        writeEEPROMSensor (120,  settings.sensors[LED_TEMPERATURE_FAN]);
-        writeEEPROMSensor (130,  settings.sensors[SUMP_TEMPERATURE_FAN]);
-        writeEEPROMSensor (140,  settings.sensors[WATER_TEMPERATURE_FAN]);
+        writeEEPROMSensor (120,  settings.ledSensorAddress);
+        writeEEPROMSensor (130,  settings.sumpSensorAddress);
+        writeEEPROMSensor (140,  settings.waterSensorAddress);
 }
 
 static void writeEEPROMSettings ()
 {
-        EEPROM.write( 104, settings.maxTemperatures[LED_TEMPERATURE_FAN]);
-        EEPROM.write( 105, settings.maxTemperatures[WATER_TEMPERATURE_FAN]);
+        EEPROM.write( 104, settings.max_led_temp);
+        EEPROM.write( 105, settings.max_water_temp);
         EEPROM.write( 106, settings.pwmDimmingTime);
-        EEPROM.write( 107, settings.maxTemperatures[SUMP_TEMPERATURE_FAN]);
+        EEPROM.write( 107, settings.max_sump_temp);
         EEPROM.write( 108, settings.screenSaverTime);
         EEPROM.write( 109, settings.softDimming);
         EEPROM.write( 110, settings.dst);
@@ -124,18 +125,20 @@ static void readEEPROMSettings ()
         settings.forceNight = EEPROM.read( 101 );
         settings.forceAmbient = EEPROM.read( 102);
         settings.forceOFF = EEPROM.read( 103);
-        settings.maxTemperatures[LED_TEMPERATURE_FAN] = EEPROM.read( 104);
-        settings.maxTemperatures[WATER_TEMPERATURE_FAN] = EEPROM.read( 105);
+        settings.max_led_temp = EEPROM.read( 104);
+        settings.max_water_temp = EEPROM.read( 105);
         settings.pwmDimmingTime = EEPROM.read( 106);
-        settings.maxTemperatures[SUMP_TEMPERATURE_FAN] = EEPROM.read( 107);
+        settings.max_sump_temp = EEPROM.read( 107);
         settings.screenSaverTime = EEPROM.read( 108);
         settings.softDimming = EEPROM.read( 109);
         settings.dst = EEPROM.read( 110);
 
         // 24 bajty adresy sensoow
-        readEEPROMSensor (120,  settings.sensors[LED_TEMPERATURE_FAN]);
-        readEEPROMSensor (130, settings.sensors[SUMP_TEMPERATURE_FAN]);
-        readEEPROMSensor (140, settings.sensors[WATER_TEMPERATURE_FAN]);
+        readEEPROMSensor (120,  settings.ledSensorAddress);
+  readEEPROMSensor (130, settings.sumpSensorAddress);
+  readEEPROMSensor (140, settings.waterSensorAddress);
+
+
 }
 
 static void eEpromRead( ) {

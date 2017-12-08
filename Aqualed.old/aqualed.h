@@ -76,18 +76,16 @@ typedef struct
         byte forceNight;
         byte forceAmbient;
         byte forceOFF;
-        byte maxTemperatures[3];
-//        byte max_led_temp;
-        //byte max_water_temp;
-        //byte max_sump_temp;
+        byte max_led_temp;
+        byte max_water_temp;
+        byte max_sump_temp;
         byte pwmDimmingTime;
         byte screenSaverTime;
         byte softDimming;
         byte dst;
-        byte sensors[7][8];
-        //byte ledSensorAddress[8];
-        //byte sumpSensorAddress[8];
-        //byte waterSensorAddress[8];
+        byte ledSensorAddress[8];
+        byte sumpSensorAddress[8];
+        byte waterSensorAddress[8];
 } SETTINGS;
 
 
@@ -104,9 +102,9 @@ typedef struct
 {
         byte address[8];
         boolean detected;
-} SENSORSLIST;
+} SENSORS;
 
-SENSORSLIST sensorsList[7] = {0};
+SENSORS sensorsList[7] = {0};
 
 typedef struct
 {
@@ -116,9 +114,9 @@ typedef struct
         bool fanStatus;
         bool nxFanStatus;
 
-} SENSORS;
+} TEMPERATURES_FANS;
 
-SENSORS sensors[3]={0};
+TEMPERATURES_FANS temperaturesFans[3]={0};
 
 // time variables
 long unsigned currentMillis = 0;

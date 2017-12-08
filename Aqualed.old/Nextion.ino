@@ -17,7 +17,7 @@ static void nexInit(void)
         NEXTION_BEGIN (9600);
         NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
-        NEXTION_FLUSH ();
+        NEXTION_FLUSH ();        
         NEXTION_BEGIN ((long)NEXTION_BAUD_RATE);
         NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BKCMD, (long)0);
@@ -44,16 +44,13 @@ static void nxTouch()
         memset(__buffer, 0, sizeof (__buffer));
         byte i = 0;
         byte c;
-        byte pid, cid;
-        boolean touchEvent = false;
         while (NEXTION_AVAIL ()> 0)
         {
                 wdt_reset();
                 delay(10);
                 c = NEXTION_READ ();
                 wdt_reset();
-                if (c == NEX_RET_EVENT_TOUCH_HEAD) touchEvent = true;
-                if (touchEvent)
+                if (c == NEX_RET_EVENT_TOUCH_HEAD)
                 {
                         __buffer[i] = c;
                         i++;
@@ -62,10 +59,7 @@ static void nxTouch()
         }
         if (0xFF == __buffer[4] && 0xFF == __buffer[5] && 0xFF == __buffer[6])
         {
-                pid = __buffer[1];
-                cid = __buffer[2];
-                //  delay(10);
-                handlePage (pid, cid);
+                handlePage (__buffer[1],  __buffer[2]);
                 return;
         }
         wdt_reset();
@@ -133,6 +127,14 @@ static void handleScreenSaver (byte cid)
         lastTouch = currentMillis;
 }
 
+static boolean readSensor (byte field, byte sensor[])
+{
+  if (!getNumber(NX_PAGE_THERMO, field, &t)) return false;
+  for (byte k = 0; k < 8; k++)
+          sensor[k] = sensorsList[t].address[k];
+  return true;
+}
+
 static void handleThermoPage (byte cid)
 {
         boolean status = false;
@@ -141,18 +143,9 @@ static void handleThermoPage (byte cid)
         // save
         case THERMOPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
-                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N0, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[LED_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
-                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N1, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[SUMP_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
-                if (!getNumber(NX_PAGE_THERMO, NX_FIELD_N2, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[WATER_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
+                if (!readSensor (NX_FIELD_N0, settings.ledSensorAddress)) break;
+                if (!readSensor (NX_FIELD_N1, settings.sumpSensorAddress)) break;
+                if (!readSensor (NX_FIELD_N2, settings.waterSensorAddress)) break;
                 writeEEPROMSensors ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
@@ -354,13 +347,13 @@ static void handleSettingsPage (byte cid)
         case SETTINGSPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
                 if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N0, &t)) break;
-                settings.maxTemperatures[LED_TEMPERATURE_FAN] = t;
+                settings.max_led_temp = t;
 
                 if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N1, &t)) break;
-                settings.maxTemperatures[SUMP_TEMPERATURE_FAN] = t;
+                settings.max_sump_temp = t;
 
                 if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N2, &t)) break;
-                settings.maxTemperatures[WATER_TEMPERATURE_FAN] = t;
+                settings.max_water_temp = t;
 
                 if (!getNumber(NX_PAGE_SETTINGS,NX_FIELD_N3, &t)) break;
                 settings.pwmDimmingTime = t;
@@ -568,9 +561,9 @@ static void handleConfigPage (byte cid)
                         }
                         strcpy  (tempbuff + strlen (tempbuff), "\r\n");
                 }
-                idxLed = listContains (settings.sensors[LED_TEMPERATURE_FAN]);
-                idxSump = listContains (settings.sensors[SUMP_TEMPERATURE_FAN]);
-                idxWater = listContains (settings.sensors[WATER_TEMPERATURE_FAN]);
+                idxLed = listContains (settings.ledSensorAddress);
+                idxSump = listContains (settings.sumpSensorAddress);
+                idxWater = listContains (settings.waterSensorAddress);
                 if (idxLed == 255) idxLed = 0;
                 if (idxSump == 255) idxSump = 0;
                 if (idxWater == 255) idxWater = 0;
@@ -607,9 +600,9 @@ static void handleConfigPage (byte cid)
         // other settings
         case CONFIGPAGE_BUTTON_SETTINGS:
                 setPage (PAGE_SETTINGS);
-                setValue (NX_FIELD_N0, settings.maxTemperatures[LED_TEMPERATURE_FAN]);
-                setValue (NX_FIELD_N1, settings.maxTemperatures[SUMP_TEMPERATURE_FAN]);
-                setValue (NX_FIELD_N2, settings.maxTemperatures[WATER_TEMPERATURE_FAN]);
+                setValue (NX_FIELD_N0, settings.max_led_temp);
+                setValue (NX_FIELD_N1, settings.max_sump_temp);
+                setValue (NX_FIELD_N2, settings.max_water_temp);
                 setValue (NX_FIELD_N3, settings.pwmDimmingTime);
                 setValue (NX_FIELD_N4, settings.screenSaverTime);
                 setValue (NX_FIELD_C0, settings.softDimming);
@@ -761,13 +754,13 @@ static void toggleButtons()
 #ifndef NO_TEMPERATURE
 void updateTempField (byte field, byte sensor, byte max, byte min)
 {
-        if (sensors[sensor].nxTemperature != sensors[sensor].temperature  || forceRefresh)
+        if (temperaturesFans[sensor].nxTemperature != temperaturesFans[sensor].temperature  || forceRefresh)
         {
-                if (sensors[sensor].temperature != TEMP_ERROR)
+                if (temperaturesFans[sensor].temperature != TEMP_ERROR)
                 {
-                        setTemperature(field, sensors[sensor].temperature);
-                        sensors[sensor].nxTemperature = sensors[sensor].temperature;
-                        if (sensors[sensor].temperature < min || sensors[sensor].temperature > max)
+                        setTemperature(field, temperaturesFans[sensor].temperature);
+                        temperaturesFans[sensor].nxTemperature = temperaturesFans[sensor].temperature;
+                        if (temperaturesFans[sensor].temperature < min || temperaturesFans[sensor].temperature > max)
                                 setColor (field, COLOR_LIGHTRED);
                         else
                                 setColor (field, COLOR_LIGHTGREEN);
@@ -779,87 +772,87 @@ void updateTempField (byte field, byte sensor, byte max, byte min)
 
 void updateFanField (byte field, byte sensor)
 {
-        if (!sensors[sensor].fanStatus) setText (field, NX_STR_EMPTY);
+        if (!temperaturesFans[sensor].fanStatus) setText (field, NX_STR_EMPTY);
         else setText (field, NX_STR_FAN);
-        sensors[sensor].nxFanStatus = sensors[sensor].fanStatus;
+        temperaturesFans[sensor].nxFanStatus = temperaturesFans[sensor].fanStatus;
 }
 #endif
 static void updateWaterTemp() {
     #ifndef NO_TEMPERATURE
-        updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,settings.maxTemperatures[WATER_TEMPERATURE_FAN], WATER_TEMPERATURE_MIN);
+        updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,settings.max_water_temp, WATER_TEMPERATURE_MIN);
     #endif
 }
 
 static void updateHomePage() {
 #ifndef NO_TEMPERATURE
         updateWaterTemp();
-        updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,settings.maxTemperatures[LED_TEMPERATURE_FAN], 0);
-        updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,settings.maxTemperatures[SUMP_TEMPERATURE_FAN], 0);
+        updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,settings.max_led_temp, 0);
+        updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,settings.max_sump_temp, 0);
 
 #endif
 
-for (byte i = 0; i < PWMS; i++)
-{
-        byte valueField = 66+i;
-        byte iconField =  3+i;
-        if (!pwmRuntime[i].valueCurrent && pwmSettings[i].enabled == 0 && (pwmRuntime[i].nxPwmLast != 0 || forceRefresh))
+        for (byte i = 0; i < PWMS; i++)
         {
-                setText (valueField, NX_STR_DASH);
-                setText (iconField, NX_STR_SPACE);
-                pwmRuntime[i].nxPwmLast = 0;
-                continue;
-        }
+                byte valueField = 66+i;
+                byte iconField =  3+i;
+                if (!pwmRuntime[i].valueCurrent && pwmSettings[i].enabled == 0 && (pwmRuntime[i].nxPwmLast != 0 || forceRefresh))
+                {
+                        setText (valueField, NX_STR_DASH);
+                        setText (iconField, NX_STR_SPACE);
+                        pwmRuntime[i].nxPwmLast = 0;
+                        continue;
+                }
 
-        if (pwmRuntime[i].nxPwmLast != pwmRuntime[i].valueCurrent || forceRefresh)
-        {
-                uint16_t color = COLOR_WHITE;
-                double percent =  mapDouble((double)pwmRuntime[i].valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
-                byte icon = NX_STR_SPACE;
-                if (pwmRuntime[i].isSunrise )
+                if (pwmRuntime[i].nxPwmLast != pwmRuntime[i].valueCurrent || forceRefresh)
                 {
-                        icon = NX_STR_SUNRISE;
-                        color = COLOR_LIGHTYELLOW;
-                }
-                else if (pwmRuntime[i].isSunset )
-                {
-                        icon = NX_STR_SUNSET;
-                        color = COLOR_ORANGE;
-                }
-                else if (pwmRuntime[i].recoverLastState)
-                {
-                        icon = NX_STR_RECOVER;
-                        color = COLOR_LIGHTGREEN;
-                }
-                else if (pwmRuntime[i].valueCurrent < pwmRuntime[i].valueGoal)
-                {
-                        icon = NX_STR_UP;
-
-                }
-                else if (pwmRuntime[i].valueCurrent > pwmRuntime[i].valueGoal) icon = NX_STR_DOWN;
-                else if (pwmRuntime[i].valueCurrent == 0 || pwmSettings[i].enabled == 0)
-                {
-                        icon = NX_STR_OFF;
-                        color = COLOR_LIGHTRED;
-                }
-                else if (pwmRuntime[i].isNight)
-                {
-                        if (pwmSettings[i].useLunarPhase)
+                        uint16_t color = COLOR_WHITE;
+                        double percent =  mapDouble((double)pwmRuntime[i].valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
+                        byte icon = NX_STR_SPACE;
+                        if (pwmRuntime[i].isSunrise )
                         {
-                                color = rgb565 (map (moonPhases[moonPhase], 0,100,150,255));
+                                icon = NX_STR_SUNRISE;
+                                color = COLOR_LIGHTYELLOW;
                         }
-                        icon = NX_STR_NIGHT;
+                        else if (pwmRuntime[i].isSunset )
+                        {
+                                icon = NX_STR_SUNSET;
+                                color = COLOR_ORANGE;
+                        }
+                        else if (pwmRuntime[i].recoverLastState)
+                        {
+                                icon = NX_STR_RECOVER;
+                                color = COLOR_LIGHTGREEN;
+                        }
+                        else if (pwmRuntime[i].valueCurrent < pwmRuntime[i].valueGoal)
+                        {
+                                icon = NX_STR_UP;
+
+                        }
+                        else if (pwmRuntime[i].valueCurrent > pwmRuntime[i].valueGoal) icon = NX_STR_DOWN;
+                        else if (pwmRuntime[i].valueCurrent == 0 || pwmSettings[i].enabled == 0)
+                        {
+                                icon = NX_STR_OFF;
+                                color = COLOR_LIGHTRED;
+                        }
+                        else if (pwmRuntime[i].isNight)
+                        {
+                                if (pwmSettings[i].useLunarPhase)
+                                {
+                                        color = rgb565 (map (moonPhases[moonPhase], 0,100,150,255));
+                                }
+                                icon = NX_STR_NIGHT;
+                        }
+                        else if (pwmRuntime[i].valueCurrent == pwmSettings[i].valueDay)
+                        {
+                                icon = NX_STR_ON;
+                                color = COLOR_YELLOW;
+                        }
+                        pwmRuntime[i].nxPwmLast = pwmRuntime[i].valueCurrent;
+                        setPercent (valueField,  percent);
+                        setText (iconField, icon);
+                        setColor (iconField, color);
                 }
-                else if (pwmRuntime[i].valueCurrent == pwmSettings[i].valueDay)
-                {
-                        icon = NX_STR_ON;
-                        color = COLOR_YELLOW;
-                }
-                pwmRuntime[i].nxPwmLast = pwmRuntime[i].valueCurrent;
-                setPercent (valueField,  percent);
-                setText (iconField, icon);
-                setColor (iconField, color);
         }
-}
         #ifndef NO_TEMPERATURE
         updateFanField (NX_FIELD_T0, WATER_TEMPERATURE_FAN);
         updateFanField (NX_FIELD_T1, LED_TEMPERATURE_FAN);
