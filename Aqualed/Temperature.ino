@@ -9,19 +9,18 @@
 OneWire onewire(ONEWIRE_PIN);
 DS18B20 sensorsWire(&onewire);
 
-void setupSensors ()
+static void setupSensors ()
 {
         sensorsWire.begin();
         initFanPin (LED_TEMPERATURE_FAN, LED_FANS_PIN);
         initFanPin (WATER_TEMPERATURE_FAN, WATER_FANS_PIN);
         initFanPin (SUMP_TEMPERATURE_FAN, SUMP_FANS_PIN);
         requestReadings ();
-
 }
 
-void initFanPin (byte i, byte pin)
+static void initFanPin (byte i, byte pin)
 {
-        sensors[i].pin = i;
+        sensors[i].pin = pin;
         pinMode(pin, OUTPUT);
         digitalWrite(pin, HIGH);
 }
@@ -32,9 +31,8 @@ static void requestReadings ()
                 sensorsWire.request(settings.sensors[i]);
 }
 
-void fansControl()
+static void fansControl()
 {
-
         if (currentMillis - previousTemperature < TEMPERATURE_SAMPLE_INTERVAL) return;
         previousTemperature = currentMillis;
 
@@ -55,12 +53,11 @@ void fansControl()
                 previousMillisFans = currentMillis;
                 for (byte i = 0; i < 3; i++)
                         fansSwitch (i, sensors[i].pin,settings.maxTemperatures[i]);
-
         }
 
 }
 
-void fansSwitch (byte sensor, byte pin, byte max)
+static void fansSwitch (byte sensor, byte pin, byte max)
 {
         if (sensors[sensor].temperature != TEMP_ERROR && sensors[sensor].temperature > max )
         {
@@ -74,7 +71,7 @@ void fansSwitch (byte sensor, byte pin, byte max)
         }
 }
 
-byte listContains (byte addr[])
+static byte listContains (byte addr[])
 {
         for (byte i = 0; i < 7; i++)
                 if(memcmp (sensorsList[i].address, addr, 8) == 0) return i;
@@ -82,21 +79,18 @@ byte listContains (byte addr[])
         return 255;
 }
 
-void isDiscovered (byte &res, byte addr[])
+static void isDiscovered (byte &res, byte addr[])
 {
         //if (checkAddr(addr) && listContains (addr) == 255)
         if (listContains (addr) == 255)
         {
-                for (byte k = 0; k < 8; k++)
-                {
-                        sensorsList[res].address[k] = addr[k];
-                        sensorsList[res].detected = false;
-                }
+                memcpy( sensorsList[res].address, addr, 8);
+                sensorsList[res].detected = false;
                 res++;
         }
 }
 
-byte discoverOneWireDevices() {
+static byte discoverOneWireDevices() {
         byte res = 0;
         byte addr[8];
         // pierwszy pusty
@@ -104,21 +98,12 @@ byte discoverOneWireDevices() {
         memset (sensorsList, 0, sizeof (sensorsList));
 
         // pierwszy pusty
-        for (byte k = 0; k < 8; k++)
-        {
-                sensorsList[res].address[k] = 0;
-                sensorsList[res].detected = false;
-        }
         res++;
 
         while (onewire.search(addr)) {
                 if ( OneWire::crc8( addr, 7) != addr[7] ) continue;
-
-                for (byte k = 0; k < 8; k++)
-                {
-                        sensorsList[res].address[k] = addr[k];
-                        sensorsList[res].detected = true;
-                }
+                memcpy( sensorsList[res].address, addr, 8);
+                sensorsList[res].detected = true;
                 res++;
         }
         for (byte i = 0; i < 3; i++)

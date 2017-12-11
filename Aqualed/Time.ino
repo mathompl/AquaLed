@@ -6,34 +6,32 @@
 #include <Arduino.h>
 #define dayOfWeek(_time_)  ((( _time_ / SECS_PER_DAY + 4)  % DAYS_PER_WEEK)+1) // 1 = Sunday
 
-void readTime ()
+static void readTime ()
 {
         currentMillis = millis();
         if (RTC.read(tm))
                 adjustDST ();
 }
 
+static void adjustTime (int h, byte dst)
+{
+        setTime( hour()+h, minute(), second (), day(), month(), year() );
+        RTC.set( now () );
+        settings.dst = dst;
+        writeEEPROMSettings ();
+}
+
 // adjust daylight saving time (european)
-void adjustDST ()
+static void adjustDST ()
 {
         if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
                 previousSecTimeAdjust = currentMillis;
                 getMoonPhase ();
                 if (dayOfWeek(now()) == 1 && month() == 3 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==0)
-                {
-                        setTime( hour()+1, minute(), second (), day(), month(), year() );
-                        RTC.set( now () );
-                        settings.dst = 1;
-                        writeEEPROMSettings ();
-                }
+                        adjustTime (1,1);
                 else if (dayOfWeek(now()) == 1 && month() == 10 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==1)
-                {
-                        setTime( hour()-1, minute(), second (), day(), month(), year() );
-                        RTC.set( now () );
-                        settings.dst = 0;
-                        writeEEPROMSettings ();
-                }
+                        adjustTime (-1,0);
         }
 }
 

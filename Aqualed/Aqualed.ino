@@ -53,38 +53,33 @@ void setup() {
 #endif
 
       // launch watchdog  - 4 seconds
-        wdt_enable(WDTO_4S);
-        setupPWMPins ();    
+        wdt_enable(WDTO_8S);
+        setupPWMPins ();
 }
 
 void loop() {
         // time
         readTime ();
-        wdt_reset();
 
         // pwm
         pwm ();
-        wdt_reset();
 
         // nextion routines
 #ifndef NO_NEXTION
         // nextion display
         nxDisplay ();
-        wdt_reset();
         // nextion touch istener
-         nxTouch();
-        wdt_reset();
+       nxTouch();
 #endif
 
         // temperature and fans control
 #ifndef NO_TEMPERATURE
         fansControl ();
-        wdt_reset();
 #endif
 
         // bluetooth routines
 #ifndef NO_BLUETOOTH
         bluetoothServe ();
-        wdt_reset();
 #endif
+        wdt_reset();
 }

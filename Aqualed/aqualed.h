@@ -24,25 +24,26 @@
 Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
 
 // structure for storing channel information
+// do not modify order (written to eeprom)
 typedef struct
 {
-        byte pin;  // pwm pin
-        byte isI2C; // use build in bin or i2c module pin
         byte enabled; // is channel enabled
-        byte invertPwm; // invert pwm values
         byte onHour; // channel daylight start hour
         byte onMinute; // channel daylight start minute
-        byte offHour;  // channel daylight stop hour
+        byte useLunarPhase;
+        byte offHour; // channel daylight stop hour
         byte offMinute; // channel daylight stop minute
         byte valueNight; // nightlight value
         int valueDay; // daylight value
-        int valueProg; // additional program value
         byte sunriseLenght; // minutes
-        byte sunsetLenght;  // minutes
+        byte sunsetLenght; // minutes
         byte isNightLight; // is channel a nightlight
+        int valueProg; // additional program value
         byte isProg;
+        byte pin; // pwm pin
+        byte isI2C; // use build in bin or i2c module pin
+        byte invertPwm; // invert pwm values
         byte watts;
-        byte useLunarPhase;
 } PWM_SETTINGS;
 
 typedef struct
@@ -71,23 +72,19 @@ typedef struct
         double sunriseValue;
 } PWM_RUNTIME;
 
+// Settings
+// do not modify order (written to eeprom)
 typedef struct
 {
         byte forceNight;
         byte forceAmbient;
         byte forceOFF;
         byte maxTemperatures[3];
-//        byte max_led_temp;
-        //byte max_water_temp;
-        //byte max_sump_temp;
         byte pwmDimmingTime;
         byte screenSaverTime;
         byte softDimming;
         byte dst;
         byte sensors[7][8];
-        //byte ledSensorAddress[8];
-        //byte sumpSensorAddress[8];
-        //byte waterSensorAddress[8];
 } SETTINGS;
 
 
@@ -121,6 +118,7 @@ typedef struct
 SENSORS sensors[3]={0};
 
 // time variables
+long currTime = 0;
 long unsigned currentMillis = 0;
 unsigned long previousPwmResolution = 0;
 unsigned long previousNxInfo = 0;
@@ -129,12 +127,7 @@ unsigned long previousMillisFans = 0;
 unsigned long previousMillisNextion = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
-unsigned long lastStateWrite[8] = {0};
 tmElements_t tm;
-
-
-
-long currTime = 0;
 
 bool lampOverheating = false;
 float watts = 0;

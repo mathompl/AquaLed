@@ -18,6 +18,7 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_PRINT(x) nx.print(x)
   #define NEXTION_PRINTF(x,y) nx.print(x,y)
   #define NEXTION_WRITE(x) nx.write(x)
+  #define NEXTION_END() nx.end ();
 #else
   #define NEXTION_BEGIN(x) Serial.begin(x)
   #define NEXTION_FLUSH(x) Serial.flush()
@@ -28,6 +29,7 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_PRINT(x) Serial.print(x)
   #define NEXTION_PRINTF(x,y) Serial.print(x,y)
   #define NEXTION_WRITE(x) Serial.write(x)
+  #define NEXTION_END() Serial.end ();
 #endif
 
 // harmonogram / schedule
@@ -41,8 +43,8 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
 #define hour_stopx 180
 
 #define DEFAULT_BAUD_RATE 9600
-//#define NEXTION_BAUD_RATE 115200
-#define NEXTION_BAUD_RATE 9600
+#define NEXTION_BAUD_RATE 115200
+//#define NEXTION_BAUD_RATE 9600
 
 // uncomment for use nextion editor simulator
 // needs additional settings for non-standard baud rates
@@ -75,11 +77,6 @@ float lastWatts = 0;
 #define PAGE_PWM_LIST 9
 #define PAGE_ERROR 10
 #define PAGE_SAVING 11
-
-#define NX_PAGE_PWM 0
-#define NX_PAGE_SETTINGS 1
-#define NX_PAGE_TIME 2
-#define NX_PAGE_THERMO 3
 
 //buttons
 #define THERMOPAGE_BUTTON_SAVE 9
@@ -126,12 +123,13 @@ float lastWatts = 0;
 #define COLOR_GREEN 1024
 #define COLOR_LIGHTRED 62225
 #define COLOR_LIGHTGREEN 38898
-#define COLOR_ORANGE 33280
+#define COLOR_ORANGE 62945
 #define COLOR_YELLOW 65504
 #define COLOR_BLUE 34815
 #define COLOR_DARKBLUE 16
 #define COLOR_DARKGRAY 12678
 #define COLOR_WHITE 65535
+#define COLOR_LIGHTYELLOW 65531
 
 #define NX_CMD_COMMA 0
 #define NX_CMD_PARENTH 1
@@ -146,6 +144,7 @@ float lastWatts = 0;
 #define NX_CMD_PAGE 10
 #define NX_CMD_FILL 11
 #define NX_CMD_DOT 12
+#define NX_CMD_EMPTY 255
 
 #define NX_STR_DEGREE 0
 #define NX_STR_ON 1
@@ -241,6 +240,7 @@ float lastWatts = 0;
 #define NX_FIELD_L8 73
 #define NX_FIELD_N11 74
 #define NX_FIELD_WA 75
+#define NX_FIELD_EMPTY 255
 
 #define NX_PIC_BO_OFF 3
 #define NX_PIC_BO_ON 2
@@ -299,22 +299,22 @@ const char f_h[] PROGMEM = "hour";
 const char f_bo[] PROGMEM = "bo";
 const char f_ba[] PROGMEM = "ba";
 const char f_bn[] PROGMEM = "bn";
-const char f_ld1[] PROGMEM = "home.ld1";
-const char f_ld2[] PROGMEM = "home.ld2";
-const char f_ld3[] PROGMEM = "home.ld3";
-const char f_ld4[] PROGMEM = "home.ld4";
-const char f_ld5[] PROGMEM = "home.ld5";
-const char f_ld6[] PROGMEM = "home.ld6";
-const char f_ld7[] PROGMEM = "home.ld7";
-const char f_ld8[] PROGMEM = "home.ld8";
-const char f_bld1[] PROGMEM = "pwmconfig.bld1";
-const char f_bld2[] PROGMEM = "pwmconfig.bld2";
-const char f_bld3[] PROGMEM = "pwmconfig.bld3";
-const char f_bld4[] PROGMEM = "pwmconfig.bld4";
-const char f_bld5[] PROGMEM = "pwmconfig.bld5";
-const char f_bld6[] PROGMEM = "pwmconfig.bld6";
-const char f_bld7[] PROGMEM = "pwmconfig.bld7";
-const char f_bld8[] PROGMEM = "pwmconfig.bld8";
+const char f_ld1[] PROGMEM = "ld1";
+const char f_ld2[] PROGMEM = "ld2";
+const char f_ld3[] PROGMEM = "ld3";
+const char f_ld4[] PROGMEM = "ld4";
+const char f_ld5[] PROGMEM = "ld5";
+const char f_ld6[] PROGMEM = "ld6";
+const char f_ld7[] PROGMEM = "ld7";
+const char f_ld8[] PROGMEM = "ld8";
+const char f_bld1[] PROGMEM = "bld1";
+const char f_bld2[] PROGMEM = "bld2";
+const char f_bld3[] PROGMEM = "bld3";
+const char f_bld4[] PROGMEM = "bld4";
+const char f_bld5[] PROGMEM = "bld5";
+const char f_bld6[] PROGMEM = "bld6";
+const char f_bld7[] PROGMEM = "bld7";
+const char f_bld8[] PROGMEM = "bld8";
 const char f_bauds[] PROGMEM = "baud";
 const char f_bkcmd[] PROGMEM = "bkcmd";
 const char f_l1[] PROGMEM = "l1";
@@ -327,10 +327,32 @@ const char f_l7[] PROGMEM = "l7";
 const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
 
-const char p_pwmcfg[] PROGMEM = "pwm";
-const char p_set[] PROGMEM = "settings";
-const char p_time[] PROGMEM = "time";
+#define PAGE_HOME 0
+#define PAGE_CONFIG 1
+#define PAGE_SETTIME 2
+#define PAGE_SETTINGS 3
+#define PAGE_PWM 4
+#define PAGE_TEST 5
+#define PAGE_SCREENSAVER 6
+#define PAGE_THERMO 7
+#define PAGE_SCHEDULE 8
+#define PAGE_PWM_LIST 9
+#define PAGE_ERROR 10
+#define PAGE_SAVING 11
+
+const char p_home[] PROGMEM = "home";
+const char p_config[] PROGMEM = "";
+const char p_settime[] PROGMEM = "time";
+const char p_settings[] PROGMEM = "settings";
+const char p_pwm[] PROGMEM = "pwm";
+const char p_test[] PROGMEM = "";
+const char p_screensaver[] PROGMEM = "";
 const char p_thermo[] PROGMEM = "thermo";
+const char p_schedule[] PROGMEM = "";
+const char p_pwmlist[] PROGMEM = "pwmlist";
+const char p_error[] PROGMEM = "";
+const char p_saving[] PROGMEM = "";
+
 
 // nextion commands
 const char cmd_comma[] PROGMEM= ",";
@@ -384,4 +406,4 @@ const char* const nx_strings[] PROGMEM {str_degree,str_on,str_off,str_night,str_
 const char* const nx_commands[] PROGMEM {cmd_comma, cmd_parenth,cmd_space,cmd_eq,cmd_txt,cmd_pic,cmd_pco,cmd_get,cmd_val,cmd_vis,cmd_page, cmd_fill,cmd_dot};
 const char* const nx_fields[] PROGMEM {f_t0,f_t1,f_t2,f_t3,f_t4,f_t5,f_t6,f_t7,f_t8,f_t9,f_t10,f_p0,f_p1,f_p2,f_va0,f_va1,f_va2,f_va3,f_c0,f_c1,f_c2,f_c3,f_c4,f_c5,f_c6,f_c7,f_c8,f_c9,f_c10,f_n0,f_n1,f_n2,f_n3,f_n4,f_n5,f_n6,f_n7,f_n8,f_n9,f_n10,f_wt,f_lt,f_st,f_ti,f_h,f_bo,f_ba,f_bn,f_ld1,f_ld2,f_ld3,f_ld4,f_ld5,f_ld6,f_ld7,f_ld8,f_bld1,f_bld2,f_bld3,f_bld4,f_bld5,f_bld6,f_bld7,f_bld8,f_bauds,f_bkcmd,f_l1,f_l2,f_l3,f_l4,f_l5,f_l6,f_l7,f_l8,f_n11,f_wa};
 const char* const nx_errors[] PROGMEM {str_er1, str_er2};
-const char* const nx_pages[] PROGMEM {p_pwmcfg, p_set, p_time, p_thermo};
+const char* const nx_pages[] PROGMEM {p_home,p_config,p_settime,p_settings,p_pwm,p_test,p_screensaver,p_thermo,p_schedule,p_pwmlist,p_error,p_saving};

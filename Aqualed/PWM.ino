@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 
-void setupPWMPins ()
+static void setupPWMPins ()
 {
         currTime = (long)hour ()* 60 * 60 + (long)minute () * 60 + (long)second ();
         // setup pins
@@ -23,7 +23,7 @@ void setupPWMPins ()
         pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
 }
 
-void updateChannelTimes (int i)
+static void updateChannelTimes (byte i)
 {
         pwmRuntime[i].startTime = (long)(pwmSettings[i].onHour) * 60 * 60 + (long)(pwmSettings[i].onMinute)* 60;
         pwmRuntime[i].stopTime = (long)(pwmSettings[i].offHour) * 60 * 60 + (long)(pwmSettings[i].offMinute)* 60;
@@ -31,7 +31,7 @@ void updateChannelTimes (int i)
         pwmRuntime[i].sunriseTime =  (long)pwmSettings[i].sunriseLenght * 60;
 }
 
-void recoverSunsetAndSunrise (int i)
+static void recoverSunsetAndSunrise (byte i)
 {
         if ( getSunsetSeconds (i)  == true)
         {
@@ -52,7 +52,7 @@ void recoverSunsetAndSunrise (int i)
         else pwmRuntime[i].recoverLastState = false;
 }
 
-void initPWM (byte i)
+static void initPWM (byte i)
 {
         if (pwmSettings[i].isI2C != 0) return;
         pinMode(pwmSettings[i].pin, OUTPUT);
@@ -60,17 +60,18 @@ void initPWM (byte i)
 }
 
 // sciemnianie/rozjasnianie
-boolean pwmStep (byte i, long dimmingTime)
+static boolean pwmStep (byte i, long dimmingTime)
 {
-        double valueCurrent = pwmRuntime[i].valueCurrent;
 
         // dimming complete, do nothing
-        if (valueCurrent == pwmRuntime[i].valueGoal)
+        if (pwmRuntime[i].valueCurrent == pwmRuntime[i].valueGoal)
         {
                 goalReached (i);
                 return false;
         }
         double step;
+
+        double valueCurrent = pwmRuntime[i].valueCurrent;
 
 // full pwm scale dimming when no other data
 // scale dimming
@@ -94,7 +95,7 @@ boolean pwmStep (byte i, long dimmingTime)
         return true;
 }
 
-void goalReached (byte i)
+static void goalReached (byte i)
 {
         pwmRuntime[i].valueCurrent = pwmRuntime[i].valueGoal;
         pwmRuntime[i].dimmingStart = false;
@@ -110,7 +111,7 @@ static bool isDimmingStart (byte i)
 
 static void forcePWMRecovery ()
 {
-        for (int i = 0; i < PWMS; i++)
+        for (byte i = 0; i < PWMS; i++)
         {
                 recoverSunsetAndSunrise(i);
         }
@@ -118,7 +119,7 @@ static void forcePWMRecovery ()
 
 static void forceDimmingRestart ()
 {
-        for (int i = 0; i < PWMS; i++)
+        for (byte i = 0; i < PWMS; i++)
         {
                 pwmRuntime[i].dimmingStart = false;
         }
@@ -252,7 +253,7 @@ static void pwm( byte i )
                         val = mapRound(val, PWM_I2C_MIN, PWM_I2C_MAX,  0, 255);
                 // logarithmic dimming table, experimental, longs best if max 100%
                 #ifndef NO_DIMMING_TABLE
-                if (dimming && settings.softDimming == 1 && (int) val != pwmRuntime[i].valueGoal)
+                if (dimming && settings.softDimming == 1 && (int) val != (int) pwmRuntime[i].valueGoal)
                         val = dimmingTable[val];
                 #endif
                 analogWrite( pwmSettings[i].pin, val);
@@ -273,7 +274,7 @@ static void pwm( byte i )
 
 
 // check if scheduled on or off
-bool getState (byte i)
+static bool getState (byte i)
 {
         if (pwmRuntime[i].stopTime < pwmRuntime[i].startTime)
         {
@@ -288,7 +289,7 @@ bool getState (byte i)
 }
 
 // calculate remaining sunset time (if any)
-bool getSunsetSeconds (byte i)
+static bool getSunsetSeconds (byte i)
 {
         pwmRuntime[i].sunsetSecondsLeft = pwmRuntime[i].stopTime - currTime;
         if (pwmRuntime[i].sunsetSecondsLeft < 0) pwmRuntime[i].sunsetSecondsLeft+=86400;
@@ -301,7 +302,7 @@ bool getSunsetSeconds (byte i)
 }
 
 // calculate remaining sunrise time (if any)
-bool getSunriseSeconds (byte i)
+static bool getSunriseSeconds (byte i)
 {
         pwmRuntime[i].sunriseSecondsLeft = (currTime - pwmRuntime[i].startTime);
         if (pwmRuntime[i].sunriseSecondsLeft<0) return false;
@@ -316,7 +317,7 @@ bool getSunriseSeconds (byte i)
 }
 
 // main pwm loop
-void pwm ()
+static void pwm ()
 {
         if (currentMillis - previousPwmResolution > PWM_RESOLUTION)
         {
@@ -327,12 +328,12 @@ void pwm ()
         }
 }
 
-long mapRound(long x, long in_min,long in_max, long out_min, long out_max)
+static long mapRound(long x, long in_min,long in_max, long out_min, long out_max)
 {
         return ((x - in_min) * (out_max - out_min) + (in_max - in_min) / 2) / (in_max - in_min) + out_min;
 }
 
-double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
+static double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
 {
         return (double)((x - in_min) * ((double)out_max - (double)out_min)  / (in_max - in_min) + (double)out_min);
 }
