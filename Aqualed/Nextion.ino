@@ -42,32 +42,9 @@ static void nxTouch()
 {
         byte __buffer[7];
         memset(__buffer, 0, sizeof (__buffer));
-        byte i = 0;
-        byte c;
-        byte pid, cid;
-        boolean touchEvent = false;
-        while (NEXTION_AVAIL ()> 0)
-        {
-
-                delay(1);
-                c = NEXTION_READ ();
-                if (c == NEX_RET_EVENT_TOUCH_HEAD) touchEvent = true;
-                if (touchEvent)
-                {
-                        __buffer[i] = c;
-                        i++;
-                }
-                if (i > 6) break;
-        }
-        if (0xFF == __buffer[4] && 0xFF == __buffer[5] && 0xFF == __buffer[6])
-        {
-                pid = __buffer[1];
-                cid = __buffer[2];
-                //  delay(10);
-                handlePage (pid, cid);
-                return;
-        }
-
+        if (NEXTION_AVAIL () >0 && NEXTION_READBYTES (__buffer, 7)==7 && __buffer[0] == NEX_RET_EVENT_TOUCH_HEAD
+          && memcmp( __buffer+4, nextionEol, 3) == 0)
+                handlePage (__buffer[1], __buffer[2]);
 }
 
 static void handlePage (byte pid, byte cid)
@@ -130,6 +107,8 @@ static void handleScreenSaver (byte cid)
         forceRefresh = true;
         setPage (PAGE_HOME);
         lastTouch = currentMillis;
+        toggleButtons();
+        refreshHomePage ();
 }
 
 static void handleThermoPage (byte cid)
@@ -549,6 +528,7 @@ static void handleConfigPage (byte cid)
                 forceRefresh = true;
                 setPage (PAGE_HOME);
                 toggleButtons();
+                refreshHomePage ();
                 break;
 
         // thermo setup
@@ -906,6 +886,13 @@ static void timeDisplay()
         time_separator++;
 }
 
+static void refreshHomePage ()
+{
+  timeDisplay();
+  updateHomePage();
+  displayWats ();
+}
+
 static void nxDisplay ()
 {
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
@@ -932,9 +919,7 @@ static void nxDisplay ()
                 }
                 if (nxScreen == PAGE_HOME )
                 {
-                        timeDisplay();
-                        updateHomePage();
-                        displayWats ();
+                        refreshHomePage ();
                         forceRefresh = false;
                 }
                 // screensaver
@@ -962,9 +947,7 @@ static void nxDisplay ()
 
 static void sendNextionEOL ()
 {
-        NEXTION_WRITE(0xFF);
-        NEXTION_WRITE(0xFF);
-        NEXTION_WRITE(0xFF);
+        NEXTION_WRITEB(nextionEol, 3);
 }
 
 static void startCommand  (byte field, byte command, boolean eq, boolean pth)
@@ -1097,7 +1080,7 @@ static bool getNumber (byte page, byte field, int *result)
         {
                 return false;
         }
-        if (temp[0] == NEX_RET_NUMBER_HEAD && temp[5] == 0xFF && temp[6] == 0xFF && temp[7] == 0xFF)
+        if (temp[0] == NEX_RET_NUMBER_HEAD && memcmp( temp+5, nextionEol, 3) == 0)
         {
                 r = ((uint32_t)temp[4] << 24) | ((uint32_t)temp[3] << 16) | ((uint32_t)temp[2] << 8) | ((uint32_t)temp[1]);
                 *result = (int) r;

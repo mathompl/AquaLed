@@ -18,6 +18,7 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_PRINT(x) nx.print(x)
   #define NEXTION_PRINTF(x,y) nx.print(x,y)
   #define NEXTION_WRITE(x) nx.write(x)
+  #define NEXTION_WRITEB(x,y) nx.write(x,y)
   #define NEXTION_END() nx.end ();
 #else
   #define NEXTION_BEGIN(x) Serial.begin(x)
@@ -29,6 +30,7 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
   #define NEXTION_PRINT(x) Serial.print(x)
   #define NEXTION_PRINTF(x,y) Serial.print(x,y)
   #define NEXTION_WRITE(x) Serial.write(x)
+  #define NEXTION_WRITEB(x,y) Serial.write(x,y)
   #define NEXTION_END() Serial.end ();
 #endif
 
@@ -63,6 +65,7 @@ bool forceRefresh = false;
 byte nxScreen = 0;
 byte time_separator = 0;
 float lastWatts = 0;
+const byte nextionEol[] = {0xFF, 0xFF,0xFF};
 
 // pages
 #define PAGE_HOME 0
