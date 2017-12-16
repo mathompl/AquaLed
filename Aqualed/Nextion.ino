@@ -13,40 +13,54 @@
 // init nextion lcd
 static void nexInit(void)
 {
-        //delay (500);
         NEXTION_BEGIN (9600);
-        NEXTION_PRINT ("\r\n");
+        NEXTION_PRINT (" ");
         setInt (NX_FIELD_BAUDS,  (long)NEXTION_BAUD_RATE);
         NEXTION_FLUSH ();
         NEXTION_END ();
         NEXTION_BEGIN ((long)NEXTION_BAUD_RATE);
-        NEXTION_PRINT ("\r\n");
         setInt (NX_FIELD_BKCMD, (long)0);
         setPage (PAGE_HOME);
-        //sendNextionEOL ();
-        //delay (500);
         toggleButtons ();
         // init names
         for (byte i = 0; i < PWMS; i++)
         {
                 setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(10);
+                delay(1);
                 setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(10);
+                delay(1);
         }
         forceRefresh = true;
+        NEXTION_FLUSH ();
 }
+
+
 
 // main touch listener
 static void nxTouch()
 {
-        byte __buffer[7];
-        memset(__buffer, 0, sizeof (__buffer));
-        if (NEXTION_AVAIL () >0 && NEXTION_READBYTES (__buffer, 7)==7 && __buffer[0] == NEX_RET_EVENT_TOUCH_HEAD
-          && memcmp( __buffer+4, nextionEol, 3) == 0)
-                handlePage (__buffer[1], __buffer[2]);
+        while (NEXTION_AVAIL ()> 0)
+        {
+                char c = NEXTION_READ ();
+                if (c == NEX_RET_EVENT_TOUCH_HEAD)
+                {
+                        memset(__touch_buffer, 0, sizeof (__touch_buffer));
+                        __touch_event = true;
+                }
+                if (__touch_event)
+                {
+                        __touch_buffer[__touch_buffer_ix] = c;
+                        __touch_buffer_ix++;
+                }
+                if (__touch_buffer_ix == 7 && memcmp( __touch_buffer+3, nextionEol, 3))
+                {
+                        handlePage ( __touch_buffer[1], __touch_buffer[2]);
+                        __touch_buffer_ix = 0;
+                        __touch_event = false;
+                        return;
+                }
+        }
 }
-
 static void handlePage (byte pid, byte cid)
 {
         lastTouch = currentMillis;
@@ -111,6 +125,14 @@ static void handleScreenSaver (byte cid)
         refreshHomePage ();
 }
 
+static boolean setThermo (byte page, byte field, byte i)
+{
+  if (!getNumber(page, field, &t)) return false;
+  for (byte k = 0; k < 8; k++)
+          settings.sensors[i][k] = sensorsList[t].address[k];
+  return true;
+}
+
 static void handleThermoPage (byte cid)
 {
         boolean status = false;
@@ -119,18 +141,9 @@ static void handleThermoPage (byte cid)
         // save
         case THERMOPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
-                if (!getNumber(PAGE_THERMO, NX_FIELD_N0, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[LED_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
-                if (!getNumber(PAGE_THERMO, NX_FIELD_N1, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[SUMP_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
-                if (!getNumber(PAGE_THERMO, NX_FIELD_N2, &t)) break;
-                for (byte k = 0; k < 8; k++)
-                        settings.sensors[WATER_TEMPERATURE_FAN][k] = sensorsList[t].address[k];
-
+                if (!setThermo (PAGE_THERMO, NX_FIELD_N0, LED_TEMPERATURE_FAN)) break;
+                if (!setThermo (PAGE_THERMO, NX_FIELD_N1, SUMP_TEMPERATURE_FAN)) break;
+                if (!setThermo (PAGE_THERMO, NX_FIELD_N2, WATER_TEMPERATURE_FAN)) break;
                 writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
@@ -222,9 +235,9 @@ static void handleTestPage (byte cid)
 }
 
 
+
 static void handlePWMPage (byte cid)
 {
-        uint16_t tmax, tamb;
         int i;
         byte lastPin;
         byte lastI2C;
@@ -235,70 +248,33 @@ static void handlePWMPage (byte cid)
         case PWMPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
                 if (!getNumber(PAGE_PWM, NX_FIELD_N9, &i)) break;
-
                 if (i < 1 || i > PWMS) break;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_C0, &t)) break;
-                pwmSettings[i - 1].enabled = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_C1, &t)) break;
-                pwmSettings[i - 1].isNightLight = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_C2, &t)) break;
-                pwmSettings[i - 1].isProg = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N0, &t)) break;
-                pwmSettings[i - 1].onHour = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N1, &t)) break;
-                pwmSettings[i - 1].onMinute = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N2, &t)) break;
-                pwmSettings[i - 1].offHour = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N3, &t)) break;
-                pwmSettings[i - 1].offMinute = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N4, &t)) break;
-                pwmSettings[i - 1].sunriseLenght = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N5, &t)) break;
-                pwmSettings[i - 1].sunsetLenght = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N6, &t)) break;
-                //  tmin = mapRound ((byte)t, 0, 100, 0, 255);
-                //pwmSettings[i - 1].valueNight = mapRound ((byte)t, 0, 255, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueNight = (byte)t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N7, &t)) break;
-                tmax = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueDay = tmax;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_N8, &t)) return;
-                tamb = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueProg = tamb;
-
                 lastPin = pwmSettings[i - 1].pin;
                 lastI2C = pwmSettings[i - 1].isI2C;
 
-                if (!getNumber(PAGE_PWM, NX_FIELD_N10, &t)) break;
-                pwmSettings[i - 1].pin = t;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C0, &pwmSettings[i - 1].enabled )) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C1, &pwmSettings[i - 1].isNightLight)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C2, &pwmSettings[i - 1].isProg)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N0, &pwmSettings[i - 1].onHour)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N1, &pwmSettings[i - 1].onMinute)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N2, &pwmSettings[i - 1].offHour)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N3, &pwmSettings[i - 1].offMinute)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N4, &pwmSettings[i - 1].sunriseLenght)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N5, &pwmSettings[i - 1].sunsetLenght)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N6, &pwmSettings[i - 1].valueNight)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N7, &pwmSettings[i - 1].valueDay)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N8, &pwmSettings[i - 1].valueProg)) return;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N10, &pwmSettings[i - 1].pin)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N11, &pwmSettings[i - 1].watts)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C3, &pwmSettings[i - 1].isI2C)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C4, &pwmSettings[i - 1].invertPwm)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C5, &pwmSettings[i - 1].useLunarPhase)) break;
 
-                if (!getNumber(PAGE_PWM, NX_FIELD_N11, &t)) break;
-                pwmSettings[i - 1].watts = t;
+                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) initPWM ( i-1 );
 
-                if (!getNumber(PAGE_PWM, NX_FIELD_C3, &t)) break;
-                pwmSettings[i - 1].isI2C = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_C4, &t)) break;
-                pwmSettings[i - 1].invertPwm = t;
-
-                if (!getNumber(PAGE_PWM, NX_FIELD_C5, &t)) break;
-                pwmSettings[i - 1].useLunarPhase = t;
-
-                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C)
-                        initPWM ( i-1 );
-
+               //pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueProg = mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueDay = mapRound (pwmSettings[i - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
                 lastTouch = currentMillis;
                 writeEEPROMPWMConfig (i - 1);
                 updateChannelTimes (i-1);
@@ -328,24 +304,12 @@ static void handleSettingsPage (byte cid)
         // save
         case SETTINGSPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N0, &t)) break;
-                settings.maxTemperatures[LED_TEMPERATURE_FAN] = t;
-
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N1, &t)) break;
-                settings.maxTemperatures[SUMP_TEMPERATURE_FAN] = t;
-
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N2, &t)) break;
-                settings.maxTemperatures[WATER_TEMPERATURE_FAN] = t;
-
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N3, &t)) break;
-                settings.pwmDimmingTime = t;
-
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N4, &t)) break;
-                settings.screenSaverTime = t;
-
-                if (!getNumber(PAGE_SETTINGS,NX_FIELD_C0, &t)) break;
-                settings.softDimming  = t;
-
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N0, &settings.maxTemperatures[LED_TEMPERATURE_FAN] )) break;
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N1, &settings.maxTemperatures[SUMP_TEMPERATURE_FAN])) break;
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N2, &settings.maxTemperatures[WATER_TEMPERATURE_FAN])) break;
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N3, &settings.pwmDimmingTime)) break;
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_N4, &settings.screenSaverTime)) break;
+                if (!getNumber(PAGE_SETTINGS,NX_FIELD_C0, &settings.softDimming)) break;
                 writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
@@ -379,11 +343,9 @@ static void handleSetTimePage (byte cid)
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N2, &setDay)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N3, &setMonth)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N4, &setYear)) break;
-
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_C0, &settings.dst)) break;
                 setTime( setHour, setMinute, 0, setDay, setMonth, setYear );
                 RTC.set( now( ) );
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_C0, &t)) break;
-                settings.dst =t;
                 readTime ();
                 adjustDST ();
                 writeEEPROMSettings ();
@@ -757,12 +719,16 @@ void updateTempField (byte field, byte sensor, byte max, byte min)
                                 setColor (field, COLOR_LIGHTGREEN);
                 }
                 else
+                {
+                        sensors[sensor].nxTemperature = TEMP_ERROR;
                         setText(field, NX_STR_DASH);
+                }
         }
 }
 
 void updateFanField (byte field, byte sensor)
 {
+        if (sensors[sensor].nxFanStatus == sensors[sensor].fanStatus) return;
         if (!sensors[sensor].fanStatus) setText (field, NX_STR_EMPTY);
         else setText (field, NX_STR_FAN);
         sensors[sensor].nxFanStatus = sensors[sensor].fanStatus;
@@ -795,7 +761,9 @@ static void updateHomePage()
                         continue;
                 }
 
-                if (pwmRuntime[i].nxPwmLast != pwmRuntime[i].valueCurrent || forceRefresh)
+
+
+                if (pwmRuntime[i].nxPwmLast!=pwmRuntime[i].valueCurrent || forceRefresh)
                 {
                         uint16_t color = COLOR_WHITE;
                         double percent =  mapDouble((double)pwmRuntime[i].valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
@@ -874,13 +842,18 @@ static void displayWats ()
         else max_watts_exceeded = false;
 
         if(watts!=lastWatts) setWatts (NX_FIELD_WA, watts);
+
+        lastWatts= watts;
 }
+
+
 
 static void timeDisplay()
 {
         char buff[7] = {0};
         memset(buff, 0, sizeof (buff));
-        if (time_separator % 2 == 0) sprintf(buff + strlen(buff), "%02u:%02u", hour (), minute ());
+        if (time_separator % 2 == 0)
+                sprintf(buff + strlen(buff), "%02u:%02u", hour (), minute ());
         else sprintf(buff + strlen(buff), "%02u %02u", hour (), minute ());
         setText (NX_FIELD_H, (String)buff);
         time_separator++;
@@ -888,9 +861,9 @@ static void timeDisplay()
 
 static void refreshHomePage ()
 {
-  timeDisplay();
-  updateHomePage();
-  displayWats ();
+        timeDisplay();
+        updateHomePage();
+        displayWats ();
 }
 
 static void nxDisplay ()
@@ -950,8 +923,13 @@ static void sendNextionEOL ()
         NEXTION_WRITEB(nextionEol, 3);
 }
 
-static void startCommand  (byte field, byte command, boolean eq, boolean pth)
+static void startCommand  (byte page, byte field, byte command, boolean eq, boolean pth)
 {
+        if (page!=NX_FIELD_EMPTY)
+        {
+                printPGM( (char*)pgm_read_word(&(nx_pages[page])));
+                printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_DOT])));
+        }
         if (field!=NX_FIELD_EMPTY) printPGM( (char*)pgm_read_word(&(nx_fields[field])));
         if (command!=NX_CMD_EMPTY) printPGM( (char*)pgm_read_word(&(nx_commands[command])));
         if (eq) printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
@@ -967,59 +945,54 @@ static void endCommand  (boolean pth)
 
 static void setColor (byte field, unsigned int color)
 {
-        startCommand (field, NX_CMD_PCO, true, false);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_PCO, true, false);
         NEXTION_PRINT (color);
         endCommand (false);
 }
 
 static void setText (byte field, String text)
 {
-        startCommand (field, NX_CMD_TXT,  true, true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT,  true, true);
         NEXTION_PRINT(text);
         endCommand (true);
 }
 
 static void setText (byte page, byte field, const char * text)
 {
-        startCommand (field, NX_CMD_TXT, true,  true);
-        if (page!=255)
-        {
-                printPGM( (char*)pgm_read_word(&(nx_pages[page])));
-                printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_DOT])));
-        }
+        startCommand (page, field, NX_CMD_TXT, true,  true);
         printPGM(text);
         endCommand (true);
 }
 
 static void setText (byte field, const char * text)
 {
-        setText (255, field, text);
+        setText (NX_FIELD_EMPTY, field, text);
 }
 
 static void setValue (byte field, unsigned int val)
 {
-        startCommand (field, NX_CMD_VAL,  true, false);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_VAL,  true, false);
         NEXTION_PRINT(val);
         endCommand (false);
 }
 
 static void setInt (byte field, long val)
 {
-        startCommand (field, NX_CMD_EMPTY, true,  false);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_EMPTY, true,  false);
         NEXTION_PRINT(val);
         endCommand (false);
 }
 
 static void setPic (byte field, byte val)
 {
-        startCommand (field, NX_CMD_PIC, true,  false);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_PIC, true,  false);
         NEXTION_PRINT(val);
         endCommand (false);
 }
 
 static void setPercent (byte field, double percent)
 {
-        startCommand (field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true);
         NEXTION_PRINTF( percent, 1);
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_PERCENT])));
         endCommand (true);
@@ -1027,7 +1000,7 @@ static void setPercent (byte field, double percent)
 
 static void setTemperature (byte field, float temp)
 {
-        startCommand (field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true);
         NEXTION_PRINTF (temp, 1);
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_DEGREE])));
         endCommand (true);
@@ -1035,7 +1008,7 @@ static void setTemperature (byte field, float temp)
 
 static void setWatts (byte field, float watts)
 {
-        startCommand (field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true);
         NEXTION_PRINTF( watts, 1 );
         printPGM( (char*)pgm_read_word(&(nx_strings[NX_STR_WATTS])));
         endCommand (true);
@@ -1043,7 +1016,7 @@ static void setWatts (byte field, float watts)
 
 static void setPage (byte number)
 {
-        startCommand (NX_FIELD_EMPTY, NX_CMD_PAGE, false, false);
+        startCommand (NX_FIELD_EMPTY, NX_FIELD_EMPTY, NX_CMD_PAGE, false, false);
         NEXTION_PRINT(number);
         endCommand (false);
         nxScreen = number;
@@ -1051,7 +1024,7 @@ static void setPage (byte number)
 
 static void setText (byte field, int nx_string_id)
 {
-        startCommand (field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY,field, NX_CMD_TXT, true,  true);
         printPGM( (char*)pgm_read_word(&(nx_strings[nx_string_id])));
         endCommand (true);
 }
@@ -1059,6 +1032,18 @@ static void setText (byte field, int nx_string_id)
 static bool getNumber (byte field, int *result)
 {
         return getNumber (255,  field, result);
+}
+
+static bool getNumber (byte page, byte field, byte *result)
+{
+    int t;
+    if (getNumber (page, field, &t))
+    {
+        *result = (byte) t;
+        return true;
+    }
+    return false;
+
 }
 
 static bool getNumber (byte page, byte field, int *result)
@@ -1104,6 +1089,7 @@ static void fillRect (int x, int y, int w, int h, int color)
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_COMMA])));
         NEXTION_PRINT (color);
         sendNextionEOL ();
+
 }
 
 static void printPGM (const char * str)

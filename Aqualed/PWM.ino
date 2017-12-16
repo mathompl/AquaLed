@@ -226,6 +226,7 @@ static void pwm( byte i )
                 initDimming (i,abs(pwmRuntime[i].valueCurrent-(double)pwmSettings[i].valueDay),pwmRuntime[i].sunriseSecondsLeft);
                 pwmStep (i, pwmRuntime[i].dimmingTime);
         }
+        // day
         else if (state)
         {
                 pwmRuntime[i].valueGoal = pwmSettings[i].valueDay;

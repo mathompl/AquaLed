@@ -67,7 +67,7 @@ void loop() {
         // nextion routines
 #ifndef NO_NEXTION
         // nextion display
-        nxDisplay ();
+       nxDisplay ();
         // nextion touch istener
        nxTouch();
 #endif
