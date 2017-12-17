@@ -761,8 +761,6 @@ static void updateHomePage()
                         continue;
                 }
 
-
-
                 if (pwmRuntime[i].nxPwmLast!=pwmRuntime[i].valueCurrent || forceRefresh)
                 {
                         uint16_t color = COLOR_WHITE;

@@ -1,6 +1,6 @@
 /*
-   AQUALED system configuration file (c) T. Formanowski 2016-2017
-   https://github.com/mathompl/AquaLed
+         AQUALED system configuration file (c) T. Formanowski 2016-2017
+         https://github.com/mathompl/AquaLed
  */
 #include <Wire.h>
 #include <OneWire.h>
@@ -13,8 +13,8 @@
 #include <Adafruit_PWMServoDriver.h>
 
 /*
-   SYSTEM VARIABLES, do not modify
-   User configuration in file config.h
+         SYSTEM VARIABLES, do not modify
+         User configuration in file config.h
  */
 
 #define ON true

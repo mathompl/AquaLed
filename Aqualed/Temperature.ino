@@ -54,12 +54,11 @@ static void fansControl()
                 for (byte i = 0; i < 3; i++)
                         fansSwitch (i, sensors[i].pin,settings.maxTemperatures[i]);
         }
-
 }
 
 static void fansSwitch (byte sensor, byte pin, byte max)
 {
-        if (sensors[sensor].temperature != TEMP_ERROR && sensors[sensor].temperature > max )
+        if (sensors[sensor].temperature != TEMP_ERROR && sensors[sensor].temperature > (double) max )
         {
                 digitalWrite(pin, LOW);
                 sensors[sensor].fanStatus = true;
