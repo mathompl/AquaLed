@@ -51,23 +51,24 @@ typedef struct {
   long sunriseTime;
   long sunsetTime;
   bool dimmingStart;
-  long dimmingTime;
   bool recoverLastState;
   double valueGoal; // runtime used for dimming
   double valueCurrent;
-  double dimmingScale;
   double pwmLast;
   double nxPwmLast;
   byte isSunrise;
   byte isSunset;
   byte isNight;
   bool testMode;
-  byte valueTest;
+  double valueTest;
   // sunset/sunrise values
   long sunsetSecondsLeft;
   long sunriseSecondsLeft;
   double sunsetValue;
   double sunriseValue;
+  double step;
+  boolean hasChanged;
+  double watts;
 } PWM_RUNTIME;
 
 // Settings

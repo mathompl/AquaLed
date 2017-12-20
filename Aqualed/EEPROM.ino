@@ -35,11 +35,11 @@ static void writeEEPROMDefaults ()
         if (isFirstRun())
         {
                 //defaults
-                memset (&settings, 0, sizeof(settings));
+                memset (&settings, 0, sizeof settings);
 
                 for (byte i = 0; i < PWMS; i++ )
                 {
-                        memset (&pwmSettings[i], 0, sizeof(pwmSettings[i]));
+                        memset (&pwmSettings[i], 0, sizeof pwmSettings[i]);
                         writeEEPROMPWMConfig (i);
                 }
 

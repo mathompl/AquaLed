@@ -8,8 +8,6 @@
 #include <Arduino.h>
 #include "Nextion.h"
 
-
-
 // init nextion lcd
 static void nexInit(void)
 {
@@ -22,19 +20,22 @@ static void nexInit(void)
         setInt (NX_FIELD_BKCMD, (long)0);
         setPage (PAGE_HOME);
         toggleButtons ();
-        // init names
-        for (byte i = 0; i < PWMS; i++)
-        {
-                setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(1);
-                setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(1);
-        }
+        refreshPWMNames ();
         forceRefresh = true;
         NEXTION_FLUSH ();
 }
 
-
+static void refreshPWMNames ()
+{
+  // init names
+  for (byte i = 0; i < PWMS; i++)
+  {
+          setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
+          delay(1);
+          setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
+          delay(1);
+  }
+}
 
 // main touch listener
 static void nxTouch()
@@ -181,7 +182,7 @@ static void handleSchedulePage (byte cid)
 static boolean handleTestSlider (int field, byte i)
 {
         if (!getNumber(field, &t)) return false;
-        pwmRuntime[i].valueTest = mapRound ((byte)t, 0, 100, 0, PWM_I2C_MAX);
+        pwmRuntime[i].valueTest = mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX);
         pwmRuntime[i].testMode = true;
         return true;
 }
@@ -225,7 +226,6 @@ static void handleTestPage (byte cid)
                         pwmRuntime[i].testMode = false;
                 }
                 forcePWMRecovery ();
-                forceDimmingRestart ();
                 setPage (PAGE_CONFIG);
                 break;
 
@@ -233,8 +233,6 @@ static void handleTestPage (byte cid)
                 break;
         }
 }
-
-
 
 static void handlePWMPage (byte cid)
 {
@@ -352,6 +350,7 @@ static void handleSetTimePage (byte cid)
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 lastTouch = currentMillis;
+                forcePWMRecovery ();
                 status = true;
                 break;
 
@@ -830,12 +829,8 @@ static void displayWats ()
 {
         watts = 0;
         for (byte i = 0; i < PWMS; i++)
-        {
-                if (pwmSettings[i].enabled && pwmSettings[i].watts && pwmRuntime[i].valueCurrent)
-                {
-                        watts+=(float)(((float)pwmRuntime[i].valueCurrent / (float)PWM_I2C_MAX) * (float)pwmSettings[i].watts);
-                }
-        }
+                        watts+=pwmRuntime[i].watts;
+
         if (watts > MAX_WATTS) max_watts_exceeded = true;
         else max_watts_exceeded = false;
 
@@ -890,6 +885,7 @@ static void nxDisplay ()
                 }
                 if (nxScreen == PAGE_HOME )
                 {
+                        if (forceRefresh) refreshPWMNames ();
                         refreshHomePage ();
                         forceRefresh = false;
                 }
