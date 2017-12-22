@@ -14,6 +14,7 @@ Features:
 - date/time support with RTC module
 - screen saver with water temperature and time
 - test mode
+- moonphases simulation for night light
 - all settings stored in EEPROM
 - works on Arduino Nano
 
@@ -95,6 +96,7 @@ Możliwości:
 - obsługa godziny i daty
 - wygaszacz ekranu z godziną i temperaturą wody
 - tryb test
+- symulacja faz księżyca
 - wszystkie ustawienia zapamiętywane w pamięci EEPROM
 - działa z Arduino Nano lub wyższym modelem
 
