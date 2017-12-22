@@ -50,6 +50,7 @@ Example Nextion project attached. I dont have copyright for graphics used, use o
 - OneWire (https://github.com/PaulStoffregen/OneWire)
 - Time (https://github.com/PaulStoffregen/Time)
 - Adafruit-PWM-Servo-Driver-Library (https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library)
+- or https://github.com/NachtRaveVL/PCA9685-Arduino
 
 **Software:**
 - Nextion Editor (https://nextion.itead.cc/download.html)
@@ -130,6 +131,7 @@ Przykładowy program na wyświetlacz załączony.
 - OneWire (https://github.com/PaulStoffregen/OneWire)
 - Time (https://github.com/PaulStoffregen/Time)
 - Adafruit-PWM-Servo-Driver-Library (https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library)
+- lub https://github.com/NachtRaveVL/PCA9685-Arduino
 
 **Oprogramowanie:**
 - Nextion Editor (https://nextion.itead.cc/download.html)
