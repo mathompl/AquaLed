@@ -5,25 +5,48 @@
 
 #include <Arduino.h>
 
+#ifndef USE_ADAFRUIT_LIBRARY
+#include "PCA9685.h"
+PCA9685 pwmController;
+#else
+#include <Adafruit_PWMServoDriver.h>
+Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
+
+#endif
+
+
 static void setupPWMPins ()
 {
+  #ifndef USE_ADAFRUIT_LIBRARY
+  Wire.begin();                       // Wire must be started first
+  Wire.setClock(400000);              // Supported baud rates are 100kHz, 400kHz, and 1000kHz
+  pwmController.resetDevices();       // Software resets all PCA9685 devices on Wire line
+
+  pwmController.init(B000000);    // Address pins A5-A0 set to B000000
+  pwmController.setPWMFrequency(PWM_I2C_FREQ); // Default is 200Hz, supports 24Hz to 1526Hz
+
+  #else
+  pwm_i2c.begin();
+  pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
+
+  #endif
         currTime = (long)hour ()* 60 * 60 + (long)minute () * 60 + (long)second ();
         // setup pins
         for (byte i = 0; i < PWMS; i++)
         {
                 initPWM ( i );
-                pwmRuntime[i].valueCurrent = 0.0;
-                pwmRuntime[i].valueTest = 0;
-                pwmRuntime[i].dimmingStart = false;
-                pwmRuntime[i].isSunset = false;
-                pwmRuntime[i].isSunrise = false;
+                memset (&pwmRuntime[i], 0, sizeof pwmRuntime[i]);
                 updateChannelTimes (i);
                 recoverSunsetAndSunrise (i);
-                pwmRuntime[i].testMode = false;
         }
-        pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
 
+}
+
+static void initPWM (byte i)
+{
+        if (pwmSettings[i].isI2C != 0) return;
+        pinMode(pwmSettings[i].pin, OUTPUT);
+        digitalWrite(pwmSettings[i].pin, OFF);
 }
 
 static void updateChannelTimes (byte i)
@@ -41,7 +64,6 @@ static void recoverSunsetAndSunrise (byte i)
                 pwmRuntime[i].recoverLastState = true;
                 pwmRuntime[i].valueGoal = (pwmRuntime[i].sunsetValue*pwmSettings[i].valueDay);
                 initDimming (i,abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal),settings.pwmDimmingTime);
-
         }
         else
         if ( getSunriseSeconds (i)  == true)
@@ -51,13 +73,6 @@ static void recoverSunsetAndSunrise (byte i)
                 initDimming (i,abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal),settings.pwmDimmingTime);
         }
         else pwmRuntime[i].recoverLastState = false;
-}
-
-static void initPWM (byte i)
-{
-        if (pwmSettings[i].isI2C != 0) return;
-        pinMode(pwmSettings[i].pin, OUTPUT);
-        digitalWrite(pwmSettings[i].pin, OFF);
 }
 
 // sciemnianie/rozjasnianie
@@ -256,8 +271,8 @@ static void pwm( byte i )
                         val = mapRound(val, PWM_I2C_MIN, PWM_I2C_MAX,  0, 255);
                 // logarithmic dimming table, experimental, longs best if max 100%
                       #ifndef NO_DIMMING_TABLE
-                      if (dimming && settings.softDimming == 1 && (int) val != (int) pwmRuntime[i].valueGoal)
-                              val = dimmingTable[val];
+                if (dimming && settings.softDimming == 1 && (int) val != (int) pwmRuntime[i].valueGoal)
+                        val = dimmingTable[val];
                       #endif
                 analogWrite( pwmSettings[i].pin, val);
         }
@@ -268,8 +283,12 @@ static void pwm( byte i )
                 {
                         if (pwmSettings[i].invertPwm == 1)
                                 val = mapRound(val, PWM_I2C_MAX, 0.0, PWM_I2C_MIN, PWM_I2C_MAX);
+                        #ifndef USE_ADAFRUIT_LIBRARY
+                          pwmController.setChannelPWM(pwmSettings[i].pin, val );
+                        #else
+                          pwm_i2c.setPWM(pwmSettings[i].pin, 0, val );
 
-                        pwm_i2c.setPWM(pwmSettings[i].pin, 0, val );
+                        #endif
                 }
         }
         pwmRuntime[i].pwmLast = pwmRuntime[i].valueCurrent;

@@ -10,7 +10,6 @@
 #include <avr/wdt.h>
 #include <DS18B20.h>
 #include "config.h"
-#include <Adafruit_PWMServoDriver.h>
 
 /*
          SYSTEM VARIABLES, do not modify
@@ -21,7 +20,6 @@
 #define OFF false
 
 // i2c controller
-Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
 
 // structure for storing channel information
 // do not modify order (written to eeprom)
