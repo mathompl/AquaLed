@@ -4,19 +4,33 @@
  */
 
 #include <Arduino.h>
+
 #define dayOfWeek(_time_)  ((( _time_ / SECS_PER_DAY + 4)  % DAYS_PER_WEEK)+1) // 1 = Sunday
+
+
+void getCurrentTime ()
+{
+    currTime = (long)RTC.now().hour ()* 60 * 60 + (long)RTC.now().minute () * 60 + (long)RTC.now().second ();
+}
+
+void rtcSetup ()
+{
+        Wire.begin();
+        Wire.setClock(400000);
+        RTC.begin();
+        startTimestamp = RTC.now().unixtime ();
+}
 
 static void readTime ()
 {
         currentMillis = millis();
-        if (RTC.read(tm))
-                adjustDST ();
+        adjustDST ();
 }
 
 static void adjustTime (int h, byte dst)
 {
-        setTime( hour()+h, minute(), second (), day(), month(), year() );
-        RTC.set( now () );
+      //  setTime( hour()+h, minute(), second (), day(), month(), year() );
+        RTC.adjust(RTC.now() + (long)((long)h * 3600L));
         settings.dst = dst;
         writeEEPROMSettings ();
 }
@@ -28,9 +42,9 @@ static void adjustDST ()
         {
                 previousSecTimeAdjust = currentMillis;
                 getMoonPhase ();
-                if (dayOfWeek(now()) == 1 && month() == 3 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==0)
+                if (dayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==0)
                         adjustTime (1,1);
-                else if (dayOfWeek(now()) == 1 && month() == 10 && day() >= 25 && day() <=31 && hour() == 1 && settings.dst==1)
+                else if (dayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==1)
                         adjustTime (-1,0);
         }
 }
@@ -50,5 +64,5 @@ static byte toMoonPhase(int year, int month, int day){
 
 static void getMoonPhase ()
 {
-        moonPhase = toMoonPhase (year(), month(), day());
+        moonPhase = toMoonPhase (RTC.now().year(), RTC.now().month(), RTC.now().day());
 }

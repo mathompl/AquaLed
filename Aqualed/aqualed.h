@@ -6,23 +6,28 @@
 #include <OneWire.h>
 #include <Time.h>
 #include <EEPROM.h>
-#include <DS1307RTC.h>
 #include <avr/wdt.h>
 #include <DS18B20.h>
 #include "config.h"
+#include "RTClib.h"
 
 /*
          SYSTEM VARIABLES, do not modify
          User configuration in file config.h
- */
+*/
 
 #define ON true
 #define OFF false
 
-// i2c controller
+RTC_DS1307 RTC;
+
+// sensors
+#define LED_TEMPERATURE_FAN 0
+#define SUMP_TEMPERATURE_FAN 1
+#define WATER_TEMPERATURE_FAN 2
 
 // structure for storing channel information
-// do not modify order (written to eeprom)
+// do not modify order (written raw to eeprom)
 typedef struct {
   byte enabled;  // is channel enabled
   byte onHour;   // channel daylight start hour
@@ -43,6 +48,7 @@ typedef struct {
   byte watts;
 } PWM_SETTINGS;
 
+// PWM channel runtime data
 typedef struct {
   long startTime;
   long stopTime;
@@ -50,7 +56,7 @@ typedef struct {
   long sunsetTime;
   bool dimmingStart;
   bool recoverLastState;
-  double valueGoal; // runtime used for dimming
+  double valueGoal;
   double valueCurrent;
   double pwmLast;
   double nxPwmLast;
@@ -58,15 +64,10 @@ typedef struct {
   byte isSunset;
   byte isNight;
   bool testMode;
-  double valueTest;
-  // sunset/sunrise values
-  long sunsetSecondsLeft;
-  long sunriseSecondsLeft;
-  double sunsetValue;
-  double sunriseValue;
+  long secondsLeft; // sunset/sunrise
   double step;
-  boolean hasChanged;
   double watts;
+  byte ticks;
 } PWM_RUNTIME;
 
 // Settings
@@ -86,11 +87,6 @@ typedef struct {
 PWM_SETTINGS pwmSettings[PWMS] = {0};
 PWM_RUNTIME pwmRuntime[PWMS] = {0};
 SETTINGS settings = {0};
-
-// sensors
-#define LED_TEMPERATURE_FAN 0
-#define SUMP_TEMPERATURE_FAN 1
-#define WATER_TEMPERATURE_FAN 2
 
 typedef struct {
   byte address[8];
@@ -120,8 +116,7 @@ unsigned long previousMillisFans = 0;
 unsigned long previousMillisNextion = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
-tmElements_t tm;
-
+uint32_t startTimestamp = 0;
 bool lampOverheating = false;
 float watts = 0;
 bool max_watts_exceeded = false;

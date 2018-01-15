@@ -36,8 +36,8 @@ void setup() {
         wdt_disable();
         writeEEPROMDefaults ();
         eEpromRead();
-        setSyncProvider(RTC.get);
-        setSyncInterval (600);
+        rtcSetup ();
+        
         getMoonPhase ();
 
 #ifndef NO_TEMPERATURE
@@ -52,7 +52,7 @@ void setup() {
         nexInit();
 #endif
 
-      // launch watchdog  - 4 seconds
+        // launch watchdog  - 4 seconds
         wdt_enable(WDTO_8S);
         setupPWMPins ();
 }
@@ -67,9 +67,9 @@ void loop() {
         // nextion routines
 #ifndef NO_NEXTION
         // nextion display
-       nxDisplay ();
+        nxDisplay ();
         // nextion touch istener
-       nxTouch();
+        nxTouch();
 #endif
 
         // temperature and fans control

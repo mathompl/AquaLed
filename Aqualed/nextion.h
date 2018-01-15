@@ -70,6 +70,7 @@ byte lastH = 0, lastM = 0;
 byte __touch_buffer_ix = 0;
 boolean __touch_event = false;
 byte __touch_buffer[7];
+byte activePwmStatus;
 
 // pages
 #define PAGE_HOME 0
@@ -84,6 +85,7 @@ byte __touch_buffer[7];
 #define PAGE_PWM_LIST 9
 #define PAGE_ERROR 10
 #define PAGE_SAVING 11
+#define PAGE_PWMSTATUS 12
 
 // buttons
 #define THERMOPAGE_BUTTON_SAVE 9
@@ -125,7 +127,18 @@ byte __touch_buffer[7];
 #define HOMEPAGE_BUTTON_NIGHT 23
 #define HOMEPAGE_BUTTON_AMBIENT 25
 #define HOMEPAGE_BUTTON_CONFIG 24
-
+#define HOMEPAGE_BUTTON_FAN_WATER 28
+#define HOMEPAGE_BUTTON_FAN_LAMP 29
+#define HOMEPAGE_BUTTON_FAN_SUMP 30
+#define HOMEPAGE_PWMSTATUS1 31
+#define HOMEPAGE_PWMSTATUS2 32
+#define HOMEPAGE_PWMSTATUS3 33
+#define HOMEPAGE_PWMSTATUS4 34
+#define HOMEPAGE_PWMSTATUS5 35
+#define HOMEPAGE_PWMSTATUS6 36
+#define HOMEPAGE_PWMSTATUS7 37
+#define HOMEPAGE_PWMSTATUS8 38
+#define PWMSTATUSPAGE_BUTTON_CLOSE 1
 #define COLOR_RED 32768
 #define COLOR_GREEN 1024
 #define COLOR_LIGHTRED 62225

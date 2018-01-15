@@ -7,7 +7,6 @@
 #include <avr/pgmspace.h>
 
 // modules, uncomment to disable, comment to enable
-// uncomment to use I2C PWM MODULE, PINS CONFIGURATION FOLLOWS
 #define NO_BLUETOOTH
 //#define NO_NEXTION
 //#define NEXTION_SOFTWARE_SERIAL // warning, soft serial is unreliable, use
@@ -15,9 +14,8 @@
 #define NO_DIMMING_TABLE
 //#define USE_ADAFRUIT_LIBRARY
 //#define NO_TEMPERATURE
-//#define DEBUG
 
-//  PWM channels
+// PWM channels count
 #define PWMS 8
 
 // PWM channels displayed names
@@ -41,7 +39,9 @@
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
 
 // if NEXTION_SOFTWARE_SERIAL defined, configure pins (for use with different
-// pins - not stanard arduino Serial port)
+// pins - not standard arduino hardware serial port)
+// Warning! Softwareserial is unrealiable and adds a fair amout of overhead,
+// data loss may occur
 #define NEXTION_SOFTWARE_PIN_TX 12
 #define NEXTION_SOFTWARE_PIN_RX 11
 
@@ -51,17 +51,18 @@
 #define SUMP_FANS_PIN 7  // sump fans relay pin
 
 // resolutions
-#define PWM_RESOLUTION 100.0           // ms main PWM loop resolution
-#define PWM_MIN_STEP 0.00001           // minimum pwm change step
-#define NX_INFO_RESOLUTION 1000        // ms - nextion home page refresh time
-#define EEPROM_STATE_RESOLUTION 300000 // ms - saving of valueCurrent value time
+#define PWM_RESOLUTION 100 // ms main PWM loop resolution (ticks in ms)
+#define PWM_RESOLUTION_R 1.0 / PWM_RESOLUTION
+#define PWM_MIN_STEP 0.00001             // minimum pwm change step
+#define PWM_ADJUST_STEP_TICKS 10         // counter to re-adjust pwm step value
+#define NX_INFO_RESOLUTION 1000          // ms - nextion home page refresh time
 #define TEMPERATURE_SAMPLE_INTERVAL 1000 // ms temperature reading resolution
-#define TIME_ADJUST_INTERVAL 900000      // s daylight saving mode check
+#define TIME_ADJUST_INTERVAL 900000      // ms daylight saving mode check
 
 // rozdzielczosc przekaznikow (s)
 #define FANS_INTERVAL 300000 // ms fans resolution
 
-// max lamp parameters
-#define MAX_WATTS                                                              \
-  \ 200 // max lamp wattage, used for lamp shutdown (psu protection)
+// lamp protection
+// max lamp wattage, used for lamp shutdown (psu protection)
+#define MAX_WATTS 200
 #define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown

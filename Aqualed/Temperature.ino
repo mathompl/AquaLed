@@ -52,22 +52,27 @@ static void fansControl()
         {
                 previousMillisFans = currentMillis;
                 for (byte i = 0; i < 3; i++)
-                        fansSwitch (i, sensors[i].pin,settings.maxTemperatures[i]);
+                {
+                        fansSwitch (i, settings.maxTemperatures[i]);
+                         relaySwitch (i);
+                }
         }
 }
 
-static void fansSwitch (byte sensor, byte pin, byte max)
+static void relaySwitch (byte sensor)
+{
+        if (sensors[sensor].fanStatus)
+                digitalWrite(sensors[sensor].pin, LOW);
+        else
+                digitalWrite(sensors[sensor].pin, HIGH);
+}
+
+static void fansSwitch (byte sensor, byte max)
 {
         if (sensors[sensor].temperature != TEMP_ERROR && sensors[sensor].temperature > (double) max )
-        {
-                digitalWrite(pin, LOW);
                 sensors[sensor].fanStatus = true;
-        }
         else
-        {
-                digitalWrite(pin, HIGH);
                 sensors[sensor].fanStatus = false;
-        }
 }
 
 static byte listContains (byte addr[])
