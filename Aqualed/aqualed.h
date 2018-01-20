@@ -67,7 +67,6 @@ typedef struct {
   long secondsLeft; // sunset/sunrise
   double step;
   double watts;
-  byte ticks;
 } PWM_RUNTIME;
 
 // Settings

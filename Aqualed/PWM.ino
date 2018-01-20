@@ -85,13 +85,23 @@ static void pwmStep (byte i)
 
         if (pwmRuntime[i].valueGoal > pwmRuntime[i].valueCurrent)
         {
-                pwmRuntime[i].valueCurrent = pwmRuntime[i].valueCurrent +  pwmRuntime[i].step;
+                pwmRuntime[i].valueCurrent += pwmRuntime[i].step;
                 if (pwmRuntime[i].valueCurrent > pwmRuntime[i].valueGoal) pwmRuntime[i].valueCurrent=pwmRuntime[i].valueGoal;
         }
         else
         {
-                pwmRuntime[i].valueCurrent = pwmRuntime[i].valueCurrent -  pwmRuntime[i].step;
+                pwmRuntime[i].valueCurrent -= pwmRuntime[i].step;
                 if (pwmRuntime[i].valueCurrent < pwmRuntime[i].valueGoal) pwmRuntime[i].valueCurrent=pwmRuntime[i].valueGoal;
+        }
+}
+
+static void initDimming (byte i, double dimmingScale, long dimmingTime)
+{
+        if (pwmRuntime[i].valueCurrent!=pwmRuntime[i].valueGoal && pwmRuntime[i].dimmingStart == false)
+        {
+                pwmRuntime[i].dimmingStart = true;
+                pwmRuntime[i].step = (double) ( (double)  dimmingScale  / (double) ((dimmingTime * 1000) * PWM_RESOLUTION_R));
+                if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
         }
 }
 
@@ -102,13 +112,14 @@ static void goalReached (byte i)
         pwmRuntime[i].step = 0;
         pwmRuntime[i].secondsLeft = 0;
         resetFlags (i);
+        forceRefresh = true;
 }
 
 static void resetFlags (byte i)
 {
         pwmRuntime[i].isSunset = false;
         pwmRuntime[i].isSunrise = false;
-        //pwmRuntime[i].recoverLastState = false;
+        forceRefresh = true;
 }
 
 static void forcePWMRecovery (boolean test)
@@ -142,15 +153,7 @@ static double getNightValue (byte i)
         return result;
 }
 
-static void initDimming (byte i, double dimmingScale, long dimmingTime)
-{
-        if (pwmRuntime[i].valueCurrent!=pwmRuntime[i].valueGoal && pwmRuntime[i].dimmingStart == false)
-        {
-                pwmRuntime[i].dimmingStart = true;
-                pwmRuntime[i].step = (double) ( (double)  dimmingScale  / (double) ((dimmingTime * 1000) * PWM_RESOLUTION_R));
-                if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
-        }
-}
+
 
 // calculate and set pwm value and drive led
 static void pwm( byte i )
@@ -158,14 +161,7 @@ static void pwm( byte i )
         bool state = getState (i);
         pwmRuntime[i].isNight= false;
 
-        // readjust times - millis() is not accurate over longer periods
-        if (pwmRuntime[i].ticks > PWM_ADJUST_STEP_TICKS)
-        {
-                resetFlags (i);
-                pwmRuntime[i].ticks = 0;
-        }
-
-        //test mode
+        //test overheat / max watts
         if (lampOverheating == true || max_watts_exceeded == true)
         {
                 pwmRuntime[i].valueCurrent = 0;
@@ -175,7 +171,6 @@ static void pwm( byte i )
         //test mode
         if (pwmRuntime[i].testMode)
         {
-                //pwmRuntime[i].valueCurrent = pwmRuntime[i].valueTest;
                 pwmRuntime[i].dimmingStart = false;
         }
         else
@@ -221,7 +216,8 @@ static void pwm( byte i )
         {
                 pwmRuntime[i].isSunset = true;
                 pwmRuntime[i].valueGoal = getNightValue(i);
-                initDimming (i,abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal),pwmRuntime[i].secondsLeft);
+                pwmRuntime[i].step =  abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal)  / (double) ((pwmRuntime[i].secondsLeft * 1000) * PWM_RESOLUTION_R);
+              //  if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
         }
         else
         //sunrise
@@ -229,8 +225,9 @@ static void pwm( byte i )
         {
                 pwmRuntime[i].isSunrise = true;
                 pwmRuntime[i].valueGoal = pwmSettings[i].valueDay;
-                initDimming (i,abs(pwmRuntime[i].valueCurrent-(double)pwmSettings[i].valueDay),pwmRuntime[i].secondsLeft);
-        }
+                pwmRuntime[i].step =  abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal)  / (double) ((pwmRuntime[i].secondsLeft * 1000) * PWM_RESOLUTION_R);
+                //if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
+              }
         // day
         else if (state)
         {
@@ -245,7 +242,7 @@ static void pwm( byte i )
         }
 
         pwmStep (i);
-        pwmRuntime[i].ticks++;
+
 
         // no change
         if (pwmRuntime[i].pwmLast != pwmRuntime[i].valueCurrent)
