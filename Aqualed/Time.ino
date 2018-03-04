@@ -5,7 +5,10 @@
 
 #include <Arduino.h>
 
-#define dayOfWeek(_time_)  ((( _time_ / SECS_PER_DAY + 4)  % DAYS_PER_WEEK)+1) // 1 = Sunday
+#define _SECS_PER_DAY  (3600UL * 24UL)
+#define _DAYS_PER_WEEK (7UL)
+
+#define dayOfWeek(_time_)  ((( _time_ / _SECS_PER_DAY + 4)  % _DAYS_PER_WEEK)+1) // 1 = Sunday
 
 
 void getCurrentTime ()
