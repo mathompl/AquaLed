@@ -10,7 +10,6 @@
 #include <DS18B20.h>
 #include "config.h"
 #include "RTClib.h"
-
 /*
          SYSTEM VARIABLES, do not modify
          User configuration in file config.h
