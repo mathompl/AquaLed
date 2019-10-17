@@ -33,7 +33,7 @@
 // i2c configuration
 #define PWM_I2C_MIN 0.0    // lower value of i2c scale
 #define PWM_I2C_MAX 4095.0 // uper value
-#define PWM_I2C_FREQ 500   // i2c frequency (hz)
+#define PWM_I2C_FREQ 1400   // i2c frequency (hz)
 
 // termometry
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
