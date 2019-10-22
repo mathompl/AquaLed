@@ -48,16 +48,16 @@ void setupBluetooth ()
 
         if (pwmNumber < 255)
         {
-                if (val[2] >= 0 && val[2] <= 1) pwmChannel[pwmNumber].enabled = val[2]; else return false;
-                if (val[3] >= 0 && val[3] <= 23) pwmChannel[pwmNumber].onHour = val[3]; else return false;
-                if (val[4] >= 0 && val[4] <= 59) pwmChannel[pwmNumber].onMinute = val[4]; else return false;
-                if (val[6] >= 0 && val[6] <= 23) pwmChannel[pwmNumber].offHour = val[6]; else return false;
-                if (val[7] >= 0 && val[7] <= 59) pwmChannel[pwmNumber].offMinute = val[7]; else return false;
-                if (val[9] >= 0 && val[9] <= 255) pwmChannel[pwmNumber].valueNight = val[9]; else return false;
-                if (val[10] >= 0 && val[10] <= 255) pwmChannel[pwmNumber].valueDay = val[10]; else return false;
-                if (val[11] >= 0 && val[11] <= 255) pwmChannel[pwmNumber].sunriseLenght = val[11]; else return false;
-                if (val[12] >= 0 && val[12] <= 255) pwmChannel[pwmNumber].sunsetLenght = val[12]; else return false;
-                if (val[13] >= 0 && val[13] <= 1) pwmChannel[pwmNumber].isNightLight = val[13]; else return false;
+                if (val[2] >= 0 && val[2] <= 1) pwmSettings[pwmNumber].enabled = val[2]; else return false;
+                if (val[3] >= 0 && val[3] <= 23) pwmSettings[pwmNumber].onHour = val[3]; else return false;
+                if (val[4] >= 0 && val[4] <= 59) pwmSettings[pwmNumber].onMinute = val[4]; else return false;
+                if (val[6] >= 0 && val[6] <= 23) pwmSettings[pwmNumber].offHour = val[6]; else return false;
+                if (val[7] >= 0 && val[7] <= 59) pwmSettings[pwmNumber].offMinute = val[7]; else return false;
+                if (val[9] >= 0 && val[9] <= 255) pwmSettings[pwmNumber].valueNight = val[9]; else return false;
+                if (val[10] >= 0 && val[10] <= 255) pwmSettings[pwmNumber].valueDay = val[10]; else return false;
+                if (val[11] >= 0 && val[11] <= 255) pwmSettings[pwmNumber].sunriseLenght = val[11]; else return false;
+                if (val[12] >= 0 && val[12] <= 255) pwmSettings[pwmNumber].sunsetLenght = val[12]; else return false;
+                if (val[13] >= 0 && val[13] <= 1) pwmSettings[pwmNumber].isNightLight = val[13]; else return false;
                 writeEEPROMPWMConfig (pwmNumber);
                 return true;
         }
@@ -75,9 +75,9 @@ void setupBluetooth ()
                 if (val[4] >= 15 && val[4] <= 99) setYear = val[4] + 2000; else return false;
                 if (val[5] >= 1 && val[5] <= 99) setMonth = val[5]; else return false;
                 if (val[6] >= 1 && val[6] <= 31) setDay = val[6]; else return false;
-
-                setTime( setHour, setMinute, setSecond, setDay, setMonth, setYear );         // godz, min, sek, dzien, miesiac, rok
-                RTC.set( now( ) );
+                RTC.adjust(DateTime(setYear, setMonth, setDay, setHour, setMinute,0));
+                readTime ();
+                adjustDST ();
                 return true;
         }
 
@@ -110,17 +110,17 @@ void setupBluetooth ()
 
                 bluetooth.print( F("*83" ));
                 bluetooth.print( F("," ));
-                bluetooth.print( tm.Hour );
+                bluetooth.print( RTC.now().hour() );
                 bluetooth.print( F("," ) );
-                bluetooth.print( tm.Minute );
+                bluetooth.print( RTC.now().minute() );
                 bluetooth.print( F("," ));
-                bluetooth.print( tm.Second );
+                bluetooth.print( RTC.now().second() );
                 bluetooth.print( F("," ));
-                bluetooth.print( tmYearToCalendar( tm.Year ) );
+                bluetooth.print( tmYearToCalendar( RTC.now().year() ) );
                 bluetooth.print( F(","));
-                bluetooth.print( tm.Month );
+                bluetooth.print( RTC.now().month() );
                 bluetooth.print( F(","));
-                bluetooth.print( tm.Day );
+                bluetooth.print( RTC.now().day() );
                 bluetooth.println( );
 
         }

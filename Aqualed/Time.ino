@@ -8,7 +8,7 @@
 #define _SECS_PER_DAY  (3600UL * 24UL)
 #define _DAYS_PER_WEEK (7UL)
 
-#define dayOfWeek(_time_)  ((( _time_ / _SECS_PER_DAY + 4)  % _DAYS_PER_WEEK)+1) // 1 = Sunday
+#define myDayOfWeek(_time_)  ((( _time_ / _SECS_PER_DAY + 4)  % _DAYS_PER_WEEK)+1) // 1 = Sunday
 
 
 void getCurrentTime ()
@@ -45,9 +45,9 @@ static void adjustDST ()
         {
                 previousSecTimeAdjust = currentMillis;
                 getMoonPhase ();
-                if (dayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==0)
+                if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==0)
                         adjustTime (1,1);
-                else if (dayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==1)
+                else if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==1)
                         adjustTime (-1,0);
         }
 }

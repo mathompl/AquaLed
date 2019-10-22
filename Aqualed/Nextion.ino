@@ -11,14 +11,12 @@
 // init nextion lcd
 static void nexInit(void)
 {
-
-
         NEXTION_BEGIN (9600);
         sendNextionEOL ();
         setPage(PAGE_HOME);
         setInt (NX_FIELD_BAUDS, NX_FIELD_EMPTY, (long)NEXTION_BAUD_RATE);
         NEXTION_FLUSH ();
-        delay (50);        
+        delay (50);
         NEXTION_BEGIN ((long)NEXTION_BAUD_RATE);
         setInt (NX_FIELD_BKCMD, NX_FIELD_EMPTY, (long)0);
         setPage (PAGE_HOME);
