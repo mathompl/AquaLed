@@ -69,7 +69,7 @@ static void relaySwitch (byte sensor)
 
 static void fansSwitch (byte sensor, byte max)
 {
-        if (sensors[sensor].temperature != TEMP_ERROR && sensors[sensor].temperature > (double) max )
+        if (sensors[sensor].temperature == TEMP_ERROR || sensors[sensor].temperature > (double) max )
                 sensors[sensor].fanStatus = true;
         else
                 sensors[sensor].fanStatus = false;

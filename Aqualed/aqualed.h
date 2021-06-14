@@ -4,7 +4,7 @@
  */
 #include <Wire.h>
 #include <OneWire.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <EEPROM.h>
 #include <avr/wdt.h>
 #include <DS18B20.h>

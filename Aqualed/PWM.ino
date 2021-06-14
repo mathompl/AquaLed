@@ -7,7 +7,7 @@
 
 #ifndef USE_ADAFRUIT_LIBRARY
   #include "PCA9685.h"
-PCA9685 pwmController;
+PCA9685 pwmController (B000000);
   #define PWM_I2C_SETVALUE(x, y) pwmController.setChannelPWM(x, y)
 #else
   #include <Adafruit_PWMServoDriver.h>
@@ -21,7 +21,8 @@ static void setupPWMPins ()
 
 #ifndef USE_ADAFRUIT_LIBRARY
         pwmController.resetDevices(); // Software resets all PCA9685 devices on Wire line
-        pwmController.init(B000000); // Address pins A5-A0 set to B000000
+        //pwmController.init(B000000); // Address pins A5-A0 set to B000000
+        pwmController.init(); // Address pins A5-A0 set to B000000
         pwmController.setPWMFrequency(PWM_I2C_FREQ); // Default is 200Hz, supports 24Hz to 1526Hz
 #else
         pwm_i2c.begin();
