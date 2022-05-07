@@ -35,6 +35,7 @@ static void setupPWMPins ()
                 updateChannelTimes (i);
                 recoverSunsetAndSunrise (i);
         }
+        
 }
 
 static void initPWM (byte i)

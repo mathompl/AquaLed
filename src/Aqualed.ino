@@ -36,10 +36,18 @@
 void setup() {
         //delay(1000);
   //      wdt_disable();
+
+// first run - erase eeprom
         writeEEPROMDefaults ();
+
+// read settings from eeprom
         eEpromRead();
+
+// configure RTC
         rtcSetup ();
 
+// first time read
+        readTimes ();
         getMoonPhase ();
 
 #ifndef NO_TEMPERATURE

@@ -13,7 +13,7 @@
 
 void getCurrentTime ()
 {
-        if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL)
+        if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
         {
                 previousRTCCall = currentMillis;
                 currHour = RTC.now().hour ();
