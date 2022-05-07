@@ -15,12 +15,10 @@ Adafruit_PWMServoDriver pwm_i2c = Adafruit_PWMServoDriver();
   #define PWM_I2C_SETVALUE(x, y) pwm_i2c.setPWM(x, 0, y)
 #endif
 
-
 static void setupPWMPins ()
 {
 
 #ifndef USE_ADAFRUIT_LIBRARY
-        pwmController.resetDevices(); // Software resets all PCA9685 devices on Wire line
         //pwmController.init(B000000); // Address pins A5-A0 set to B000000
         pwmController.init(); // Address pins A5-A0 set to B000000
         pwmController.setPWMFrequency(PWM_I2C_FREQ); // Default is 200Hz, supports 24Hz to 1526Hz
@@ -28,7 +26,7 @@ static void setupPWMPins ()
         pwm_i2c.begin();
         pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
 #endif
-        getCurrentTime ();
+        //  getCurrentTime ();
         // setup pins
         for (byte i = 0; i < PWMS; i++)
         {
@@ -154,8 +152,6 @@ static double getNightValue (byte i)
         return result;
 }
 
-
-
 // calculate and set pwm value and drive led
 static void pwm( byte i )
 {
@@ -218,7 +214,7 @@ static void pwm( byte i )
                 pwmRuntime[i].isSunset = true;
                 pwmRuntime[i].valueGoal = getNightValue(i);
                 pwmRuntime[i].step =  abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal)  / (double) ((pwmRuntime[i].secondsLeft * 1000) * PWM_RESOLUTION_R);
-              //  if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
+                //  if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
         }
         else
         //sunrise
@@ -228,7 +224,7 @@ static void pwm( byte i )
                 pwmRuntime[i].valueGoal = pwmSettings[i].valueDay;
                 pwmRuntime[i].step =  abs(pwmRuntime[i].valueCurrent-pwmRuntime[i].valueGoal)  / (double) ((pwmRuntime[i].secondsLeft * 1000) * PWM_RESOLUTION_R);
                 //if ( pwmRuntime[i].step < PWM_MIN_STEP) pwmRuntime[i].step = PWM_MIN_STEP;
-              }
+        }
         // day
         else if (state)
         {
@@ -334,7 +330,7 @@ static void pwm ()
         if (currentMillis - previousPwmResolution > PWM_RESOLUTION)
         {
                 previousPwmResolution = currentMillis;
-                getCurrentTime ();
+                //getCurrentTime ();
                 watts = 0;
                 for (byte i = 0; i < PWMS; i++)
                 {

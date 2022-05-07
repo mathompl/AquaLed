@@ -13,7 +13,15 @@
 
 void getCurrentTime ()
 {
-    currTime = (long)RTC.now().hour ()* 60 * 60 + (long)RTC.now().minute () * 60 + (long)RTC.now().second ();
+        if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL)
+        {
+                previousRTCCall = currentMillis;
+                currHour = RTC.now().hour ();
+                currMinute = RTC.now().minute ();
+                currSecond = RTC.now().second ();
+                currTime = (long) currHour * 60 * 60 + (long) currMinute * 60 + (long) currSecond;
+                if (currTime <=1 ) getMoonPhase ();
+        }
 }
 
 void rtcSetup ()
@@ -22,17 +30,19 @@ void rtcSetup ()
         Wire.setClock(400000);
         RTC.begin();
         startTimestamp = RTC.now().unixtime ();
+        readTimes ();
 }
 
-static void readTime ()
+static void readTimes ()
 {
         currentMillis = millis();
+        getCurrentTime ();
         adjustDST ();
 }
 
 static void adjustTime (int h, byte dst)
 {
-      //  setTime( hour()+h, minute(), second (), day(), month(), year() );
+        //  setTime( hour()+h, minute(), second (), day(), month(), year() );
         RTC.adjust(RTC.now() + (long)((long)h * 3600L));
         settings.dst = dst;
         writeEEPROMSettings ();
@@ -44,10 +54,9 @@ static void adjustDST ()
         if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
                 previousSecTimeAdjust = currentMillis;
-                getMoonPhase ();
-                if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==0)
+                if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 2 && settings.dst==0)
                         adjustTime (1,1);
-                else if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 1 && settings.dst==1)
+                else if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 3 && settings.dst==1)
                         adjustTime (-1,0);
         }
 }

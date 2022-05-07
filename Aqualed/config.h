@@ -32,13 +32,13 @@
 
 // i2c configuration
 #define PWM_I2C_MIN 0.0    // lower value of i2c scale
-#define PWM_I2C_MAX 4095.0 // uper value
-#define PWM_I2C_FREQ 1400   // i2c frequency (hz)
+#define PWM_I2C_MAX 4096.0 // uper value
+#define PWM_I2C_FREQ 1000   // i2c frequency (hz)
 
 // termometry
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
 
-// if NEXTION_SOFTWARE_SERIAL defined, configure pins (for use with different
+// if NEXTION_SOFTWARE_SERIAL defined, configure pins (use with different
 // pins - not standard arduino hardware serial port)
 // Warning! Softwareserial is unrealiable and adds a fair amout of overhead,
 // data loss may occur
@@ -58,11 +58,12 @@
 #define NX_INFO_RESOLUTION 1000          // ms - nextion home page refresh time
 #define TEMPERATURE_SAMPLE_INTERVAL 1000 // ms temperature reading resolution
 #define TIME_ADJUST_INTERVAL 900000      // ms daylight saving mode check
+#define RTC_CALL_INTERVAL 1000      // ms how often check RTC time
 
 // rozdzielczosc przekaznikow (s)
 #define FANS_INTERVAL 300000 // ms fans resolution
 
 // lamp protection
 // max lamp wattage, used for lamp shutdown (psu protection)
-#define MAX_WATTS 200
+#define MAX_WATTS 250
 #define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown

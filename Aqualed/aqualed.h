@@ -18,7 +18,7 @@
 #define ON true
 #define OFF false
 
-RTC_DS1307 RTC;
+RTC_DS3231 RTC;
 
 // sensors
 #define LED_TEMPERATURE_FAN 0
@@ -106,7 +106,11 @@ SENSORS sensors[3] = {0};
 
 // time variables
 long currTime = 0;
+uint8_t currHour = 0;
+uint8_t currMinute = 0;
+uint8_t currSecond = 0;
 long unsigned currentMillis = 0;
+unsigned long previousRTCCall = 0;
 unsigned long previousPwmResolution = 0;
 unsigned long previousNxInfo = 0;
 unsigned long previousTemperature = 0;
@@ -115,9 +119,12 @@ unsigned long previousMillisNextion = 0;
 unsigned long previousSecTimeAdjust = 0;
 unsigned long lastTouch = 0;
 uint32_t startTimestamp = 0;
+
+// aux
 bool lampOverheating = false;
 float watts = 0;
 bool max_watts_exceeded = false;
+byte codePoint = 0;
 
 // moonphases
 byte moonPhase = 0;

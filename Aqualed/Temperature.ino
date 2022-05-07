@@ -28,7 +28,10 @@ static void initFanPin (byte i, byte pin)
 static void requestReadings ()
 {
         for (byte i = 0; i < 3; i++)
-                sensorsWire.request(settings.sensors[i]);
+        {
+                if (!sensorsWire.request(settings.sensors[i]))
+                        sensors[i].temperature = 0;
+        }
 }
 
 static void fansControl()
@@ -39,22 +42,35 @@ static void fansControl()
         if (sensorsWire.available()) {
                 for (byte i = 0; i < 3; i++)
                         sensors[i].temperature = sensorsWire.readTemperature(settings.sensors[i]);
-
                 requestReadings ();
         }
-
+/*
         // lamp overheating (for eg due to fans failure)
-        if (sensors[LED_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX ||
-            sensors[SUMP_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX) lampOverheating = true;
-        else lampOverheating = false;
+        if (sensors[LED_TEMPERATURE_FAN].temperature!=0
+              && sensors[LED_TEMPERATURE_FAN].temperature!=TEMP_ERROR
+              && sensors[LED_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX)
+              {
+                 lampOverheating = true;
+              }
+              else lampOverheating = false;
 
+              if (sensors[SUMP_TEMPERATURE_FAN].temperature!=0
+                    && sensors[SUMP_TEMPERATURE_FAN].temperature!=TEMP_ERROR
+                    && sensors[SUMP_TEMPERATURE_FAN].temperature >= LAMP_TEMPERATURE_MAX)
+                    {
+
+                       lampOverheating = true;
+                    }
+                    else lampOverheating = false;
+
+ */
         if (currentMillis - previousMillisFans > FANS_INTERVAL || previousMillisFans == 0)
         {
                 previousMillisFans = currentMillis;
                 for (byte i = 0; i < 3; i++)
                 {
                         fansSwitch (i, settings.maxTemperatures[i]);
-                         relaySwitch (i);
+                        relaySwitch (i);
                 }
         }
 }

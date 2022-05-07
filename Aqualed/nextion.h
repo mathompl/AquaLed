@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
+
 #ifdef NEXTION_SOFTWARE_SERIAL
 #include "SoftwareSerial.h"
 SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
@@ -45,8 +46,8 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
 #define hour_stopx 180
 
 #define DEFAULT_BAUD_RATE 9600
+//#define NEXTION_BAUD_RATE 9600
 #define NEXTION_BAUD_RATE 115200
-//#define NEXTION_BAUD_RATE 115200
 
 // uncomment for use nextion editor simulator
 // needs additional settings for non-standard baud rates
@@ -260,6 +261,8 @@ byte activePwmStatus;
 #define NX_FIELD_L8 73
 #define NX_FIELD_N11 74
 #define NX_FIELD_WA 75
+#define NX_FIELD_DEBUG1 76
+#define NX_FIELD_DEBUG2 77
 #define NX_FIELD_EMPTY 255
 
 #define NX_PIC_BO_OFF 3
@@ -346,6 +349,8 @@ const char f_l6[] PROGMEM = "l6";
 const char f_l7[] PROGMEM = "l7";
 const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
+const char f_debug1[] PROGMEM = "debug1";
+const char f_debug2[] PROGMEM = "debug2";
 
 #define PAGE_HOME 0
 #define PAGE_CONFIG 1
@@ -439,7 +444,7 @@ const char *const nx_fields[] PROGMEM{
     f_bo,   f_ba,    f_bn,    f_ld1,  f_ld2,  f_ld3,  f_ld4,  f_ld5,  f_ld6,
     f_ld7,  f_ld8,   f_bld1,  f_bld2, f_bld3, f_bld4, f_bld5, f_bld6, f_bld7,
     f_bld8, f_bauds, f_bkcmd, f_l1,   f_l2,   f_l3,   f_l4,   f_l5,   f_l6,
-    f_l7,   f_l8,    f_n11,   f_wa};
+    f_l7,   f_l8,    f_n11,   f_wa, f_debug1, f_debug2};
 const char *const nx_errors[] PROGMEM{str_er1, str_er2};
 const char *const nx_pages[] PROGMEM{
     p_home,        p_config, p_settime,  p_settings, p_pwm,   p_test,

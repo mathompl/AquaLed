@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "Aqualed.h"
 
 /*
@@ -33,11 +34,12 @@
  */
 
 void setup() {
-        wdt_disable();
+        //delay(1000);
+  //      wdt_disable();
         writeEEPROMDefaults ();
         eEpromRead();
         rtcSetup ();
-        
+
         getMoonPhase ();
 
 #ifndef NO_TEMPERATURE
@@ -51,35 +53,37 @@ void setup() {
 #ifndef NO_NEXTION
         nexInit();
 #endif
-
-        // launch watchdog  - 4 seconds
-        wdt_enable(WDTO_8S);
         setupPWMPins ();
+
+
+    //    wdt_enable(WDTO_2S);
+        Wire.setWireTimeout(3000, true);
 }
 
-void loop() {
-        // time
-        readTime ();
 
+void loop() {
+
+        // time
+        readTimes ();
         // pwm
         pwm ();
-
         // nextion routines
 #ifndef NO_NEXTION
-        // nextion display
-        nxDisplay ();
         // nextion touch istener
         nxTouch();
+      // nextion display
+        nxDisplay ();
 #endif
-
         // temperature and fans control
 #ifndef NO_TEMPERATURE
         fansControl ();
 #endif
-
         // bluetooth routines
 #ifndef NO_BLUETOOTH
         bluetoothServe ();
 #endif
-        wdt_reset();
+
+       // clear Wire timeout
+       Wire.clearWireTimeoutFlag();
+
 }

@@ -3,11 +3,12 @@
    https://github.com/mathompl/AquaLed
  */
 
-#ifndef NO_NEXTION
+
 
 #include <Arduino.h>
+#include <MemoryFree.h>
 #include "Nextion.h"
-
+#ifndef NO_NEXTION
 // init nextion lcd
 static void nexInit(void)
 {
@@ -43,6 +44,7 @@ static void nxTouch()
 {
         while (NEXTION_AVAIL ()> 0)
         {
+
                 char c = NEXTION_READ ();
                 if (c == NEX_RET_EVENT_TOUCH_HEAD)
                 {
@@ -54,13 +56,15 @@ static void nxTouch()
                         __touch_buffer[__touch_buffer_ix] = c;
                         __touch_buffer_ix++;
                 }
-                if (__touch_buffer_ix == 7 && memcmp( __touch_buffer+3, nextionEol, 3))
+
+                if (__touch_buffer_ix == 7)
                 {
-                        handlePage ( __touch_buffer[1], __touch_buffer[2]);
+                        if (memcmp( __touch_buffer+3, nextionEol, 3)) handlePage ( __touch_buffer[1], __touch_buffer[2]);
                         __touch_buffer_ix = 0;
                         __touch_event = false;
                         return;
                 }
+
         }
 }
 static void handlePage (byte pid, byte cid)
@@ -128,6 +132,7 @@ static void handleScreenSaver (byte cid)
         setPage (PAGE_HOME);
         lastTouch = currentMillis;
         toggleButtons();
+        refreshPWMNames ();
         refreshHomePage ();
 }
 
@@ -348,7 +353,7 @@ static void handleSetTimePage (byte cid)
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N4, &setYear)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_C0, &settings.dst)) break;
                 RTC.adjust(DateTime(setYear, setMonth, setDay, setHour, setMinute,0));
-                readTime ();
+                readTimes ();
                 adjustDST ();
                 writeEEPROMSettings ();
                 lastTouch = currentMillis;
@@ -401,7 +406,6 @@ static void drawSchedule ()
                 if (pwmSettings[i].enabled == 0) continue;
 
                 // light
-
                 if (min_stop < min_start) midnight = true;
                 else midnight = false;
 
@@ -463,7 +467,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, startL, width, stopM, COLOR_BLUE);
                 }
         }
-        int min_now = map (RTC.now().hour () * 60 + RTC.now().minute (), 0, min_hour, starty, starty + height);
+        int min_now = map (currHour * 60 + currMinute, 0, min_hour, starty, starty + height);
         fillRect (hour_startx, min_now, hour_stopx, 1, COLOR_YELLOW);
         // siatka dodatkowa
         /*
@@ -922,7 +926,7 @@ static uint16_t rgb565( byte rgb)
 
 static void displayWats ()
 {
-        if(watts!=lastWatts) setTextFloat (NX_FIELD_WA, watts, 1, NX_STR_WATTS);
+        if(watts!=lastWatts || forceRefresh) setTextFloat (NX_FIELD_WA, watts, 1, NX_STR_WATTS);
         lastWatts= watts;
 }
 
@@ -931,8 +935,8 @@ static void timeDisplay()
         char buff[7] = {0};
         memset(buff, 0, sizeof (buff));
         if (time_separator % 2 == 0)
-                sprintf(buff + strlen(buff), "%02u:%02u", RTC.now().hour (), RTC.now().minute ());
-        else sprintf(buff + strlen(buff), "%02u %02u", RTC.now().hour (), RTC.now().minute ());
+                sprintf(buff + strlen(buff), "%02u:%02u", currHour, currMinute);
+        else sprintf(buff + strlen(buff), "%02u %02u", currHour, currMinute);
         setText (NX_FIELD_H, (String)buff);
         time_separator++;
 }
@@ -942,7 +946,24 @@ static void refreshHomePage ()
         timeDisplay();
         updateHomePage();
         displayWats ();
+
 }
+
+/*static void displayMemory ()
+   {
+        double freemem = ( (double) getFreeMemory() / (double) 2048) *100;
+        setTextFloat (NX_FIELD_DEBUG2, freemem,  1, NX_STR_PERCENT);
+   }*/
+/*
+   static void nxSetDebug ()
+   {
+    if (nxScreen == PAGE_SCREENSAVER )
+    {
+        setTextInt (NX_FIELD_DEBUG1, codePoint);
+
+    }
+   }
+ */
 
 static void nxDisplay ()
 {
@@ -966,6 +987,7 @@ static void nxDisplay ()
                         timeDisplay();
                         updateWaterTemp();
                         displayWats ();
+                        //  displayMemory ();
                         forceRefresh = false;
                 }
                 if (nxScreen == PAGE_HOME )
@@ -998,6 +1020,7 @@ static void nxDisplay ()
                 }
         }
         if (lastTouch == 0) lastTouch = currentMillis;
+
 }
 
 /* NEXTION COMMUNICATION */
@@ -1072,7 +1095,8 @@ static void setText (byte field, int nx_string_id)
 static void setText (byte field, String text)
 {
         startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT,  true, true);
-        NEXTION_PRINT(text);
+        //NEXTION_PRINT(text);
+        writeString (text);
         endCommand (true);
 }
 
@@ -1157,4 +1181,12 @@ static void printPGM (const char * str)
         while ((c = pgm_read_byte(str++)))
                 NEXTION_WRITE (c);
 }
+
+void writeString(String stringData) { // Used to serially push out a String with Serial.write()
+        for (byte i = 0; i < stringData.length(); i++)
+        {
+                NEXTION_WRITE (stringData[i]); // Push each char 1 by 1 on each loop pass
+        }
+}
+
 #endif
