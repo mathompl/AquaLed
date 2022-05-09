@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "defaults.h"
 
 /*
    Aqualed EEPROM functions (c) T. Formanowski 2016-2017
@@ -30,16 +31,25 @@ static boolean isFirstRun ()
         else return false;
 }
 
+static void forceFirstRun ()
+{
+      EEPROM.write( 100, 0 );
+      writeEEPROMDefaults ();
+}
+
 static void writeEEPROMDefaults ()
 {
         if (isFirstRun())
         {
                 //defaults
-                memset (&settings, 0, sizeof settings);
-
+                for ( unsigned int i = 0 ; i < EEPROM.length() ; i++)
+                {
+                        EEPROM.write(i, 0);
+                }
+                settings = defaultSettings;
                 for (byte i = 0; i < PWMS; i++ )
                 {
-                        memset (&pwmSettings[i], 0, sizeof pwmSettings[i]);
+                        pwmSettings[i] = defaultPWMSettings[i];
                         writeEEPROMPWMConfig (i);
                 }
 
@@ -99,4 +109,17 @@ static int getEEPROMAddr( byte n ) {
         if (n == 6) return 450;
         if (n == 7) return 470;
         return 0;
+}
+
+void dumpConfig()
+{
+        int value;
+        for ( unsigned int i = 0 ; i < 500 ; i++)
+        {
+                value = EEPROM.read(i);
+                Serial.print(i);
+                Serial.print("\t");
+                Serial.print(value);
+                Serial.println();
+        }
 }

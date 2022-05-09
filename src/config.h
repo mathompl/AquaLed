@@ -1,3 +1,5 @@
+#ifndef CONFIG_H
+#define CONFIG_H
 /*
    AQUALED user configuration file (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
@@ -5,6 +7,7 @@
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
+
 
 // modules, uncomment to disable, comment to enable
 #define NO_BLUETOOTH
@@ -14,6 +17,7 @@
 #define NO_DIMMING_TABLE
 //#define USE_ADAFRUIT_LIBRARY
 //#define NO_TEMPERATURE
+//#define ENABLE_WATCHDOG
 
 // PWM channels count
 #define PWMS 8
@@ -67,3 +71,5 @@
 // max lamp wattage, used for lamp shutdown (psu protection)
 #define MAX_WATTS 250
 #define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown
+
+#endif

@@ -34,8 +34,9 @@
  */
 
 void setup() {
-        //delay(1000);
-  //      wdt_disable();
+  #ifdef ENABLE_WATCHDOG
+        wdt_disable();
+  #endif
 
 // first run - erase eeprom
         writeEEPROMDefaults ();
@@ -63,14 +64,15 @@ void setup() {
 #endif
         setupPWMPins ();
 
-
-    //    wdt_enable(WDTO_2S);
         Wire.setWireTimeout(3000, true);
+
+#ifdef ENABLE_WATCHDOG
+        wdt_enable(WDTO_2S);
+#endif
 }
 
 
 void loop() {
-
         // time
         readTimes ();
         // pwm
@@ -79,7 +81,7 @@ void loop() {
 #ifndef NO_NEXTION
         // nextion touch istener
         nxTouch();
-      // nextion display
+        // nextion display
         nxDisplay ();
 #endif
         // temperature and fans control
@@ -91,7 +93,11 @@ void loop() {
         bluetoothServe ();
 #endif
 
-       // clear Wire timeout
-       Wire.clearWireTimeoutFlag();
+        // clear Wire timeout
+        Wire.clearWireTimeoutFlag();
+
+#ifdef ENABLE_WATCHDOG
+        wdt_reset();
+#endif
 
 }

@@ -1,3 +1,5 @@
+#ifndef NEXTION_H
+#define NEXTION_H
 /*
    AQUALED Nextion configuration file (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
@@ -5,7 +7,7 @@
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
-
+#include "aqualed.h"
 
 #ifdef NEXTION_SOFTWARE_SERIAL
 #include "SoftwareSerial.h"
@@ -449,3 +451,5 @@ const char *const nx_errors[] PROGMEM{str_er1, str_er2};
 const char *const nx_pages[] PROGMEM{
     p_home,        p_config, p_settime,  p_settings, p_pwm,   p_test,
     p_screensaver, p_thermo, p_schedule, p_pwmlist,  p_error, p_saving};
+
+#endif
