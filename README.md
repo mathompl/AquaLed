@@ -3,7 +3,7 @@
 Arduino PWM LED lamp driver software with LCD support and temperature control for marine, reef or sweetwater aquariums.
 
 Features:
-- 6 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
+- 8 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
 - programmable light hours with sunsets and sunrises
 - night light support
 - 3 digital thermometers with asynchronous temperature read, for: water, lamp and addictional lamp or sump, controlling 3 separate  relays (cooling fans)
@@ -85,7 +85,7 @@ There are many other options for eg. timers resolution, most of them are pretty 
 Sterownik lampy LED PWM na Arduino z obsługą termometrów, chłodzenia i wyświetlacza LCD Nextion dla akwariów słodko i słonowodnych.
 
 Możliwości:
-- obsługa 6 ściemnialnych kanałów PWM dla modułów LED (driverów), z modułem I2C do 512 kanałów (maksymalnie 8 na wyswietlaczu)
+- obsługa 8 ściemnialnych kanałów PWM dla modułów LED (driverów), z modułem I2C do 512 kanałów (maksymalnie 8 na wyswietlaczu)
 - programowanie godzin świetenia z symulacją wschodów i zachodów słońca
 - światło nocne
 - obsługa 3 cyfrowych termometrów sterujących pracą 3 przekaźników (np. wentylatorów), np. dla lampy, lampy w sumpie, wody w akwarium
