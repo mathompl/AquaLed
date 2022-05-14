@@ -1,17 +1,13 @@
 /*
-   AQUALED Nextion support functions (c) T. Formanowski 2016-2017
+   AQUALED Nextion support functions (c) T. Formanowski 2016-2022
    https://github.com/mathompl/AquaLed
  */
-
-
 
 #include <Arduino.h>
 #include "aqualed.h"
 #include "Nextion.h"
 
-#ifndef NO_NEXTION
 // init nextion lcd
-
 Nextion::Nextion (_Time *_time, PWM *_pwm, Sensors* _sensors, DataStorage *_dataStorage)
 {
         __time = _time;
@@ -53,9 +49,7 @@ void Nextion::refreshPWMNames ()
         for (byte i = 0; i < PWMS; i++)
         {
                 setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                //delay(1);
                 setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                //delay(1);
         }
 }
 
@@ -76,7 +70,7 @@ void Nextion::keepAlive()
 }
 
 
-// main touch listener
+// main nextion response listener: touch and keepalive (sendme)
 void Nextion::listen()
 {
         while (NEXTION_AVAIL ()> 0)
@@ -132,13 +126,10 @@ void Nextion::processResponse ()
                 __last_response = currentMillis;
                 break;
 
-
         default:
                 return;
         }
 }
-
-
 
 void Nextion::handlePage (byte pid, byte cid)
 {
@@ -265,10 +256,6 @@ void Nextion::handleSchedulePage (byte cid)
 boolean Nextion::handleTestSlider (int field, byte i)
 {
         if (!getNumber(field, &t)) return false;
-        //pwm.getRuntime(i).valueCurrent = mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX);
-        //pwm.getRuntime(i).testMode = true;
-
-
         pwm.setCurrentValue (i, __pwm->mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX));
         pwm.setTestMode (i, true);
         return true;
@@ -358,7 +345,10 @@ void Nextion::handlePWMPage (byte cid)
 
                 if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) pwm.initPWM ( i-1 );
 
-                //pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
+                #ifndef PWM_NO_MAP_NIGHT_VALUE
+                  pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
+                #endif
+
                 pwmSettings[i - 1].valueProg = __pwm->mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
                 pwmSettings[i - 1].valueDay = __pwm->mapRound (pwmSettings[i - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
                 lastTouch = currentMillis;
@@ -841,7 +831,7 @@ void Nextion::toggleButtons()
         toggleButton (settings.forceNight, NX_FIELD_BN, NX_PIC_BN_ON, NX_PIC_BN_OFF);
 }
 
-#ifndef NO_TEMPERATURE
+
 void Nextion::updateTempField (byte field, byte sensor, byte max, byte min)
 {
         if (__sensors->getConfig(sensor).nxTemperature != __sensors->getConfig(sensor).temperature  || forceRefresh)
@@ -851,7 +841,6 @@ void Nextion::updateTempField (byte field, byte sensor, byte max, byte min)
                         setText(field, NX_STR_DASH);
                         setInt (field, NX_CMD_PCO, COLOR_DARKGRAY);
                 }else
-
                 if (__sensors->getConfig(sensor).temperature != TEMP_ERROR)
                 {
                         setTextFloat(field, __sensors->getConfig(sensor).temperature,1,NX_STR_DEGREE);
@@ -885,7 +874,7 @@ void Nextion::updateFanField (byte field, byte sensor)
         __sensors->setNXFanStatus(sensor, __sensors->getConfig(sensor).fanStatus);
 
 }
-#endif
+
 
 void Nextion::updateWaterTemp()
 {
@@ -1044,22 +1033,6 @@ void Nextion::refreshHomePage ()
 
 }
 
-/* void Nextion::displayMemory ()
-   {
-        double freemem = ( (double) getFreeMemory() / (double) 2048) *100;
-        setTextFloat (NX_FIELD_DEBUG2, freemem,  1, NX_STR_PERCENT);
-   }*/
-/*
-    void Nextion::nxSetDebug ()
-   {
-    if (nxScreen == PAGE_SCREENSAVER )
-    {
-        setTextInt (NX_FIELD_DEBUG1, codePoint);
-
-    }
-   }
- */
-
 void Nextion::display ()
 {
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
@@ -1108,7 +1081,6 @@ void Nextion::display ()
 }
 
 /* NEXTION COMMUNICATION */
-
 void Nextion::sendNextionEOL ()
 {
         NEXTION_WRITEB(nextionEol, 3);
@@ -1140,8 +1112,6 @@ void Nextion::setInt (byte field, long cmd, long val)
         NEXTION_PRINT(val);
         endCommand (false);
 }
-
-
 
 void Nextion::setTextFloat (byte field, double txt, byte prec, byte str)
 {
@@ -1215,12 +1185,6 @@ bool Nextion::getNumber (byte page, byte field, byte *result)
 
 bool Nextion::getNumber (byte page, byte field, int *result)
 {
-
-/*        NEXTION_FLUSH ();
-        while(NEXTION_AVAIL() > 0)
-        {
-                Serial.read();
-        }*/
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_GET])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
         if (page!=255)
@@ -1253,7 +1217,6 @@ bool Nextion::getNumber (byte page, byte field, int *result)
 // fills nextion rectangle
 void Nextion::fillRect (int x, int y, int w, int h, int color)
 {
-
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_FILL])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
         NEXTION_PRINT (x);
@@ -1282,5 +1245,3 @@ void Nextion::writeString(String stringData) {  // Used to serially push out a S
                 NEXTION_WRITE (stringData[i]); // Push each char 1 by 1 on each loop pass
         }
 }
-
-#endif

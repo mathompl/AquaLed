@@ -39,6 +39,8 @@
 #define PWM_I2C_MAX 4096.0 // uper value
 #define PWM_I2C_FREQ 1000   // i2c frequency (hz)
 
+#define PWM_NO_MAP_NIGHT_VALUE 1 // map value not mapped to max PWM value, use for more precise nightligh (0-PWM_I2C_MAX), comment if % value needed
+
 // termometry
 #define ONEWIRE_PIN 4 // ds18b20 thermometers pin
 
@@ -72,5 +74,7 @@
 // max lamp wattage, used for lamp shutdown (psu protection)
 #define MAX_WATTS 250
 #define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown
+
+
 
 #endif

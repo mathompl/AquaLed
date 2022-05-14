@@ -4,15 +4,15 @@
          AQUALED system configuration file (c) T. Formanowski 2016-2017
          https://github.com/mathompl/AquaLed
  */
-#include <SPI.h>
-#include <avr/wdt.h>
-#include "config.h"
-#include "pwm.h"
-#include "nextion.h"
-#include "time.h"
-#include "sensors.h"
-#include "eeprom.h"
-#include "datastorage.h"
+ #include <SPI.h>
+ #include <avr/wdt.h>
+ #include "config.h"
+ #include "pwm.h"
+ #include "nextion.h"
+ #include "time.h"
+ #include "sensors.h"
+ #include "eeprom.h"
+ #include "datastorage.h"
 /*
          SYSTEM VARIABLES and GLOBALS, do not modify
          User configuration in file config.h
@@ -97,6 +97,8 @@ const byte dimmingTable[] = {
         0xF8, 0xFA, 0xFD, 0xFF,
 };
 #endif
+
+#include "datastorage.h"
 
 static Sensors sensors;
 static DataStorage dataStorage;

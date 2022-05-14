@@ -1,5 +1,8 @@
 #include "datastorage.h"
 #include "defaults.h"
+
+#define EEPROM_CONFIG_EXISTS_ADDR 1
+#define EEPROM_SETTINGS_ADDR 2
 /*
    Aqualed EEPROM functions (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
@@ -39,20 +42,19 @@ template <class T> int EEPROM_readAnything(int ee, T& value)
 boolean DataStorage::isFirstRun ()
 {
         //  return true;
-        if (EEPROM.read( 100 ) != 255) return true;
+        if (EEPROM.read( EEPROM_CONFIG_EXISTS_ADDR ) != 255) return true;
         else return false;
 }
 
 void DataStorage::forceFirstRun ()
 {
-        EEPROM.write( 100, 0 );
-        writeEEPROMDefaults ();
+        EEPROM.write( EEPROM_CONFIG_EXISTS_ADDR, 0 );
 }
 
 void DataStorage::writeEEPROMDefaults ()
 {
         //defaults
-        for ( unsigned int i = 0 ; i < EEPROM.length() ; i++)
+        for ( unsigned int i = EEPROM_CONFIG_EXISTS_ADDR+1 ; i < EEPROM.length() ; i++)
         {
                 EEPROM.write(i, 0);
         }
@@ -65,63 +67,54 @@ void DataStorage::writeEEPROMDefaults ()
         }
         memcpy_P( &settings, &defaultSettings, sizeof( settings));
         writeEEPROMSettings ();
-        EEPROM.write( 100, 255 );
+        EEPROM.write( EEPROM_CONFIG_EXISTS_ADDR, 255 );
 
 }
 
 void DataStorage::writeEEPROMForceNight ()
 {
-        EEPROM.write( 101, settings.forceNight);
+        EEPROM.write( EEPROM_SETTINGS_ADDR, settings.forceNight);
 }
 
 void DataStorage::writeEEPROMForceOff ()
 {
-        EEPROM.write( 103, settings.forceOFF);
+        EEPROM.write( EEPROM_SETTINGS_ADDR+2, settings.forceOFF);
 }
 
 void DataStorage::writeEEPROMForceAmbient ()
 {
-        EEPROM.write( 102, settings.forceAmbient);
+        EEPROM.write( EEPROM_SETTINGS_ADDR+1, settings.forceAmbient);
 }
 
 void DataStorage::writeEEPROMSettings ()
 {
-        EEPROM_writeAnything(101, settings);
+        EEPROM_writeAnything(EEPROM_SETTINGS_ADDR, settings);
 }
 
 void DataStorage::readEEPROMSettings ()
 {
-        EEPROM_readAnything (101, settings);
+        EEPROM_readAnything (EEPROM_SETTINGS_ADDR, settings);
 }
 
 void DataStorage::eEpromRead( )
 {
         for (byte i = 0; i < PWMS; i++)
         {
-                EEPROM_readAnything (getEEPROMAddr( i )+2, pwmSettings[i]);
+                EEPROM_readAnything (getEEPROMAddr( i ), pwmSettings[i]);
         }
         readEEPROMSettings ();
 }
 
 void DataStorage::writeEEPROMPWMConfig (byte pwmNumber)
 {
-        EEPROM_writeAnything (getEEPROMAddr( pwmNumber )+2, pwmSettings[pwmNumber]);
+        EEPROM_writeAnything (getEEPROMAddr( pwmNumber ), pwmSettings[pwmNumber]);
 
 }
 
-// kompatybilnosc z AQMA
+
 int DataStorage::getEEPROMAddr( byte n )
 {
-        if (n == 0) return 280;
-        if (n == 1) return 300;
-        if (n == 2) return 330;
-        if (n == 3) return 370;
-        if (n == 4) return 390;
-        if (n == 5) return 410;
-        // nie aqma
-        if (n == 6) return 450;
-        if (n == 7) return 470;
-        return 0;
+        return EEPROM_SETTINGS_ADDR + sizeof (SETTINGS) + (n * sizeof (PWM_SETTINGS) + 1);
 }
 
 void DataStorage::dumpConfig()

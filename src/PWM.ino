@@ -3,7 +3,6 @@
    https://github.com/mathompl/AquaLed
  */
 
-#include <Arduino.h>
 #include <pwm.h>
 
 PWM::PWM (_Time *_time)
@@ -11,28 +10,25 @@ PWM::PWM (_Time *_time)
         __time = _time;
 }
 
-
 void PWM::begin ()
 {
-
-#ifndef USE_ADAFRUIT_LIBRARY
-        //pwmController.init(B000000); // Address pins A5-A0 set to B000000
-        pwmController.init(); // Address pins A5-A0 set to B000000
-        pwmController.setPWMFrequency(PWM_I2C_FREQ); // Default is 200Hz, supports 24Hz to 1526Hz
-#else
-        pwm_i2c.begin();
-        pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
-#endif
-        //  getCurrentTime ();
-        // setup pins
-        for (byte i = 0; i < PWMS; i++)
-        {
-                initPWM ( i );
-                memset (&__pwmRuntime[i], 0, sizeof __pwmRuntime[i]);
-                updateChannelTimes (i);
-                recoverSunsetAndSunrise (i);
-        }
-        Wire.setWireTimeout(3000, true);
+    #ifndef USE_ADAFRUIT_LIBRARY
+            //pwmController.init(B000000); // Address pins A5-A0 set to B000000
+            pwmController.init(); // Address pins A5-A0 set to B000000
+            pwmController.setPWMFrequency(PWM_I2C_FREQ); // Default is 200Hz, supports 24Hz to 1526Hz
+    #else
+            pwm_i2c.begin();
+            pwm_i2c.setPWMFreq(PWM_I2C_FREQ);
+    #endif
+            // setup pins
+            for (byte i = 0; i < PWMS; i++)
+            {
+                    initPWM ( i );
+                    memset (&__pwmRuntime[i], 0, sizeof __pwmRuntime[i]);
+                    updateChannelTimes (i);
+                    recoverSunsetAndSunrise (i);
+            }
+            Wire.setWireTimeout(3000, true);
 }
 
 void PWM::initPWM (byte i)
@@ -348,7 +344,6 @@ void PWM::loop ()
         if (currentMillis - previousPwmResolution > PWM_RESOLUTION)
         {
                 previousPwmResolution = currentMillis;
-                //getCurrentTime ();
                 watts = 0;
                 for (byte i = 0; i < PWMS; i++)
                 {

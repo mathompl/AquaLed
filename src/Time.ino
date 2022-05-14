@@ -1,5 +1,5 @@
 /*
-   AQUALED date/time functions (c) T. Formanowski 2016-2017
+   AQUALED date/time functions (c) T. Formanowski 2016-2022
    https://github.com/mathompl/AquaLed
  */
 #include <time.h>
@@ -9,13 +9,23 @@ _Time::_Time (DataStorage *_dataStorage)
         __dataStorage = _dataStorage;
 }
 
+
+void _Time::begin ()
+{
+        Wire.begin();
+        Wire.setClock(400000);
+        rtcAvailable =rtc.begin();
+        startTimestamp = rtc.now().unixtime ();
+        read ();
+        getMoonPhase ();
+        startSimpleTime = millis ();
+}
+
+// reads RTC
 void _Time::readCurrentTime ()
 {
-
-
         if (rtcAvailable)
         {
-
                   if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
                   {
                         previousRTCCall = currentMillis;
@@ -32,11 +42,11 @@ void _Time::readCurrentTime ()
         }
         else
         {
+                // for testing purposes, when RTC not available, needs proper implementation if needed
                 if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
                 {
-
                         simpleTime= (millis () - startSimpleTime)/1000;
-                        if (simpleTime > (long)24*(long)60*(long)60) simpleTime = 0;
+                        if (simpleTime > 86400) simpleTime = 0;
                         previousRTCCall = currentMillis;
                         currMinute = (simpleTime % 3600) / 60;
                         currSecond = simpleTime % 60;
@@ -50,19 +60,6 @@ void _Time::readCurrentTime ()
         }
 }
 
-void _Time::begin ()
-{
-        Wire.begin();
-        Wire.setClock(400000);
-        rtcAvailable =rtc.begin();
-        startTimestamp = rtc.now().unixtime ();
-        read ();
-        getMoonPhase ();
-        startSimpleTime = millis ();
-
-
-}
-
 void _Time::read ()
 {
         currentMillis = millis();
@@ -72,7 +69,6 @@ void _Time::read ()
 
 void _Time::adjustTime (int h, byte dst)
 {
-        //  setTime( hour()+h, minute(), second (), day(), month(), year() );
         rtc.adjust(rtc.now() + (long)((long)h * 3600L));
         settings.dst = dst;
         __dataStorage->writeEEPROMSettings ();
@@ -91,8 +87,8 @@ void _Time::adjustDST ()
         }
 }
 
+//Returns 0,1,2 depending on how close is the day to moon phase (1:Phase)
 byte _Time::toMoonPhase(int year, int month, int day){
-        //Returns 0,1,2 depending on how close is the day to moon phase (1:Phase)
         int r = year % 100;
         r %= 19;
         if (r>9) { r -= 19;}

@@ -1,5 +1,6 @@
 #ifndef PWM_H
 #define PWM_H
+
 #include "config.h"
 #include "time.h"
 #include <Arduino.h>
@@ -57,14 +58,12 @@ public:
 private:
     PWM_RUNTIME __pwmRuntime[PWMS] = {0};
     _Time *__time;
-
     void pwmStep(byte i);
     void initDimming(byte i, double dimmingScale, long dimmingTime);
     void goalReached(byte i);
     double getNightValue(byte i);
     bool getState(byte i);
     void loop_channel(byte i);
-
 };
 
 #endif

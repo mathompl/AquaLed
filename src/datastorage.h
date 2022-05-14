@@ -1,6 +1,5 @@
 #ifndef DATASTORAGE_H
 #define DATASTORAGE_H
-
 #include <Arduino.h>
 #include <EEPROM.h>
 #include "aqualed.h"

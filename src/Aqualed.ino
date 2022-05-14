@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include "Aqualed.h"
+#include "aqualed.h"
+
 
 /*
     AQUALED Arduino PWM LED lamp driver software with LCD support and temperature control for marine, reef or sweetwater aquariums.
@@ -20,20 +21,20 @@
     - test mode
     - all settings stored in EEPROM
 
-     (c) 2016 - 2017 Tomek Formanowski mathom@pifpaf.pl
+     (c) 2016 - 2022 Tomek Formanowski mathom@pifpaf.pl
      Open Source public domain
 
      Use at your own risk.
 
      for config see:
-     @aqualed.h
+
+     @defaults.h
+     @config.h
      @nextion.h
 
      published on github:
      https://github.com/mathompl/AquaLed
  */
-#include "arduino.h"
-
 
 
 void setup() {
@@ -45,24 +46,21 @@ void setup() {
        dataStorage.begin();
 
 // configure RTC
-      time.begin ();
+        time.begin ();
 
-#ifndef NO_BLUETOOTH
-        setupBluetooth ();
-#endif
-
-#ifndef NO_NEXTION
+// configure and connect NEXTION lcd
         nextion.begin();
-#endif
+
+// configure PWM output
         pwm.begin ();
 
-#ifndef NO_TEMPERATURE
+// configure temperature sensors and fans pins
         sensors.begin ();
-#endif
 
 #ifdef ENABLE_WATCHDOG
         wdt_enable(WDTO_2S);
 #endif
+
 }
 
 
@@ -73,27 +71,16 @@ void loop() {
         // pwm
         pwm.loop ();
 
-        // nextion routines
-#ifndef NO_NEXTION
         // in case of nextion disconnect / baud rate change
         nextion.keepAlive();
         // nextion touch istener
         nextion.listen();
         // nextion display
         nextion.display();
-#endif
 
         // temperature and fans control
-#ifndef NO_TEMPERATURE
-    //    sensors.requestReadings();
         sensors.readTemperatures();
         sensors.fansControl ();
-#endif
-        // bluetooth routines
-#ifndef NO_BLUETOOTH
-        bluetoothServe ();
-#endif
-
 
 #ifdef ENABLE_WATCHDOG
         wdt_reset();

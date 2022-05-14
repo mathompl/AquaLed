@@ -2,15 +2,9 @@
    AQUALED Temperature && fans relay  functions (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
  */
-
-#ifndef NO_TEMPERATURE
-
 #include <sensors.h>
 
-Sensors::Sensors ()
-{
-
-}
+Sensors::Sensors () {}
 
 void Sensors::begin()
 {
@@ -19,7 +13,6 @@ void Sensors::begin()
         __sensorsWire->begin();
         setupSensors ();
         requestReadings ();
-
 }
 
 void Sensors::setupSensors ()
@@ -42,7 +35,6 @@ void Sensors::printAddr (byte addr[])
         {
                 Serial.print (addr[b], HEX);
                 Serial.print (" ");
-
         }
 }
 
@@ -53,17 +45,18 @@ boolean Sensors::readTemperatures ()
 
         if (__sensorsWire->available())
         {
-
                 for (byte i = 0; i < 3; i++)
                 {
                         if (settings.sensors[i][0]==0) continue;
                         _config[i].temperature = __sensorsWire->readTemperature(settings.sensors[i]);
                 }
         }
+        // for some reason, this has to be called right after reading temperatures, if run in a separate intervals, DS18B20->avaolable () always returns false
         requestReadings ();
         return true;
 }
 
+// asynchronous RTC pool
 void Sensors::requestReadings ()
 {
         for (byte i = 0; i < 3; i++)
@@ -124,13 +117,12 @@ void Sensors::isDiscovered (byte &res, byte addr[])
 byte Sensors::discoverOneWireDevices() {
         byte res = 0;
         byte addr[8];
-        // pierwszy pusty
+
         __oneWire->reset ();
         __oneWire->reset_search();
         memset (_list, 0, sizeof (_list));
-        // pierwszy pusty
+        // first {0,0,0,0,0,0,0,0}
         res++;
-
         while (__oneWire->search(addr)) {
                 if ( __oneWire->crc8( addr, 7) != addr[7] ) continue;
                 memcpy( _list[res].address, addr, 8);
@@ -141,7 +133,6 @@ byte Sensors::discoverOneWireDevices() {
                 isDiscovered (res, settings.sensors[i]);
 
         __oneWire->reset_search();
-
         return res;
 }
 
@@ -168,5 +159,3 @@ void Sensors::setNXFanStatus (byte fan, boolean newStatus)
 {
   _config[fan].nxFanStatus = newStatus;
 }
-
-#endif
