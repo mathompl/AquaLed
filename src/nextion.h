@@ -7,7 +7,10 @@
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
-#include "aqualed.h"
+#include "pwm.h"
+#include "time.h"
+#include "sensors.h"
+#include "datastorage.h"
 
 #ifdef NEXTION_SOFTWARE_SERIAL
 #include "SoftwareSerial.h"
@@ -51,6 +54,9 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
 //#define NEXTION_BAUD_RATE 9600
 #define NEXTION_BAUD_RATE 115200
 
+#define NEXTION_KEEP_ALIVE_PING 10000
+#define NEXTION_KEEP_ALIVE 60000
+
 // uncomment for use nextion editor simulator
 // needs additional settings for non-standard baud rates
 //#define NEXTION_SIMULATOR 1
@@ -58,22 +64,11 @@ SoftwareSerial nx(NEXTION_SOFTWARE_PIN_TX, NEXTION_SOFTWARE_PIN_RX);
 // nextion protocol
 #define NEX_RET_CMD_FINISHED (0x01)
 #define NEX_RET_EVENT_TOUCH_HEAD (0x65)
+#define NEX_RET_EVENT_PAGE_HEAD (0x66)
 #define NEX_EVENT_POP (0x00)
 #define NEX_EVENT_PUSH (0x01)
 #define NEX_RET_STRING_HEAD (0x70)
 #define NEX_RET_NUMBER_HEAD (0x71)
-
-int t = 0;
-bool forceRefresh = false;
-byte nxScreen = 0;
-byte time_separator = 0;
-float lastWatts = 0;
-const byte nextionEol[] = {0xFF, 0xFF, 0xFF};
-byte lastH = 0, lastM = 0;
-byte __touch_buffer_ix = 0;
-boolean __touch_event = false;
-byte __touch_buffer[7];
-byte activePwmStatus;
 
 // pages
 #define PAGE_HOME 0
@@ -186,6 +181,7 @@ byte activePwmStatus;
 #define NX_STR_PERCENT 14
 #define NX_STR_WATTS 15
 #define NX_STR_SPACE 16
+#define NX_STR_ERR 17
 
 #define NX_FIELD_T0 0
 #define NX_FIELD_T1 1
@@ -265,6 +261,7 @@ byte activePwmStatus;
 #define NX_FIELD_WA 75
 #define NX_FIELD_DEBUG1 76
 #define NX_FIELD_DEBUG2 77
+#define NX_FIELD_SENDME 78
 #define NX_FIELD_EMPTY 255
 
 #define NX_PIC_BO_OFF 3
@@ -353,6 +350,7 @@ const char f_l8[] PROGMEM = "l8";
 const char f_wa[] PROGMEM = "wa";
 const char f_debug1[] PROGMEM = "debug1";
 const char f_debug2[] PROGMEM = "debug2";
+const char f_sendme[] PROGMEM = "sendme";
 
 #define PAGE_HOME 0
 #define PAGE_CONFIG 1
@@ -413,6 +411,7 @@ const char str_celc[] PROGMEM = "'C";
 const char str_percent[] PROGMEM = "%";
 const char str_watts[] PROGMEM = "W";
 const char str_space[] PROGMEM = " ";
+const char str_err[] PROGMEM = "err";
 
 // nextion error descriptions
 const char str_er1[] PROGMEM = "OVERHEAT";
@@ -427,29 +426,124 @@ char const pwm_6_name[] PROGMEM = PWM_6_NAME;
 char const pwm_7_name[] PROGMEM = PWM_7_NAME;
 char const pwm_8_name[] PROGMEM = PWM_8_NAME;
 
-const char *const nx_pwm_names[] PROGMEM{pwm_1_name, pwm_2_name, pwm_3_name,
-                                         pwm_4_name, pwm_5_name, pwm_6_name,
-                                         pwm_7_name, pwm_8_name};
-const char *const nx_strings[] PROGMEM{
-    str_degree, str_on,    str_off,     str_night,   str_sunrise, str_sunset,
-    str_dash,   str_slash, str_empty,   str_recover, str_fan,     str_up,
-    str_down,   str_celc,  str_percent, str_watts,   str_space};
-const char *const nx_commands[] PROGMEM{
-    cmd_comma, cmd_parenth, cmd_space, cmd_eq,   cmd_txt,  cmd_pic, cmd_pco,
-    cmd_get,   cmd_val,     cmd_vis,   cmd_page, cmd_fill, cmd_dot};
-const char *const nx_fields[] PROGMEM{
-    f_t0,   f_t1,    f_t2,    f_t3,   f_t4,   f_t5,   f_t6,   f_t7,   f_t8,
-    f_t9,   f_t10,   f_p0,    f_p1,   f_p2,   f_va0,  f_va1,  f_va2,  f_va3,
-    f_c0,   f_c1,    f_c2,    f_c3,   f_c4,   f_c5,   f_c6,   f_c7,   f_c8,
-    f_c9,   f_c10,   f_n0,    f_n1,   f_n2,   f_n3,   f_n4,   f_n5,   f_n6,
-    f_n7,   f_n8,    f_n9,    f_n10,  f_wt,   f_lt,   f_st,   f_ti,   f_h,
-    f_bo,   f_ba,    f_bn,    f_ld1,  f_ld2,  f_ld3,  f_ld4,  f_ld5,  f_ld6,
-    f_ld7,  f_ld8,   f_bld1,  f_bld2, f_bld3, f_bld4, f_bld5, f_bld6, f_bld7,
-    f_bld8, f_bauds, f_bkcmd, f_l1,   f_l2,   f_l3,   f_l4,   f_l5,   f_l6,
-    f_l7,   f_l8,    f_n11,   f_wa, f_debug1, f_debug2};
-const char *const nx_errors[] PROGMEM{str_er1, str_er2};
-const char *const nx_pages[] PROGMEM{
-    p_home,        p_config, p_settime,  p_settings, p_pwm,   p_test,
-    p_screensaver, p_thermo, p_schedule, p_pwmlist,  p_error, p_saving};
+const char *const nx_pwm_names[] PROGMEM {pwm_1_name, pwm_2_name, pwm_3_name,
+                                          pwm_4_name, pwm_5_name, pwm_6_name,
+                                          pwm_7_name, pwm_8_name};
+const char *const nx_strings[] PROGMEM {
+        str_degree, str_on,    str_off,     str_night,   str_sunrise, str_sunset,
+        str_dash,   str_slash, str_empty,   str_recover, str_fan,     str_up,
+        str_down,   str_celc,  str_percent, str_watts,   str_space, str_err
+};
+const char *const nx_commands[] PROGMEM {
+        cmd_comma, cmd_parenth, cmd_space, cmd_eq,   cmd_txt,  cmd_pic, cmd_pco,
+        cmd_get,   cmd_val,     cmd_vis,   cmd_page, cmd_fill, cmd_dot
+};
+const char *const nx_fields[] PROGMEM {
+        f_t0,   f_t1,    f_t2,    f_t3,   f_t4,   f_t5,   f_t6,   f_t7,   f_t8,
+        f_t9,   f_t10,   f_p0,    f_p1,   f_p2,   f_va0,  f_va1,  f_va2,  f_va3,
+        f_c0,   f_c1,    f_c2,    f_c3,   f_c4,   f_c5,   f_c6,   f_c7,   f_c8,
+        f_c9,   f_c10,   f_n0,    f_n1,   f_n2,   f_n3,   f_n4,   f_n5,   f_n6,
+        f_n7,   f_n8,    f_n9,    f_n10,  f_wt,   f_lt,   f_st,   f_ti,   f_h,
+        f_bo,   f_ba,    f_bn,    f_ld1,  f_ld2,  f_ld3,  f_ld4,  f_ld5,  f_ld6,
+        f_ld7,  f_ld8,   f_bld1,  f_bld2, f_bld3, f_bld4, f_bld5, f_bld6, f_bld7,
+        f_bld8, f_bauds, f_bkcmd, f_l1,   f_l2,   f_l3,   f_l4,   f_l5,   f_l6,
+        f_l7,   f_l8,    f_n11,   f_wa, f_debug1, f_debug2, f_sendme
+};
+const char *const nx_errors[] PROGMEM {str_er1, str_er2};
+const char *const nx_pages[] PROGMEM {
+        p_home,        p_config, p_settime,  p_settings, p_pwm,   p_test,
+        p_screensaver, p_thermo, p_schedule, p_pwmlist,  p_error, p_saving
+};
+
+const byte nextionPage[] = {0xFF, 0xFF, 0xFF};
+const byte nextionTouch[] = {0x01};
+const byte nextionEol[] = {0xFF, 0xFF, 0xFF};
+
+class Nextion
+{
+  typedef struct {
+          byte command;
+          byte value[5];
+  } COMMAND;
+
+public:
+        Nextion (_Time *_time, PWM *_pwm, Sensors *_sensors, DataStorage *_dataStorage);
+        void begin ();
+        void listen ();
+        void display ();
+        void keepAlive ();
+
+private:
+        _Time *__time;
+        PWM *__pwm;
+        Sensors *__sensors;
+        DataStorage *__dataStorage;
+        int t = 0;
+        byte nxScreen = 0;
+        byte time_separator = 0;
+        float lastWatts = 0;
+        byte lastH = 0, lastM = 0;
+        byte __nx_buffer_ix = 0;
+        long __last_response = 0;
+        long __last_keepAlive = 0;
+        boolean __touch_event = false;
+        boolean __page_event = false;
+        boolean __command_start = false;
+        boolean __command_complete = false;
+        byte __nx_buffer[10];
+        byte activePwmStatus;
+        COMMAND lastCommand;
+        void handlePage (byte pid, byte cid);
+        void handleScreenSaver (byte cid);
+        boolean setThermo (byte page, byte field, byte i);
+        void handleThermoPage (byte cid);
+        void handleSchedulePage (byte cid);
+        boolean handleTestSlider (int field, byte i);
+        void handleTestPage (byte cid);
+        void handlePWMPage (byte cid);
+        void handleSettingsPage (byte cid);
+        void handleSetTimePage (byte cid);
+        void drawSchedule ();
+        void handleConfigPage (byte cid);
+        void handlePWMStatus (byte cid);
+        void handlePWMListPage (byte cid);
+        void handleHomePage (byte cid);
+        void toggleButton (byte value, byte field, byte pic_on, byte pic_off);
+        void toggleButtons();
+        void updateTempField (byte field, byte sensor, byte max, byte min);
+        void updateFanField (byte field, byte sensor);
+        void updateWaterTemp();
+        void updatePWMStatusPage (byte i);
+        void updateHomePage();
+        double getPercent (byte i);
+        void getColorAndIcon (byte i, uint16_t *color, byte *icon);
+        uint16_t rgb565( byte rgb);
+        void displayWats ();
+        void timeDisplay();
+        void refreshHomePage ();
+        void sendNextionEOL ();
+        void startCommand  (byte page, byte field, byte command, boolean eq, boolean pth, boolean space);
+        void endCommand  (boolean pth);
+        void setInt (byte field, long cmd, long val);
+        void setTextFloat (byte field, double txt, byte prec, byte str);
+        void setValue (byte field, unsigned int val);
+        void setTextInt (byte field, int txt);
+        void setPage (byte number);
+        void setText (byte field, int nx_string_id);
+        void setText (byte field, String text);
+        void setText (byte page, byte field, const char * text);
+        void setText (byte field, const char * text);
+        bool getNumber (byte field, int *result);
+        bool getNumber (byte page, byte field, byte *result);
+        bool getNumber (byte page, byte field, int *result);
+        void fillRect (int x, int y, int w, int h, int color);
+        void printPGM (const char * str);
+        void writeString(String stringData);
+        void refreshPWMNames ();
+        void reconnect ();
+        void processResponse ();
+
+};
+
 
 #endif

@@ -4,30 +4,19 @@
          AQUALED system configuration file (c) T. Formanowski 2016-2017
          https://github.com/mathompl/AquaLed
  */
-#include <Wire.h>
-#include <OneWire.h>
-#include <TimeLib.h>
-#include <EEPROM.h>
+#include <SPI.h>
 #include <avr/wdt.h>
-#include <DS18B20.h>
-#include "RTClib.h"
 #include "config.h"
-
+#include "pwm.h"
+#include "nextion.h"
+#include "time.h"
+#include "sensors.h"
+#include "eeprom.h"
+#include "datastorage.h"
 /*
-         SYSTEM VARIABLES, do not modify
+         SYSTEM VARIABLES and GLOBALS, do not modify
          User configuration in file config.h
- */
-
-#define ON true
-#define OFF false
-
-RTC_DS3231 RTC;
-
-// sensors
-#define LED_TEMPERATURE_FAN 0
-#define SUMP_TEMPERATURE_FAN 1
-#define WATER_TEMPERATURE_FAN 2
-
+*/
 // structure for storing channel information
 // do not modify order (written raw to eeprom)
 typedef struct {
@@ -50,27 +39,6 @@ typedef struct {
         byte watts;
 } PWM_SETTINGS;
 
-// PWM channel runtime data
-typedef struct {
-        long startTime;
-        long stopTime;
-        long sunriseTime;
-        long sunsetTime;
-        bool dimmingStart;
-        bool recoverLastState;
-        double valueGoal;
-        double valueCurrent;
-        double pwmLast;
-        double nxPwmLast;
-        byte isSunrise;
-        byte isSunset;
-        byte isNight;
-        bool testMode;
-        long secondsLeft; // sunset/sunrise
-        double step;
-        double watts;
-} PWM_RUNTIME;
-
 // Settings
 // do not modify order (written to eeprom)
 typedef struct {
@@ -86,43 +54,9 @@ typedef struct {
 } SETTINGS;
 
 PWM_SETTINGS pwmSettings[PWMS] = {0};
-PWM_RUNTIME pwmRuntime[PWMS] = {0};
 SETTINGS settings = {0};
 
-typedef struct {
-        byte address[8];
-        boolean detected;
-} SENSORSLIST;
-
-SENSORSLIST sensorsList[7] = {0};
-
-typedef struct {
-        byte pin;
-        float temperature;
-        float nxTemperature;
-        bool fanStatus;
-        bool nxFanStatus;
-
-} SENSORS;
-
-SENSORS sensors[3] = {0};
-
-// time variables
-long currTime = 0;
-uint8_t currHour = 0;
-uint8_t currMinute = 0;
-uint8_t currSecond = 0;
-long unsigned currentMillis = 0;
-unsigned long previousRTCCall = 0;
-unsigned long previousPwmResolution = 0;
-unsigned long previousNxInfo = 0;
-unsigned long previousTemperature = 0;
-unsigned long previousMillisFans = 0;
-unsigned long previousMillisNextion = 0;
-unsigned long previousSecTimeAdjust = 0;
-unsigned long lastTouch = 0;
-uint32_t startTimestamp = 0;
-
+bool forceRefresh = false;
 // aux
 bool lampOverheating = false;
 float watts = 0;
@@ -163,6 +97,12 @@ const byte dimmingTable[] = {
         0xF8, 0xFA, 0xFD, 0xFF,
 };
 #endif
+
+static Sensors sensors;
+static DataStorage dataStorage;
+static _Time time (&dataStorage);
+static PWM pwm (&time);
+static Nextion nextion (&time, &pwm, &sensors, &dataStorage);
 
 
 #endif

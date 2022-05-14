@@ -2,66 +2,96 @@
    AQUALED date/time functions (c) T. Formanowski 2016-2017
    https://github.com/mathompl/AquaLed
  */
+#include <time.h>
 
-#include <Arduino.h>
-
-#define _SECS_PER_DAY  (3600UL * 24UL)
-#define _DAYS_PER_WEEK (7UL)
-
-#define myDayOfWeek(_time_)  ((( _time_ / _SECS_PER_DAY + 4)  % _DAYS_PER_WEEK)+1) // 1 = Sunday
-
-
-void getCurrentTime ()
+_Time::_Time (DataStorage *_dataStorage)
 {
-        if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
+        __dataStorage = _dataStorage;
+}
+
+void _Time::readCurrentTime ()
+{
+
+
+        if (rtcAvailable)
         {
-                previousRTCCall = currentMillis;
-                currHour = RTC.now().hour ();
-                currMinute = RTC.now().minute ();
-                currSecond = RTC.now().second ();
-                currTime = (long) currHour * 60 * 60 + (long) currMinute * 60 + (long) currSecond;
-                if (currTime <=1 ) getMoonPhase ();
+
+                  if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
+                  {
+                        previousRTCCall = currentMillis;
+                        currHour = rtc.now().hour ();
+                        currMinute = rtc.now().minute ();
+                        currSecond = rtc.now().second ();
+                        currYear = rtc.now().year();
+                        currMonth = rtc.now().month();
+                        currDay = rtc.now().day();
+                        unixTime = rtc.now().unixtime();
+                        currTime = (long) currHour * 60 * 60 + (long) currMinute * 60 + (long) currSecond;
+                        if (currTime <=1 ) getMoonPhase ();
+                  }
+        }
+        else
+        {
+                if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
+                {
+
+                        simpleTime= (millis () - startSimpleTime)/1000;
+                        if (simpleTime > (long)24*(long)60*(long)60) simpleTime = 0;
+                        previousRTCCall = currentMillis;
+                        currMinute = (simpleTime % 3600) / 60;
+                        currSecond = simpleTime % 60;
+                        currHour = simpleTime / 3600;
+                        currYear = 2022;
+                        currMonth = 1;
+                        currDay = 1;
+                        unixTime = 1640991600+simpleTime;
+                        currTime = (long) ((long) currHour * (long)60 * (long)60 + (long) currMinute * 60 + (long) currSecond);
+              }
         }
 }
 
-void rtcSetup ()
+void _Time::begin ()
 {
         Wire.begin();
         Wire.setClock(400000);
-        RTC.begin();
-        startTimestamp = RTC.now().unixtime ();
-        readTimes ();
+        rtcAvailable =rtc.begin();
+        startTimestamp = rtc.now().unixtime ();
+        read ();
+        getMoonPhase ();
+        startSimpleTime = millis ();
+
+
 }
 
-static void readTimes ()
+void _Time::read ()
 {
         currentMillis = millis();
-        getCurrentTime ();
+        readCurrentTime();
         adjustDST ();
 }
 
-static void adjustTime (int h, byte dst)
+void _Time::adjustTime (int h, byte dst)
 {
         //  setTime( hour()+h, minute(), second (), day(), month(), year() );
-        RTC.adjust(RTC.now() + (long)((long)h * 3600L));
+        rtc.adjust(rtc.now() + (long)((long)h * 3600L));
         settings.dst = dst;
-        writeEEPROMSettings ();
+        __dataStorage->writeEEPROMSettings ();
 }
 
 // adjust daylight saving time (european)
-static void adjustDST ()
+void _Time::adjustDST ()
 {
         if (currentMillis -  previousSecTimeAdjust > TIME_ADJUST_INTERVAL)
         {
                 previousSecTimeAdjust = currentMillis;
-                if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 3 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 2 && settings.dst==0)
+                if (myDayOfWeek(rtc.now().unixtime()) == 1 && rtc.now().month() == 3 && rtc.now().day() >= 25 && rtc.now().day() <=31 && rtc.now().hour() == 2 && settings.dst==0)
                         adjustTime (1,1);
-                else if (myDayOfWeek(RTC.now().unixtime()) == 1 && RTC.now().month() == 10 && RTC.now().day() >= 25 && RTC.now().day() <=31 && RTC.now().hour() == 3 && settings.dst==1)
+                else if (myDayOfWeek(rtc.now().unixtime()) == 1 && rtc.now().month() == 10 && rtc.now().day() >= 25 && rtc.now().day() <=31 && rtc.now().hour() == 3 && settings.dst==1)
                         adjustTime (-1,0);
         }
 }
 
-static byte toMoonPhase(int year, int month, int day){
+byte _Time::toMoonPhase(int year, int month, int day){
         //Returns 0,1,2 depending on how close is the day to moon phase (1:Phase)
         int r = year % 100;
         r %= 19;
@@ -74,7 +104,56 @@ static byte toMoonPhase(int year, int month, int day){
         return res;
 }
 
-static void getMoonPhase ()
+void _Time::getMoonPhase ()
 {
-        moonPhase = toMoonPhase (RTC.now().year(), RTC.now().month(), RTC.now().day());
+        moonPhase = toMoonPhase (rtc.now().year(), rtc.now().month(), rtc.now().day());
+}
+
+void _Time::adjust (DateTime time)
+{
+        rtc.adjust(time);
+}
+
+uint8_t _Time::getHour ()
+{
+        return currHour;
+}
+uint8_t _Time::getMinute ()
+{
+        return currMinute;
+}
+uint8_t _Time::getSecond ()
+{
+        return currSecond;
+}
+long _Time::getCurrentTime ()
+{
+        return currTime;
+}
+
+uint8_t _Time::getDay ()
+{
+        return currDay;
+}
+uint8_t _Time::getMonth ()
+{
+        return currMonth;
+}
+int _Time::getYear ()
+{
+        return currYear;
+};
+
+long _Time::getUnixTime ()
+{
+        return unixTime;
+}
+boolean _Time::isRTC()
+{
+  return rtcAvailable;
+}
+
+void _Time::setSimpleTime (long stime)
+{
+  simpleTime = stime;
 }
