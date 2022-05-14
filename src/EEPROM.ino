@@ -33,8 +33,8 @@ static boolean isFirstRun ()
 
 static void forceFirstRun ()
 {
-      EEPROM.write( 100, 0 );
-      writeEEPROMDefaults ();
+        EEPROM.write( 100, 0 );
+        writeEEPROMDefaults ();
 }
 
 static void writeEEPROMDefaults ()
@@ -46,13 +46,14 @@ static void writeEEPROMDefaults ()
                 {
                         EEPROM.write(i, 0);
                 }
-                settings = defaultSettings;
+
                 for (byte i = 0; i < PWMS; i++ )
                 {
                         pwmSettings[i] = defaultPWMSettings[i];
+                        memcpy_P( &pwmSettings[i], &defaultPWMSettings[i], sizeof( pwmSettings[i]));
                         writeEEPROMPWMConfig (i);
                 }
-
+                memcpy_P( &settings, &defaultSettings, sizeof( settings));
                 writeEEPROMSettings ();
                 EEPROM.write( 100, 255 );
         }

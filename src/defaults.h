@@ -2,11 +2,22 @@
 #define DEFAULTS_H
 
 #include "aqualed.h"
+#include <avr/pgmspace.h>
 
 // default settings to write to EEprom
-SETTINGS defaultSettings  = {0,0,0,{0}, 30, 30, 0,0,{0}};
+const SETTINGS defaultSettings PROGMEM = {0,0,0,{0,0,0}, 30, 30, 0,0,
+{
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0}
+}
+};
 
-PWM_SETTINGS defaultPWMSettings[8]  =
+const PWM_SETTINGS defaultPWMSettings[] PROGMEM =
 {
         {0,9,0,0,20,0,0,(int)(PWM_I2C_MAX*0.6),60,60,0,0,0,15,1,0,30}, //CW1
         {0,9,0,0,20,0,0,(int)(PWM_I2C_MAX*0.6),60,60,0,0,0,14,1,0,30}, //CW2

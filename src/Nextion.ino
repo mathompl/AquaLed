@@ -719,16 +719,19 @@ static void handleHomePage (byte cid)
         case HOMEPAGE_BUTTON_FAN_WATER:
                 sensors[WATER_TEMPERATURE_FAN].fanStatus = !sensors[WATER_TEMPERATURE_FAN].fanStatus;
                 relaySwitch (WATER_TEMPERATURE_FAN);
+                refreshHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_LAMP:
                 sensors[LED_TEMPERATURE_FAN].fanStatus = !sensors[LED_TEMPERATURE_FAN].fanStatus;
                 relaySwitch (LED_TEMPERATURE_FAN);
+                refreshHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_SUMP:
                 sensors[SUMP_TEMPERATURE_FAN].fanStatus = !sensors[SUMP_TEMPERATURE_FAN].fanStatus;
                 relaySwitch (SUMP_TEMPERATURE_FAN);
+                refreshHomePage ();
                 break;
 
         case HOMEPAGE_PWMSTATUS1:
