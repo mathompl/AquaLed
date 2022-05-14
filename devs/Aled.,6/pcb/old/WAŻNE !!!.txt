@@ -1,4 +1,0 @@
-Uwaga wa¿ne!!!
-Przed pod³¹czeniem wyœwietlacza " NEXTION" i umieszczeniem modu³u "ARDUINO  NANO " na p³ytce nale¿y:
-Ustawiæ napiêcie wyjœæiowe modu³u zasilania NEXTION na wartoœæ 5V
-Ustawiæ napiêcie wyjœciowe modu³u zasilania ARDUINO na wartoœæ 12V

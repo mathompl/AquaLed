@@ -32,70 +32,68 @@
      published on github:
      https://github.com/mathompl/AquaLed
  */
+#include "arduino.h"
+
+
 
 void setup() {
   #ifdef ENABLE_WATCHDOG
         wdt_disable();
   #endif
 
-// first run - erase eeprom
-        writeEEPROMDefaults ();
-
-// read settings from eeprom
-        eEpromRead();
+// read EEPROM and write defaults if first run
+       dataStorage.begin();
 
 // configure RTC
-        rtcSetup ();
-
-// first time read
-        readTimes ();
-        getMoonPhase ();
-
-#ifndef NO_TEMPERATURE
-        setupSensors ();
-#endif
+      time.begin ();
 
 #ifndef NO_BLUETOOTH
         setupBluetooth ();
 #endif
 
 #ifndef NO_NEXTION
-        nexInit();
+        nextion.begin();
 #endif
-        setupPWMPins ();
+        pwm.begin ();
 
-        Wire.setWireTimeout(3000, true);
+#ifndef NO_TEMPERATURE
+        sensors.begin ();
+#endif
 
 #ifdef ENABLE_WATCHDOG
         wdt_enable(WDTO_2S);
 #endif
-
 }
 
 
 void loop() {
         // time
-        readTimes ();
+        time.read ();
+
         // pwm
-        pwm ();
+        pwm.loop ();
+
         // nextion routines
 #ifndef NO_NEXTION
+        // in case of nextion disconnect / baud rate change
+        nextion.keepAlive();
         // nextion touch istener
-        nxTouch();
+        nextion.listen();
         // nextion display
-        nxDisplay ();
+        nextion.display();
 #endif
+
         // temperature and fans control
 #ifndef NO_TEMPERATURE
-        fansControl ();
+    //    sensors.requestReadings();
+        sensors.readTemperatures();
+        sensors.fansControl ();
 #endif
         // bluetooth routines
 #ifndef NO_BLUETOOTH
         bluetoothServe ();
 #endif
 
-        // clear Wire timeout
-        Wire.clearWireTimeoutFlag();
 
 #ifdef ENABLE_WATCHDOG
         wdt_reset();

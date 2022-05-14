@@ -17,7 +17,7 @@
 #define NO_DIMMING_TABLE
 //#define USE_ADAFRUIT_LIBRARY
 //#define NO_TEMPERATURE
-//#define ENABLE_WATCHDOG
+#define ENABLE_WATCHDOG
 
 // PWM channels count
 #define PWMS 8
@@ -60,7 +60,8 @@
 #define PWM_MIN_STEP 0.00001             // minimum pwm change step
 #define PWM_ADJUST_STEP_TICKS 10         // counter to re-adjust pwm step value
 #define NX_INFO_RESOLUTION 1000          // ms - nextion home page refresh time
-#define TEMPERATURE_SAMPLE_INTERVAL 1000 // ms temperature reading resolution
+#define TEMPERATURE_READ_INTERVAL 1000 // ms temperature reading resolution
+#define FANS_CONTROL_INTERVAL 1000 // ms temperature reading resolution
 #define TIME_ADJUST_INTERVAL 900000      // ms daylight saving mode check
 #define RTC_CALL_INTERVAL 1000      // ms how often check RTC time
 

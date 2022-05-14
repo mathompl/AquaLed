@@ -6,11 +6,21 @@
 
 
 #include <Arduino.h>
-#include <MemoryFree.h>
+#include "aqualed.h"
 #include "Nextion.h"
+
 #ifndef NO_NEXTION
 // init nextion lcd
-static void nexInit(void)
+
+Nextion::Nextion (_Time *_time, PWM *_pwm, Sensors* _sensors, DataStorage *_dataStorage)
+{
+        __time = _time;
+        __pwm = _pwm;
+        __sensors = _sensors;
+        __dataStorage = _dataStorage;
+}
+
+void Nextion::begin(void)
 {
         NEXTION_BEGIN (9600);
         sendNextionEOL ();
@@ -21,53 +31,116 @@ static void nexInit(void)
         NEXTION_BEGIN ((long)NEXTION_BAUD_RATE);
         setInt (NX_FIELD_BKCMD, NX_FIELD_EMPTY, (long)0);
         setPage (PAGE_HOME);
-        toggleButtons ();
         refreshPWMNames ();
+        toggleButtons ();
         forceRefresh = true;
         NEXTION_FLUSH ();
+        __last_response = currentMillis;
+        __last_keepAlive = currentMillis;
+        lastTouch = currentMillis;
 }
 
-static void refreshPWMNames ()
+void Nextion::reconnect ()
+{
+        NEXTION_FLUSH ();
+        NEXTION_END();
+        begin ();
+}
+
+void Nextion::refreshPWMNames ()
 {
         // init names
         for (byte i = 0; i < PWMS; i++)
         {
                 setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(1);
+                //delay(1);
                 setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                delay(1);
+                //delay(1);
         }
 }
 
+void Nextion::keepAlive()
+{
+        if (currentMillis - __last_keepAlive > NEXTION_KEEP_ALIVE_PING)
+        {
+                __last_keepAlive = currentMillis;
+                startCommand (NX_FIELD_EMPTY, NX_FIELD_SENDME, NX_CMD_EMPTY,  false, false, false);
+                endCommand(false);
+
+        }
+        if (currentMillis - __last_response > NEXTION_KEEP_ALIVE)
+        {
+                __last_response = currentMillis;
+                reconnect();
+        }
+}
+
+
 // main touch listener
-static void nxTouch()
+void Nextion::listen()
 {
         while (NEXTION_AVAIL ()> 0)
         {
 
                 char c = NEXTION_READ ();
-                if (c == NEX_RET_EVENT_TOUCH_HEAD)
-                {
-                        memset(__touch_buffer, 0, sizeof (__touch_buffer));
-                        __touch_event = true;
-                }
-                if (__touch_event)
-                {
-                        __touch_buffer[__touch_buffer_ix] = c;
-                        __touch_buffer_ix++;
-                }
 
-                if (__touch_buffer_ix == 7)
+                if (c == NEX_RET_EVENT_TOUCH_HEAD || c == NEX_RET_EVENT_PAGE_HEAD)
                 {
-                        if (memcmp( __touch_buffer+3, nextionEol, 3)) handlePage ( __touch_buffer[1], __touch_buffer[2]);
-                        __touch_buffer_ix = 0;
-                        __touch_event = false;
-                        return;
+                        memset(__nx_buffer, 0, sizeof (__nx_buffer));
+                        __command_start = true;
+                        lastCommand = {};
+                        lastCommand.command = c;
+                        memset(lastCommand.value, 0, sizeof (lastCommand.value));
+                        continue;
                 }
+                if (__command_start)
+                {
+                        __nx_buffer[__nx_buffer_ix] = c;
+                        __nx_buffer_ix++;
 
+                        if (__nx_buffer_ix >= 3 )
+                        {
+                                if (memcmp(__nx_buffer + (__nx_buffer_ix-3), nextionEol, 3) ==0)
+                                {
+                                        __command_complete = true;
+                                        memcpy(&lastCommand.value, &__nx_buffer, __nx_buffer_ix);
+                                        __command_start = false;
+                                        __nx_buffer_ix=0;
+                                        processResponse ();
+                                        return;
+                                }
+                        }
+                        if (__nx_buffer_ix == 9)
+                        {
+                                __command_start = false;
+                                __nx_buffer_ix=0;
+                                return;
+                        }
+                }
         }
 }
-static void handlePage (byte pid, byte cid)
+
+void Nextion::processResponse ()
+{
+        switch (lastCommand.command)
+        {
+        case NEX_RET_EVENT_TOUCH_HEAD:
+                handlePage ( lastCommand.value [0], lastCommand.value [1] );
+                break;
+
+        case NEX_RET_EVENT_PAGE_HEAD:
+                __last_response = currentMillis;
+                break;
+
+
+        default:
+                return;
+        }
+}
+
+
+
+void Nextion::handlePage (byte pid, byte cid)
 {
         lastTouch = currentMillis;
         switch (pid)
@@ -126,7 +199,7 @@ static void handlePage (byte pid, byte cid)
         lastTouch = currentMillis;
 }
 
-static void handleScreenSaver (byte cid)
+void Nextion::handleScreenSaver (byte cid)
 {
         forceRefresh = true;
         setPage (PAGE_HOME);
@@ -136,15 +209,15 @@ static void handleScreenSaver (byte cid)
         refreshHomePage ();
 }
 
-static boolean setThermo (byte page, byte field, byte i)
+boolean Nextion::setThermo (byte page, byte field, byte i)
 {
         if (!getNumber(page, field, &t)) return false;
         for (byte k = 0; k < 8; k++)
-                settings.sensors[i][k] = sensorsList[t].address[k];
+                settings.sensors[i][k] = __sensors->getList(t).address[k];
         return true;
 }
 
-static void handleThermoPage (byte cid)
+void Nextion::handleThermoPage (byte cid)
 {
         boolean status = false;
         switch (cid)
@@ -155,7 +228,7 @@ static void handleThermoPage (byte cid)
                 if (!setThermo (PAGE_THERMO, NX_FIELD_N0, LED_TEMPERATURE_FAN)) break;
                 if (!setThermo (PAGE_THERMO, NX_FIELD_N1, SUMP_TEMPERATURE_FAN)) break;
                 if (!setThermo (PAGE_THERMO, NX_FIELD_N2, WATER_TEMPERATURE_FAN)) break;
-                writeEEPROMSettings ();
+                __dataStorage->writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 status = true;
@@ -174,7 +247,7 @@ static void handleThermoPage (byte cid)
         if (!status) setPage (PAGE_THERMO);
 }
 
-static void handleSchedulePage (byte cid)
+void Nextion::handleSchedulePage (byte cid)
 {
         switch (cid)
         {
@@ -189,15 +262,19 @@ static void handleSchedulePage (byte cid)
         }
 }
 
-static boolean handleTestSlider (int field, byte i)
+boolean Nextion::handleTestSlider (int field, byte i)
 {
         if (!getNumber(field, &t)) return false;
-        pwmRuntime[i].valueCurrent = mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX);
-        pwmRuntime[i].testMode = true;
+        //pwm.getRuntime(i).valueCurrent = mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX);
+        //pwm.getRuntime(i).testMode = true;
+
+
+        pwm.setCurrentValue (i, __pwm->mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX));
+        pwm.setTestMode (i, true);
         return true;
 }
 
-static void handleTestPage (byte cid)
+void Nextion::handleTestPage (byte cid)
 {
         switch (cid)
         {
@@ -230,11 +307,12 @@ static void handleTestPage (byte cid)
         // close
         case TESTPAGE_BUTTON_CLOSE:
                 lastTouch = currentMillis;
-                forcePWMRecovery (true);
+                pwm.forcePWMRecovery  (true);
                 for (byte i = 0; i < PWMS; i++)
                 {
-                        //pwmRuntime[i].valueTest = 0;
-                        pwmRuntime[i].testMode = false;
+                        //pwm.getRuntime(i).valueTest = 0;
+                        pwm.setTestMode (i, false);
+
                 }
                 setPage (PAGE_CONFIG);
                 break;
@@ -244,9 +322,9 @@ static void handleTestPage (byte cid)
         }
 }
 
-static void handlePWMPage (byte cid)
+void Nextion::handlePWMPage (byte cid)
 {
-        int i;
+        byte i;
         byte lastPin;
         byte lastI2C;
         boolean status = false;
@@ -278,14 +356,14 @@ static void handlePWMPage (byte cid)
                 if (!getNumber(PAGE_PWM, NX_FIELD_C4, &pwmSettings[i - 1].invertPwm)) break;
                 if (!getNumber(PAGE_PWM, NX_FIELD_C5, &pwmSettings[i - 1].useLunarPhase)) break;
 
-                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) initPWM ( i-1 );
+                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) pwm.initPWM ( i-1 );
 
                 //pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueProg = mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueDay = mapRound (pwmSettings[i - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueProg = __pwm->mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueDay = __pwm->mapRound (pwmSettings[i - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
                 lastTouch = currentMillis;
-                writeEEPROMPWMConfig (i - 1);
-                updateChannelTimes (i-1);
+                __dataStorage->writeEEPROMPWMConfig (i - 1);
+                pwm.updateChannelTimes  (i-1);
                 setPage (PAGE_PWM_LIST);
                 status = true;
                 break;
@@ -304,7 +382,7 @@ static void handlePWMPage (byte cid)
         if (!status) setPage (PAGE_PWM_LIST);
 }
 
-static void handleSettingsPage (byte cid)
+void Nextion::handleSettingsPage (byte cid)
 {
         boolean status = false;
         switch (cid)
@@ -318,7 +396,7 @@ static void handleSettingsPage (byte cid)
                 if (!getNumber(PAGE_SETTINGS,NX_FIELD_N3, &settings.pwmDimmingTime)) break;
                 if (!getNumber(PAGE_SETTINGS,NX_FIELD_N4, &settings.screenSaverTime)) break;
                 if (!getNumber(PAGE_SETTINGS,NX_FIELD_C0, &settings.softDimming)) break;
-                writeEEPROMSettings ();
+                __dataStorage->writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 status = true;
@@ -337,9 +415,10 @@ static void handleSettingsPage (byte cid)
         if (!status) setPage (PAGE_SETTINGS);
 }
 
-static void handleSetTimePage (byte cid)
+void Nextion::handleSetTimePage (byte cid)
 {
-        int setHour, setMinute, setYear, setMonth, setDay;
+        byte setHour, setMinute,  setMonth, setDay;
+        int setYear;
         boolean status = false;
         switch (cid)
         {
@@ -352,14 +431,14 @@ static void handleSetTimePage (byte cid)
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N3, &setMonth)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_N4, &setYear)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_C0, &settings.dst)) break;
-                RTC.adjust(DateTime(setYear, setMonth, setDay, setHour, setMinute,0));
-                readTimes ();
-                adjustDST ();
-                writeEEPROMSettings ();
+                time.adjust(DateTime(setYear, setMonth, setDay, setHour, setMinute,0));
+                time.read ();
+                time.adjustDST ();
+                __dataStorage->writeEEPROMSettings ();
                 lastTouch = currentMillis;
                 setPage (PAGE_CONFIG);
                 lastTouch = currentMillis;
-                forcePWMRecovery (false);
+                pwm.forcePWMRecovery  (false);
                 status = true;
                 break;
 
@@ -378,7 +457,7 @@ static void handleSetTimePage (byte cid)
         if (!status) setPage (PAGE_SETTIME);
 }
 
-static void drawSchedule ()
+void Nextion::drawSchedule ()
 {
         int startL;
         int min_start;
@@ -467,7 +546,7 @@ static void drawSchedule ()
                         fillRect (offset * i + startx, startL, width, stopM, COLOR_BLUE);
                 }
         }
-        int min_now = map (currHour * 60 + currMinute, 0, min_hour, starty, starty + height);
+        int min_now = map (__time->getHour() * 60 + __time->getMinute(), 0, min_hour, starty, starty + height);
         fillRect (hour_startx, min_now, hour_stopx, 1, COLOR_YELLOW);
         // siatka dodatkowa
         /*
@@ -478,12 +557,12 @@ static void drawSchedule ()
            }*/
 }
 
-static void handleConfigPage (byte cid)
+void Nextion::handleConfigPage (byte cid)
 {
         byte s;
         byte idxLed, idxSump, idxWater;
+        char tempbuff[50] = {0};
 
-        char tempbuff[150] = {0};
         switch (cid)
         {
         // schedule
@@ -504,7 +583,7 @@ static void handleConfigPage (byte cid)
         case CONFIGPAGE_BUTTON_THERMO:
               #ifndef NO_TEMPERATURE
                 setPage (PAGE_THERMO);
-                s = discoverOneWireDevices ();
+                s = __sensors->discoverOneWireDevices ();
                 memset (tempbuff, 0, sizeof (tempbuff));
                 setValue (NX_FIELD_VA0, (s-1));
                 for (byte i = 0; i < s; i++)
@@ -516,16 +595,16 @@ static void handleConfigPage (byte cid)
                         }
                         else
                         {
-                                if (sensorsList[i].detected)
+                                if (__sensors->getList(i).detected)
                                         strcpy (tempbuff + strlen (tempbuff), "* ");
                                 for (byte k = 0; k < 8; k++)
-                                        sprintf (tempbuff + strlen (tempbuff), "%02x ", sensorsList[i].address[k]);
+                                        sprintf (tempbuff + strlen (tempbuff), "%02x ", __sensors->getList(i).address[k]);
                         }
                         strcpy  (tempbuff + strlen (tempbuff), "\r\n");
                 }
-                idxLed = listContains (settings.sensors[LED_TEMPERATURE_FAN]);
-                idxSump = listContains (settings.sensors[SUMP_TEMPERATURE_FAN]);
-                idxWater = listContains (settings.sensors[WATER_TEMPERATURE_FAN]);
+                idxLed = __sensors->listContains (settings.sensors[LED_TEMPERATURE_FAN]);
+                idxSump = __sensors->listContains (settings.sensors[SUMP_TEMPERATURE_FAN]);
+                idxWater = __sensors->listContains (settings.sensors[WATER_TEMPERATURE_FAN]);
                 if (idxLed == 255) idxLed = 0;
                 if (idxSump == 255) idxSump = 0;
                 if (idxWater == 255) idxWater = 0;
@@ -541,21 +620,21 @@ static void handleConfigPage (byte cid)
                 setPage (PAGE_TEST);
                 for (byte i = 0; i < PWMS; i++)
                 {
-                        setValue (NX_FIELD_N0+i, mapRound (pwmRuntime[i].valueCurrent, 0, PWM_I2C_MAX, 0, 100));
-                        setValue (NX_FIELD_C1+i, mapRound (pwmRuntime[i].valueCurrent, 0, PWM_I2C_MAX, 0, 100));
-                        //pwmRuntime[i].valueTest = pwmRuntime[i].valueCurrent;
-                        pwmRuntime[i].testMode = false;
+                        setValue (NX_FIELD_N0+i, __pwm->mapRound (pwm.getRuntime(i).valueCurrent, 0, PWM_I2C_MAX, 0, 100));
+                        setValue (NX_FIELD_C1+i, __pwm->mapRound (pwm.getRuntime(i).valueCurrent, 0, PWM_I2C_MAX, 0, 100));
+                        //pwm.getRuntime(i).valueTest = pwm.getRuntime(i).valueCurrent;
+                        pwm.setTestMode(i, false);
                 }
                 break;
 
         // hour and date setup
         case CONFIGPAGE_BUTTON_TIME:
                 setPage (PAGE_SETTIME);
-                setValue (NX_FIELD_N0, RTC.now().hour ());
-                setValue (NX_FIELD_N1, RTC.now().minute ());
-                setValue (NX_FIELD_N2, RTC.now().day ());
-                setValue (NX_FIELD_N3, RTC.now().month ());
-                setValue (NX_FIELD_N4, RTC.now().year());
+                setValue (NX_FIELD_N0, __time->getHour ());
+                setValue (NX_FIELD_N1, __time->getMinute ());
+                setValue (NX_FIELD_N2, __time->getDay());
+                setValue (NX_FIELD_N3, __time->getMonth ());
+                setValue (NX_FIELD_N4, __time->getYear());
                 setValue (NX_FIELD_C0, settings.dst);
                 break;
 
@@ -581,7 +660,7 @@ static void handleConfigPage (byte cid)
 }
 
 
-static void handlePWMStatus (byte cid)
+void Nextion::handlePWMStatus (byte cid)
 {
 
         switch (cid)
@@ -600,7 +679,7 @@ static void handlePWMStatus (byte cid)
         }
 }
 
-static void handlePWMListPage (byte cid)
+void Nextion::handlePWMListPage (byte cid)
 {
         byte tmin, tmax, tamb;
 
@@ -616,8 +695,8 @@ static void handlePWMListPage (byte cid)
         case PWMCONFIGPAGE_BUTTON_PWM_7:
         case PWMCONFIGPAGE_BUTTON_PWM_8:
                 tmin = pwmSettings[cid - 1].valueNight;
-                tmax = (byte) mapRound (pwmSettings[cid - 1].valueDay, 0, PWM_I2C_MAX, 0, 100);
-                tamb = (byte) mapRound (pwmSettings[cid - 1].valueProg, 0, PWM_I2C_MAX, 0, 100);
+                tmax = (byte) __pwm->mapRound (pwmSettings[cid - 1].valueDay, 0, PWM_I2C_MAX, 0, 100);
+                tamb = (byte) __pwm->mapRound (pwmSettings[cid - 1].valueProg, 0, PWM_I2C_MAX, 0, 100);
                 setPage (PAGE_PWM);
                 setValue (NX_FIELD_C0, pwmSettings[cid - 1].enabled);
                 setValue (NX_FIELD_C1, pwmSettings[cid - 1].isNightLight);
@@ -652,7 +731,7 @@ static void handlePWMListPage (byte cid)
         }
 }
 
-static void handleHomePage (byte cid)
+void Nextion::handleHomePage (byte cid)
 {
 
         switch (cid)
@@ -669,16 +748,16 @@ static void handleHomePage (byte cid)
                 if (settings.forceNight == 1)
                 {
                         settings.forceNight = 0;
-                        forcePWMRecovery (false);
+                        pwm.forcePWMRecovery  (false);
                 }
                 else
                 {
                         settings.forceNight = 1;
-                        forceDimmingRestart ();
+                        pwm.forceDimmingRestart ();
                 }
 
                 toggleButtons();
-                writeEEPROMForceNight ();
+                __dataStorage->writeEEPROMForceNight ();
                 break;
 
         // ambient toggle
@@ -687,16 +766,16 @@ static void handleHomePage (byte cid)
                 if (settings.forceAmbient == 1)
                 {
                         settings.forceAmbient = 0;
-                        forcePWMRecovery (false);
+                        pwm.forcePWMRecovery  (false);
                 }
                 else
                 {
                         settings.forceAmbient = 1;
-                        forceDimmingRestart ();
+                        pwm.forceDimmingRestart ();
                 }
 
                 toggleButtons();
-                writeEEPROMForceAmbient ();
+                __dataStorage->writeEEPROMForceAmbient ();
                 break;
 
         // off/on toggle
@@ -704,34 +783,31 @@ static void handleHomePage (byte cid)
                 if (settings.forceOFF == 1)
                 {
                         settings.forceOFF = 0;
-                        forcePWMRecovery (false);
+                        pwm.forcePWMRecovery  (false);
                 }
                 else
                 {
                         settings.forceOFF = 1;
-                        forceDimmingRestart ();
+                        pwm.forceDimmingRestart ();
                 }
                 toggleButtons();
-                writeEEPROMForceOff ();
+                __dataStorage->writeEEPROMForceOff ();
                 break;
 
         // fans toggle
         case HOMEPAGE_BUTTON_FAN_WATER:
-                sensors[WATER_TEMPERATURE_FAN].fanStatus = !sensors[WATER_TEMPERATURE_FAN].fanStatus;
-                relaySwitch (WATER_TEMPERATURE_FAN);
-                refreshHomePage ();
+                __sensors->invertFan (WATER_TEMPERATURE_FAN, true);
+                updateHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_LAMP:
-                sensors[LED_TEMPERATURE_FAN].fanStatus = !sensors[LED_TEMPERATURE_FAN].fanStatus;
-                relaySwitch (LED_TEMPERATURE_FAN);
-                refreshHomePage ();
+                __sensors->invertFan (LED_TEMPERATURE_FAN, true);
+                updateHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_SUMP:
-                sensors[SUMP_TEMPERATURE_FAN].fanStatus = !sensors[SUMP_TEMPERATURE_FAN].fanStatus;
-                relaySwitch (SUMP_TEMPERATURE_FAN);
-                refreshHomePage ();
+                __sensors->invertFan (SUMP_TEMPERATURE_FAN, true);
+                updateHomePage ();
                 break;
 
         case HOMEPAGE_PWMSTATUS1:
@@ -752,13 +828,13 @@ static void handleHomePage (byte cid)
         }
 }
 
-static void toggleButton (byte value, byte field, byte pic_on, byte pic_off)
+void Nextion::toggleButton (byte value, byte field, byte pic_on, byte pic_off)
 {
         if (value == 1) setInt(field,NX_CMD_PIC, pic_on); else setInt(field,NX_CMD_PIC,  pic_off);
 }
 
 // toggle home page buttons images
-static void toggleButtons()
+void Nextion::toggleButtons()
 {
         toggleButton (settings.forceOFF, NX_FIELD_BO, NX_PIC_BO_ON, NX_PIC_BO_OFF);
         toggleButton (settings.forceAmbient, NX_FIELD_BA, NX_PIC_BA_ON, NX_PIC_BA_OFF);
@@ -766,37 +842,52 @@ static void toggleButtons()
 }
 
 #ifndef NO_TEMPERATURE
-void updateTempField (byte field, byte sensor, byte max, byte min)
+void Nextion::updateTempField (byte field, byte sensor, byte max, byte min)
 {
-        if (sensors[sensor].nxTemperature != sensors[sensor].temperature  || forceRefresh)
+        if (__sensors->getConfig(sensor).nxTemperature != __sensors->getConfig(sensor).temperature  || forceRefresh)
         {
-                if (sensors[sensor].temperature != TEMP_ERROR)
+                if (settings.sensors[sensor][0]==0)
                 {
-                        setTextFloat(field, sensors[sensor].temperature,1,NX_STR_DEGREE);
-                        sensors[sensor].nxTemperature = sensors[sensor].temperature;
-                        if (sensors[sensor].temperature < min || sensors[sensor].temperature > max)
+                        setText(field, NX_STR_DASH);
+                        setInt (field, NX_CMD_PCO, COLOR_DARKGRAY);
+                }else
+
+                if (__sensors->getConfig(sensor).temperature != TEMP_ERROR)
+                {
+                        setTextFloat(field, __sensors->getConfig(sensor).temperature,1,NX_STR_DEGREE);
+
+                        __sensors->setNXTemperature (sensor, __sensors->getConfig(sensor).temperature);
+                        if (__sensors->getConfig(sensor).temperature < min || __sensors->getConfig(sensor).temperature > max)
                                 setInt (field, NX_CMD_PCO, COLOR_LIGHTRED);
                         else
                                 setInt (field, NX_CMD_PCO,  COLOR_LIGHTGREEN);
                 }
-                else
+                else if (__sensors->getConfig(sensor).temperature == TEMP_ERROR)
                 {
-                        sensors[sensor].nxTemperature = TEMP_ERROR;
-                        setText(field, NX_STR_DASH);
+                        setText(field, NX_STR_ERR);
+                        setInt (field, NX_CMD_PCO, COLOR_RED);
                 }
+
+                if (settings.sensors[sensor][0]==0)
+                {
+                        setText(field, NX_STR_DASH);
+                        setInt (field, NX_CMD_PCO, COLOR_DARKGRAY);
+                }
+
         }
 }
 
-void updateFanField (byte field, byte sensor)
+void Nextion::updateFanField (byte field, byte sensor)
 {
-        if (sensors[sensor].nxFanStatus == sensors[sensor].fanStatus) return;
-        if (!sensors[sensor].fanStatus) setText (field, NX_STR_EMPTY);
+        if (__sensors->getConfig(sensor).nxFanStatus == __sensors->getConfig(sensor).fanStatus) return;
+        if (!__sensors->getConfig(sensor).fanStatus) setText (field, NX_STR_EMPTY);
         else setText (field, NX_STR_FAN);
-        sensors[sensor].nxFanStatus = sensors[sensor].fanStatus;
+        __sensors->setNXFanStatus(sensor, __sensors->getConfig(sensor).fanStatus);
+
 }
 #endif
 
-static void updateWaterTemp()
+void Nextion::updateWaterTemp()
 {
     #ifndef NO_TEMPERATURE
         updateTempField (NX_FIELD_WT, WATER_TEMPERATURE_FAN,settings.maxTemperatures[WATER_TEMPERATURE_FAN], WATER_TEMPERATURE_MIN);
@@ -804,23 +895,23 @@ static void updateWaterTemp()
 }
 
 
-static void updatePWMStatusPage (byte i)
+void Nextion::updatePWMStatusPage (byte i)
 {
         uint16_t color;
         byte icon;
         setText (NX_FIELD_EMPTY, NX_FIELD_T0, (char*)pgm_read_word(&(nx_pwm_names[i])));
         getColorAndIcon (i, &color, &icon);
         setTextFloat (NX_FIELD_T1,  getPercent (i), 1, NX_STR_PERCENT);
-        setTextInt (NX_FIELD_T2, pwmRuntime[i].valueCurrent);
+        setTextInt (NX_FIELD_T2, pwm.getRuntime(i).valueCurrent);
         setText (NX_FIELD_T3, icon);
         setInt (NX_FIELD_T3, NX_CMD_PCO,  color);
-        setTextInt (NX_FIELD_T4, pwmRuntime[i].secondsLeft);
-        setTextInt (NX_FIELD_T5, pwmRuntime[i].valueGoal);
-        setTextFloat (NX_FIELD_T6, pwmRuntime[i].watts, 1, NX_STR_WATTS);
-        setTextFloat (NX_FIELD_T7, pwmRuntime[i].step,3, NX_FIELD_EMPTY);
+        setTextInt (NX_FIELD_T4, pwm.getRuntime(i).secondsLeft);
+        setTextInt (NX_FIELD_T5, pwm.getRuntime(i).valueGoal);
+        setTextFloat (NX_FIELD_T6, pwm.getRuntime(i).watts, 1, NX_STR_WATTS);
+        setTextFloat (NX_FIELD_T7, pwm.getRuntime(i).step,3, NX_FIELD_EMPTY);
         setTextFloat (NX_FIELD_T9, moonPhases[moonPhase],0,NX_STR_PERCENT);
-        uint32_t uptime  = RTC.now ().unixtime() - startTimestamp;
         char buf[12];
+        uint32_t uptime  = __time->getUnixTime() - startTimestamp;
         memset (buf, 0, sizeof (buf));
         long mins=uptime/60;
         long hours=mins/60;
@@ -832,7 +923,7 @@ static void updatePWMStatusPage (byte i)
 }
 
 
-static void updateHomePage()
+void Nextion::updateHomePage()
 {
         #ifndef NO_TEMPERATURE
         updateWaterTemp();
@@ -843,20 +934,21 @@ static void updateHomePage()
         {
                 byte valueField = 66+i;
                 byte iconField =  3+i;
-                if (!pwmRuntime[i].valueCurrent && pwmSettings[i].enabled == 0 && (pwmRuntime[i].nxPwmLast != 0 || forceRefresh))
+                if (!pwm.getRuntime(i).valueCurrent && pwmSettings[i].enabled == 0 && (pwm.getRuntime(i).nxPwmLast != 0 || forceRefresh))
                 {
                         setText (valueField, NX_STR_DASH);
                         setText (iconField, NX_STR_SPACE);
-                        pwmRuntime[i].nxPwmLast = 0;
+                        pwm.setnxPwmLast(i,0);
+                        //  pwm.getRuntime(i).nxPwmLast = 0;
                         continue;
                 }
 
-                if (pwmRuntime[i].nxPwmLast!=pwmRuntime[i].valueCurrent || forceRefresh)
+                if (pwm.getRuntime(i).nxPwmLast!=pwm.getRuntime(i).valueCurrent || forceRefresh)
                 {
                         uint16_t color;
                         byte icon;
                         getColorAndIcon (i, &color, &icon);
-                        pwmRuntime[i].nxPwmLast = pwmRuntime[i].valueCurrent;
+                        pwm.setnxPwmLast(i,pwm.getRuntime(i).valueCurrent);
                         setTextFloat (valueField,  getPercent (i), 1, NX_STR_PERCENT);
                         setText (iconField, icon);
                         setInt (iconField, NX_CMD_PCO,  color);
@@ -869,42 +961,42 @@ static void updateHomePage()
         #endif
 }
 
-static double getPercent (byte i)
+double Nextion::getPercent (byte i)
 {
-        return mapDouble((double)pwmRuntime[i].valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
+        return __pwm->mapDouble((double)pwm.getRuntime(i).valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
 }
 
-static void getColorAndIcon (byte i, uint16_t *color, byte *icon)
+void Nextion::getColorAndIcon (byte i, uint16_t *color, byte *icon)
 {
         *color = COLOR_WHITE;
         *icon = NX_STR_SPACE;
-        if (pwmRuntime[i].isSunrise )
+        if (pwm.getRuntime(i).isSunrise )
         {
                 *icon = NX_STR_SUNRISE;
                 *color = COLOR_LIGHTYELLOW;
         }
-        else if (pwmRuntime[i].isSunset )
+        else if (pwm.getRuntime(i).isSunset )
         {
                 *icon = NX_STR_SUNSET;
                 *color = COLOR_ORANGE;
         }
-        else if (pwmRuntime[i].recoverLastState)
+        else if (pwm.getRuntime(i).recoverLastState)
         {
                 *icon = NX_STR_RECOVER;
                 *color = COLOR_LIGHTGREEN;
         }
-        else if (pwmRuntime[i].valueCurrent < pwmRuntime[i].valueGoal)
+        else if (pwm.getRuntime(i).valueCurrent < pwm.getRuntime(i).valueGoal)
         {
                 *icon = NX_STR_UP;
 
         }
-        else if (pwmRuntime[i].valueCurrent > pwmRuntime[i].valueGoal) *icon = NX_STR_DOWN;
-        else if (pwmRuntime[i].valueCurrent == 0 || pwmSettings[i].enabled == 0)
+        else if (pwm.getRuntime(i).valueCurrent > pwm.getRuntime(i).valueGoal) *icon = NX_STR_DOWN;
+        else if (pwm.getRuntime(i).valueCurrent == 0 || pwmSettings[i].enabled == 0)
         {
                 *icon = NX_STR_OFF;
                 *color = COLOR_LIGHTRED;
         }
-        else if (pwmRuntime[i].isNight)
+        else if (pwm.getRuntime(i).isNight)
         {
                 if (pwmSettings[i].useLunarPhase)
                 {
@@ -912,14 +1004,14 @@ static void getColorAndIcon (byte i, uint16_t *color, byte *icon)
                 }
                 *icon = NX_STR_NIGHT;
         }
-        else if (pwmRuntime[i].valueCurrent == pwmSettings[i].valueDay)
+        else if (pwm.getRuntime(i).valueCurrent == pwmSettings[i].valueDay)
         {
                 *icon = NX_STR_ON;
                 *color = COLOR_YELLOW;
         }
 }
 
-static uint16_t rgb565( byte rgb)
+uint16_t Nextion::rgb565( byte rgb)
 {
         uint16_t ret  = (rgb & 0xF8) << 8;// 5 bits
         ret |= (rgb & 0xFC) << 3;       // 6 bits
@@ -927,24 +1019,24 @@ static uint16_t rgb565( byte rgb)
         return( ret);
 }
 
-static void displayWats ()
+void Nextion::displayWats ()
 {
         if(watts!=lastWatts || forceRefresh) setTextFloat (NX_FIELD_WA, watts, 1, NX_STR_WATTS);
         lastWatts= watts;
 }
 
-static void timeDisplay()
+void Nextion::timeDisplay()
 {
         char buff[7] = {0};
         memset(buff, 0, sizeof (buff));
         if (time_separator % 2 == 0)
-                sprintf(buff + strlen(buff), "%02u:%02u", currHour, currMinute);
-        else sprintf(buff + strlen(buff), "%02u %02u", currHour, currMinute);
+                sprintf(buff + strlen(buff), "%02u:%02u", __time->getHour(), __time->getMinute());
+        else sprintf(buff + strlen(buff), "%02u %02u", __time->getHour(), __time->getMinute());
         setText (NX_FIELD_H, (String)buff);
         time_separator++;
 }
 
-static void refreshHomePage ()
+void Nextion::refreshHomePage ()
 {
         timeDisplay();
         updateHomePage();
@@ -952,13 +1044,13 @@ static void refreshHomePage ()
 
 }
 
-/*static void displayMemory ()
+/* void Nextion::displayMemory ()
    {
         double freemem = ( (double) getFreeMemory() / (double) 2048) *100;
         setTextFloat (NX_FIELD_DEBUG2, freemem,  1, NX_STR_PERCENT);
    }*/
 /*
-   static void nxSetDebug ()
+    void Nextion::nxSetDebug ()
    {
     if (nxScreen == PAGE_SCREENSAVER )
     {
@@ -968,7 +1060,7 @@ static void refreshHomePage ()
    }
  */
 
-static void nxDisplay ()
+void Nextion::display ()
 {
         if (currentMillis - previousNxInfo > NX_INFO_RESOLUTION)
         {
@@ -1004,18 +1096,7 @@ static void nxDisplay ()
                         updatePWMStatusPage(activePwmStatus);
                 }
                 // screensaver
-                if (currentMillis - lastTouch > settings.screenSaverTime*1000 && nxScreen != PAGE_SCREENSAVER && settings.screenSaverTime > 0
-                    && nxScreen != PAGE_TEST
-                    && nxScreen != PAGE_SETTINGS
-                    && nxScreen != PAGE_PWM
-                    && nxScreen != PAGE_SETTIME
-                    && nxScreen != PAGE_THERMO
-                    && nxScreen != PAGE_SCHEDULE
-                    && nxScreen != PAGE_PWM_LIST
-                    && nxScreen != PAGE_ERROR
-                    && nxScreen != PAGE_SAVING
-                    && nxScreen != PAGE_PWMSTATUS
-                    )
+                if (currentMillis - lastTouch > settings.screenSaverTime*1000 && nxScreen != PAGE_SCREENSAVER && settings.screenSaverTime > 0 && nxScreen == PAGE_HOME )
                 {
                         setPage (PAGE_SCREENSAVER);
                         setText (NX_FIELD_T1,NX_STR_EMPTY);
@@ -1028,12 +1109,12 @@ static void nxDisplay ()
 
 /* NEXTION COMMUNICATION */
 
-static void sendNextionEOL ()
+void Nextion::sendNextionEOL ()
 {
         NEXTION_WRITEB(nextionEol, 3);
 }
 
-static void startCommand  (byte page, byte field, byte command, boolean eq, boolean pth)
+void Nextion::startCommand  (byte page, byte field, byte command, boolean eq, boolean pth, boolean space)
 {
         if (page!=NX_FIELD_EMPTY)
         {
@@ -1043,84 +1124,85 @@ static void startCommand  (byte page, byte field, byte command, boolean eq, bool
         if (field!=NX_FIELD_EMPTY) printPGM( (char*)pgm_read_word(&(nx_fields[field])));
         if (command!=NX_CMD_EMPTY) printPGM( (char*)pgm_read_word(&(nx_commands[command])));
         if (eq) printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_EQ])));
-        else printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
+        else if (space) printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
         if (pth) printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
 }
 
-static void endCommand  (boolean pth)
+void Nextion::endCommand  (boolean pth)
 {
         if (pth) printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_PARENTH])));
         sendNextionEOL ();
 }
 
-static void setInt (byte field, long cmd, long val)
+void Nextion::setInt (byte field, long cmd, long val)
 {
-        startCommand (NX_FIELD_EMPTY, field, cmd,  true, false);
+        startCommand (NX_FIELD_EMPTY, field, cmd,  true, false, true);
         NEXTION_PRINT(val);
         endCommand (false);
 }
 
 
-static void setTextFloat (byte field, double txt, byte prec, byte str)
+
+void Nextion::setTextFloat (byte field, double txt, byte prec, byte str)
 {
-        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true, true);
         NEXTION_PRINTF( txt, prec );
         if (str!=NX_FIELD_EMPTY) printPGM( (char*)pgm_read_word(&(nx_strings[str])));
         endCommand (true);
 }
-static void setValue (byte field, unsigned int val)
+void Nextion::setValue (byte field, unsigned int val)
 {
-        startCommand (NX_FIELD_EMPTY, field, NX_CMD_VAL,  true, false);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_VAL,  true, false, true);
         NEXTION_PRINT(val);
         endCommand (false);
 }
 
-static void setTextInt (byte field, int txt)
+void Nextion::setTextInt (byte field, int txt)
 {
-        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT, true,  true, true);
         NEXTION_PRINT( txt );
         endCommand (true);
 }
 
-static void setPage (byte number)
+void Nextion::setPage (byte number)
 {
-        startCommand (NX_FIELD_EMPTY, NX_FIELD_EMPTY, NX_CMD_PAGE, false, false);
+        startCommand (NX_FIELD_EMPTY, NX_FIELD_EMPTY, NX_CMD_PAGE, false, false, true);
         NEXTION_PRINT(number);
         endCommand (false);
         nxScreen = number;
 }
 
-static void setText (byte field, int nx_string_id)
+void Nextion::setText (byte field, int nx_string_id)
 {
         setText (field, (char*)pgm_read_word(&(nx_strings[nx_string_id])));
 }
 
-static void setText (byte field, String text)
+void Nextion::setText (byte field, String text)
 {
-        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT,  true, true);
+        startCommand (NX_FIELD_EMPTY, field, NX_CMD_TXT,  true, true, true);
         //NEXTION_PRINT(text);
         writeString (text);
         endCommand (true);
 }
 
-static void setText (byte page, byte field, const char * text)
+void Nextion::setText (byte page, byte field, const char * text)
 {
-        startCommand (page, field, NX_CMD_TXT, true,  true);
+        startCommand (page, field, NX_CMD_TXT, true,  true, true);
         printPGM(text);
         endCommand (true);
 }
 
-static void setText (byte field, const char * text)
+void Nextion::setText (byte field, const char * text)
 {
         setText (NX_FIELD_EMPTY, field, text);
 }
 
-static bool getNumber (byte field, int *result)
+bool Nextion::getNumber (byte field, int *result)
 {
         return getNumber (255,  field, result);
 }
 
-static bool getNumber (byte page, byte field, byte *result)
+bool Nextion::getNumber (byte page, byte field, byte *result)
 {
         int t;
         if (getNumber (page, field, &t))
@@ -1131,8 +1213,14 @@ static bool getNumber (byte page, byte field, byte *result)
         return false;
 }
 
-static bool getNumber (byte page, byte field, int *result)
+bool Nextion::getNumber (byte page, byte field, int *result)
 {
+
+/*        NEXTION_FLUSH ();
+        while(NEXTION_AVAIL() > 0)
+        {
+                Serial.read();
+        }*/
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_GET])));
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_SPACE])));
         if (page!=255)
@@ -1145,11 +1233,14 @@ static bool getNumber (byte page, byte field, int *result)
         sendNextionEOL ();
         uint8_t temp[8] = {0};
         uint32_t r;
+
         NEXTION_SETTIMEOUT(500);
         if (sizeof(temp) != NEXTION_READBYTES((char *)temp, sizeof(temp)))
         {
+
                 return false;
         }
+
         if (temp[0] == NEX_RET_NUMBER_HEAD && memcmp( temp+5, nextionEol, 3) == 0)
         {
                 r = ((uint32_t)temp[4] << 24) | ((uint32_t)temp[3] << 16) | ((uint32_t)temp[2] << 8) | ((uint32_t)temp[1]);
@@ -1160,7 +1251,7 @@ static bool getNumber (byte page, byte field, int *result)
 }
 
 // fills nextion rectangle
-static void fillRect (int x, int y, int w, int h, int color)
+void Nextion::fillRect (int x, int y, int w, int h, int color)
 {
 
         printPGM( (char*)pgm_read_word(&(nx_commands[NX_CMD_FILL])));
@@ -1177,7 +1268,7 @@ static void fillRect (int x, int y, int w, int h, int color)
         sendNextionEOL ();
 }
 
-static void printPGM (const char * str)
+void Nextion::printPGM (const char * str)
 {
         if (!str) return;
         char c;
@@ -1185,7 +1276,7 @@ static void printPGM (const char * str)
                 NEXTION_WRITE (c);
 }
 
-void writeString(String stringData) { // Used to serially push out a String with Serial.write()
+void Nextion::writeString(String stringData) {  // Used to serially push out a String with Serial.write()
         for (byte i = 0; i < stringData.length(); i++)
         {
                 NEXTION_WRITE (stringData[i]); // Push each char 1 by 1 on each loop pass
