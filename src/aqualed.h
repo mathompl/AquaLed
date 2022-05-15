@@ -16,7 +16,7 @@
 /*
          SYSTEM VARIABLES and GLOBALS, do not modify
          User configuration in file config.h
-*/
+ */
 // structure for storing channel information
 // do not modify order (written raw to eeprom)
 typedef struct {
@@ -64,10 +64,7 @@ bool max_watts_exceeded = false;
 byte codePoint = 0;
 
 // moonphases
-byte moonPhase = 0;
-const byte moonPhases[] = {0,  1,  4,  9,  16,  25, 36, 50, 58, 69,
-                           79, 88, 94, 99, 100, 99, 95, 90, 83, 75,
-                           66, 57, 50, 38, 29,  21, 13, 7,  3,  1};
+
 
 // logarithmic dimming table (dont use with I2C module)
 // const byte dimmingTable [] PROGMEM = {
@@ -100,11 +97,11 @@ const byte dimmingTable[] = {
 
 #include "datastorage.h"
 
-static Sensors sensors;
-static DataStorage dataStorage;
-static _Time time (&dataStorage);
-static PWM pwm (&time);
-static Nextion nextion (&time, &pwm, &sensors, &dataStorage);
+Sensors sensors;
+DataStorage dataStorage;
+_Time time (&dataStorage);
+PWM pwm (&time);
+Nextion nextion (&time, &pwm, &sensors, &dataStorage);
 
 
 #endif

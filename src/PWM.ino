@@ -141,7 +141,7 @@ double PWM::getNightValue (byte i)
         if (pwmSettings[i].isNightLight)
         {
                 if (pwmSettings[i].useLunarPhase==0) result = (double)pwmSettings[i].valueNight;
-                else result = (double)pwmSettings[i].valueNight * (double)moonPhases[moonPhase] * 0.01;
+                else result = (double)pwmSettings[i].valueNight * (double)__time->getMoonPhaseValue () * 0.01;
         }
         return result;
 }

@@ -17,8 +17,8 @@ void _Time::begin ()
         rtcAvailable =rtc.begin();
         startTimestamp = rtc.now().unixtime ();
         read ();
-        getMoonPhase ();
-        startSimpleTime = millis ();
+        getMoonPhase ();      
+        benchmarkStartMillis = millis ();
 }
 
 // reads RTC
@@ -26,8 +26,8 @@ void _Time::readCurrentTime ()
 {
         if (rtcAvailable)
         {
-                  if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
-                  {
+                if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
+                {
                         previousRTCCall = currentMillis;
                         currHour = rtc.now().hour ();
                         currMinute = rtc.now().minute ();
@@ -38,25 +38,7 @@ void _Time::readCurrentTime ()
                         unixTime = rtc.now().unixtime();
                         currTime = (long) currHour * 60 * 60 + (long) currMinute * 60 + (long) currSecond;
                         if (currTime <=1 ) getMoonPhase ();
-                  }
-        }
-        else
-        {
-                // for testing purposes, when RTC not available, needs proper implementation if needed
-                if (currentMillis -  previousRTCCall > RTC_CALL_INTERVAL || previousRTCCall == 0)
-                {
-                        simpleTime= (millis () - startSimpleTime)/1000;
-                        if (simpleTime > 86400) simpleTime = 0;
-                        previousRTCCall = currentMillis;
-                        currMinute = (simpleTime % 3600) / 60;
-                        currSecond = simpleTime % 60;
-                        currHour = simpleTime / 3600;
-                        currYear = 2022;
-                        currMonth = 1;
-                        currDay = 1;
-                        unixTime = 1640991600+simpleTime;
-                        currTime = (long) ((long) currHour * (long)60 * (long)60 + (long) currMinute * 60 + (long) currSecond);
-              }
+                }
         }
 }
 
@@ -65,6 +47,18 @@ void _Time::read ()
         currentMillis = millis();
         readCurrentTime();
         adjustDST ();
+        //    doBenchmark ();
+}
+
+void _Time::doBenchmark ()
+{
+        if (benchmarkIteration >= BENCHMARK_ITERATIONS)
+        {
+                benchmarkResult = ( (currentMillis - benchmarkStartMillis) *1000 ) / benchmarkIteration;
+                benchmarkIteration = 0;
+                benchmarkStartMillis = currentMillis;
+        }
+        benchmarkIteration++;
 }
 
 void _Time::adjustTime (int h, byte dst)
@@ -146,10 +140,16 @@ long _Time::getUnixTime ()
 }
 boolean _Time::isRTC()
 {
-  return rtcAvailable;
+        return rtcAvailable;
 }
 
-void _Time::setSimpleTime (long stime)
+byte _Time::getMoonPhaseValue ()
 {
-  simpleTime = stime;
+        return moonPhases[moonPhase];
+}
+
+// micro seconds
+byte _Time::getBenchmark ()
+{
+        return benchmarkResult;
 }

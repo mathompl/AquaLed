@@ -23,14 +23,14 @@
 #define PWMS 8
 
 // PWM channels displayed names
-#define PWM_1_NAME "CoolWhite 1\0"
-#define PWM_2_NAME "CoolWhite 2\0"
-#define PWM_3_NAME "RoyalBlue 1\0"
-#define PWM_4_NAME "RoyalBlue 2\0"
-#define PWM_5_NAME "RoyalBlue 3\0"
-#define PWM_6_NAME "Blue\0"
-#define PWM_7_NAME "Actinic\0"
-#define PWM_8_NAME "Sump\0"
+#define PWM_1_NAME "Red\0"
+#define PWM_2_NAME "Green\0"
+#define PWM_3_NAME "Deep blue\0"
+#define PWM_4_NAME "Blue\0"
+#define PWM_5_NAME "Cool white\0"
+#define PWM_6_NAME "Warm white\0"
+#define PWM_7_NAME "Violet\0"
+#define PWM_8_NAME "UV\0"
 
 #define WATER_TEMPERATURE_MIN 24 // for coloring water temperature
 
@@ -74,7 +74,5 @@
 // max lamp wattage, used for lamp shutdown (psu protection)
 #define MAX_WATTS 250
 #define LAMP_TEMPERATURE_MAX 70 // max lamp temperature, used for lamp shutdown
-
-
 
 #endif

@@ -4,7 +4,8 @@
  */
 #include <sensors.h>
 
-Sensors::Sensors () {}
+Sensors::Sensors () {
+}
 
 void Sensors::begin()
 {
@@ -146,16 +147,16 @@ SENSORS_CONFIG Sensors::getConfig (byte fan)
 }
 void Sensors::invertFan (byte fan, boolean switchRelay)
 {
-  _config[fan].fanStatus = !_config[fan].fanStatus;
-  if (switchRelay) relaySwitch (fan);
+        _config[fan].fanStatus = !_config[fan].fanStatus;
+        if (switchRelay) relaySwitch (fan);
 }
 
 void Sensors::setNXTemperature  (byte fan, float newTemp)
 {
-  _config[fan].nxTemperature = newTemp;
+        _config[fan].nxTemperature = newTemp;
 }
 
 void Sensors::setNXFanStatus (byte fan, boolean newStatus)
 {
-  _config[fan].nxFanStatus = newStatus;
+        _config[fan].nxFanStatus = newStatus;
 }

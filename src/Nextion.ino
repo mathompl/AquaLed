@@ -48,8 +48,8 @@ void Nextion::refreshPWMNames ()
         // init names
         for (byte i = 0; i < PWMS; i++)
         {
-                setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
-                setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
+                if (__page == PAGE_HOME) setText (PAGE_HOME, NX_FIELD_LD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
+                if (__page == PAGE_PWM_LIST) setText (PAGE_PWM_LIST, NX_FIELD_BLD1+i, (char*)pgm_read_word(&(nx_pwm_names[i])));
         }
 }
 
@@ -82,9 +82,9 @@ void Nextion::listen()
                 {
                         memset(__nx_buffer, 0, sizeof (__nx_buffer));
                         __command_start = true;
-                        lastCommand = {};
-                        lastCommand.command = c;
-                        memset(lastCommand.value, 0, sizeof (lastCommand.value));
+                        __lastCommand = {};
+                        __lastCommand.command = c;
+                        memset(__lastCommand.value, 0, sizeof (__lastCommand.value));
                         continue;
                 }
                 if (__command_start)
@@ -97,7 +97,7 @@ void Nextion::listen()
                                 if (memcmp(__nx_buffer + (__nx_buffer_ix-3), nextionEol, 3) ==0)
                                 {
                                         __command_complete = true;
-                                        memcpy(&lastCommand.value, &__nx_buffer, __nx_buffer_ix);
+                                        memcpy(&__lastCommand.value, &__nx_buffer, __nx_buffer_ix);
                                         __command_start = false;
                                         __nx_buffer_ix=0;
                                         processResponse ();
@@ -116,10 +116,10 @@ void Nextion::listen()
 
 void Nextion::processResponse ()
 {
-        switch (lastCommand.command)
+        switch (__lastCommand.command)
         {
         case NEX_RET_EVENT_TOUCH_HEAD:
-                handlePage ( lastCommand.value [0], lastCommand.value [1] );
+                handlePage ( __lastCommand.value [0], __lastCommand.value [1] );
                 break;
 
         case NEX_RET_EVENT_PAGE_HEAD:
@@ -196,7 +196,6 @@ void Nextion::handleScreenSaver (byte cid)
         setPage (PAGE_HOME);
         lastTouch = currentMillis;
         toggleButtons();
-        refreshPWMNames ();
         refreshHomePage ();
 }
 
@@ -346,7 +345,7 @@ void Nextion::handlePWMPage (byte cid)
                 if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) pwm.initPWM ( i-1 );
 
                 #ifndef PWM_NO_MAP_NIGHT_VALUE
-                  pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
+                pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
                 #endif
 
                 pwmSettings[i - 1].valueProg = __pwm->mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
@@ -808,9 +807,9 @@ void Nextion::handleHomePage (byte cid)
         case HOMEPAGE_PWMSTATUS6:
         case HOMEPAGE_PWMSTATUS7:
         case HOMEPAGE_PWMSTATUS8:
-                activePwmStatus = cid - HOMEPAGE_PWMSTATUS1;
+                __activePwmStatus = cid - HOMEPAGE_PWMSTATUS1;
                 setPage (PAGE_PWMSTATUS);
-                updatePWMStatusPage (activePwmStatus);
+                updatePWMStatusPage (__activePwmStatus);
                 break;
 
         default:
@@ -898,7 +897,7 @@ void Nextion::updatePWMStatusPage (byte i)
         setTextInt (NX_FIELD_T5, pwm.getRuntime(i).valueGoal);
         setTextFloat (NX_FIELD_T6, pwm.getRuntime(i).watts, 1, NX_STR_WATTS);
         setTextFloat (NX_FIELD_T7, pwm.getRuntime(i).step,3, NX_FIELD_EMPTY);
-        setTextFloat (NX_FIELD_T9, moonPhases[moonPhase],0,NX_STR_PERCENT);
+        setTextFloat (NX_FIELD_T9, __time->getMoonPhaseValue(),0,NX_STR_PERCENT);
         char buf[12];
         uint32_t uptime  = __time->getUnixTime() - startTimestamp;
         memset (buf, 0, sizeof (buf));
@@ -914,11 +913,10 @@ void Nextion::updatePWMStatusPage (byte i)
 
 void Nextion::updateHomePage()
 {
-        #ifndef NO_TEMPERATURE
+
         updateWaterTemp();
         updateTempField (NX_FIELD_LT, LED_TEMPERATURE_FAN,settings.maxTemperatures[LED_TEMPERATURE_FAN], 0);
         updateTempField (NX_FIELD_ST, SUMP_TEMPERATURE_FAN,settings.maxTemperatures[SUMP_TEMPERATURE_FAN], 0);
-        #endif
         for (byte i = 0; i < PWMS; i++)
         {
                 byte valueField = 66+i;
@@ -943,11 +941,10 @@ void Nextion::updateHomePage()
                         setInt (iconField, NX_CMD_PCO,  color);
                 }
         }
-        #ifndef NO_TEMPERATURE
         updateFanField (NX_FIELD_T0, WATER_TEMPERATURE_FAN);
         updateFanField (NX_FIELD_T1, LED_TEMPERATURE_FAN);
         updateFanField (NX_FIELD_T2, SUMP_TEMPERATURE_FAN);
-        #endif
+
 }
 
 double Nextion::getPercent (byte i)
@@ -989,7 +986,7 @@ void Nextion::getColorAndIcon (byte i, uint16_t *color, byte *icon)
         {
                 if (pwmSettings[i].useLunarPhase)
                 {
-                        *color = rgb565 (map (moonPhases[moonPhase], 0,100,150,255));
+                        *color = rgb565 (map (__time->getMoonPhaseValue (), 0,100,150,255));
                 }
                 *icon = NX_STR_NIGHT;
         }
@@ -1010,19 +1007,19 @@ uint16_t Nextion::rgb565( byte rgb)
 
 void Nextion::displayWats ()
 {
-        if(watts!=lastWatts || forceRefresh) setTextFloat (NX_FIELD_WA, watts, 1, NX_STR_WATTS);
-        lastWatts= watts;
+        if(watts!=__lastWatts || forceRefresh) setTextFloat (NX_FIELD_WA, watts, 1, NX_STR_WATTS);
+        __lastWatts= watts;
 }
 
 void Nextion::timeDisplay()
 {
         char buff[7] = {0};
         memset(buff, 0, sizeof (buff));
-        if (time_separator % 2 == 0)
+        if (__time_separator % 2 == 0)
                 sprintf(buff + strlen(buff), "%02u:%02u", __time->getHour(), __time->getMinute());
         else sprintf(buff + strlen(buff), "%02u %02u", __time->getHour(), __time->getMinute());
         setText (NX_FIELD_H, (String)buff);
-        time_separator++;
+        __time_separator++;
 }
 
 void Nextion::refreshHomePage ()
@@ -1040,17 +1037,17 @@ void Nextion::display ()
                 previousNxInfo = currentMillis;
                 if (lampOverheating)
                 {
-                        nxScreen = PAGE_ERROR;
+                        __page = PAGE_ERROR;
                         setPage (PAGE_ERROR);
                         setText (NX_FIELD_T1, (char*)pgm_read_word(&(nx_errors[0])) );
                 }
                 if (max_watts_exceeded)
                 {
-                        nxScreen = PAGE_ERROR;
+                        __page = PAGE_ERROR;
                         setPage (PAGE_ERROR);
                         setText (NX_FIELD_T1, (char*)pgm_read_word(&(nx_errors[1])) );
                 }
-                if (nxScreen == PAGE_SCREENSAVER )
+                if (__page == PAGE_SCREENSAVER )
                 {
                         timeDisplay();
                         updateWaterTemp();
@@ -1058,18 +1055,18 @@ void Nextion::display ()
                         //  displayMemory ();
                         forceRefresh = false;
                 }
-                if (nxScreen == PAGE_HOME )
+                if (__page == PAGE_HOME )
                 {
-                        if (forceRefresh) refreshPWMNames ();
+                        //  if (forceRefresh) refreshPWMNames ();
                         refreshHomePage ();
                         forceRefresh = false;
                 }
-                if (nxScreen == PAGE_PWMSTATUS)
+                if (__page == PAGE_PWMSTATUS)
                 {
-                        updatePWMStatusPage(activePwmStatus);
+                        updatePWMStatusPage(__activePwmStatus);
                 }
                 // screensaver
-                if (currentMillis - lastTouch > settings.screenSaverTime*1000 && nxScreen != PAGE_SCREENSAVER && settings.screenSaverTime > 0 && nxScreen == PAGE_HOME )
+                if (currentMillis - lastTouch > settings.screenSaverTime*1000 && __page != PAGE_SCREENSAVER && settings.screenSaverTime > 0 && __page == PAGE_HOME )
                 {
                         setPage (PAGE_SCREENSAVER);
                         setText (NX_FIELD_T1,NX_STR_EMPTY);
@@ -1136,10 +1133,13 @@ void Nextion::setTextInt (byte field, int txt)
 
 void Nextion::setPage (byte number)
 {
+
         startCommand (NX_FIELD_EMPTY, NX_FIELD_EMPTY, NX_CMD_PAGE, false, false, true);
         NEXTION_PRINT(number);
         endCommand (false);
-        nxScreen = number;
+        __page = number;
+        if (number == PAGE_HOME || number == PAGE_PWM_LIST) refreshPWMNames ();
+
 }
 
 void Nextion::setText (byte field, int nx_string_id)

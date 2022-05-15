@@ -21,24 +21,6 @@ void DataStorage::begin ()
         //  dumpConfig();
 }
 
-template <class T> int EEPROM_writeAnything(int ee, const T& value)
-{
-        const byte* p = (const byte*)(const void*)&value;
-        unsigned int i;
-        for (i = 0; i < sizeof(value); i++)
-                EEPROM.write(ee++, *p++);
-        return i;
-}
-
-template <class T> int EEPROM_readAnything(int ee, T& value)
-{
-        byte* p = (byte*)(void*)&value;
-        unsigned int i;
-        for (i = 0; i < sizeof(value); i++)
-                *p++ = EEPROM.read(ee++);
-        return i;
-}
-
 boolean DataStorage::isFirstRun ()
 {
         //  return true;
@@ -88,29 +70,27 @@ void DataStorage::writeEEPROMForceAmbient ()
 
 void DataStorage::writeEEPROMSettings ()
 {
-        EEPROM_writeAnything(EEPROM_SETTINGS_ADDR, settings);
+        EEPROM.put (EEPROM_SETTINGS_ADDR, settings);
 }
 
 void DataStorage::readEEPROMSettings ()
 {
-        EEPROM_readAnything (EEPROM_SETTINGS_ADDR, settings);
+        EEPROM.get(EEPROM_SETTINGS_ADDR, settings);
 }
 
 void DataStorage::eEpromRead( )
 {
         for (byte i = 0; i < PWMS; i++)
         {
-                EEPROM_readAnything (getEEPROMAddr( i ), pwmSettings[i]);
+                EEPROM.get (getEEPROMAddr( i ), pwmSettings[i]);
         }
         readEEPROMSettings ();
 }
 
 void DataStorage::writeEEPROMPWMConfig (byte pwmNumber)
 {
-        EEPROM_writeAnything (getEEPROMAddr( pwmNumber ), pwmSettings[pwmNumber]);
-
+        EEPROM.put (getEEPROMAddr( pwmNumber ), pwmSettings[pwmNumber]);
 }
-
 
 int DataStorage::getEEPROMAddr( byte n )
 {
