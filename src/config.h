@@ -1,9 +1,12 @@
+/**************************************************************
+   AQUALED user configuration file (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+ **************************************************************/
+
 #ifndef CONFIG_H
 #define CONFIG_H
-/*
-   AQUALED user configuration file (c) T. Formanowski 2016-2017
-   https://github.com/mathompl/AquaLed
- */
+
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>

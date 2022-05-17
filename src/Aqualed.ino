@@ -6,12 +6,11 @@
 
     Features:
 
-    - 6 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
+    - 8 channel PWM control of LED modules (drivers), with I2C module up to 512 (up to 8 channels on LCD)
     - programmable light hours with sunsets and sunrises
     - night light support
     - 3 digital thermometers with asynchronous temperature read, for: water, lamp and addictional lamp or sump, controlling 3 separate relays (cooling fans)
     - customizable dimming, linear or logarithmic algorith
-    - bluetooth compatibility with AQma Led Control by Maqu http://magu.pl/aqma-led-control
     - full configuration and status using Nextion 2.8" LCD with touch support, including: operational hours, sunset & sunrise hours, thermometers, dimming times, schedule, night mode etc.
     - override programs: off, night and user accessible from LCD
     - date/time support with RTC module
@@ -20,7 +19,7 @@
     - all settings stored in EEPROM
 
      (c) 2016 - 2022 Tomek Formanowski mathom@pifpaf.pl
-     Open Source public domain
+     GNU GENERAL PUBLIC LICENSE
 
      Use at your own risk.
 

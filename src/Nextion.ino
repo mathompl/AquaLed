@@ -1,6 +1,7 @@
 /*
    AQUALED Nextion support functions (c) T. Formanowski 2016-2022
    https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
  */
 
 #include <Arduino.h>
@@ -53,6 +54,7 @@ void Nextion::refreshPWMNames ()
         }
 }
 
+// pings nextion with "sendme", if none response in NEXTION_KEEP_ALIVE - reconnects
 void Nextion::keepAlive()
 {
         if (currentMillis - __last_keepAlive > NEXTION_KEEP_ALIVE_PING)
@@ -68,7 +70,6 @@ void Nextion::keepAlive()
                 reconnect();
         }
 }
-
 
 // main nextion response listener: touch and keepalive (sendme)
 void Nextion::listen()
@@ -114,6 +115,7 @@ void Nextion::listen()
         }
 }
 
+// process Nextion touch/keepalive reponse
 void Nextion::processResponse ()
 {
         switch (__lastCommand.command)
@@ -131,57 +133,58 @@ void Nextion::processResponse ()
         }
 }
 
-void Nextion::handlePage (byte pid, byte cid)
+// handle page on touch event
+void Nextion::handlePage (byte pageId, byte componentId)
 {
         lastTouch = currentMillis;
-        switch (pid)
+        switch (pageId)
         {
         case PAGE_HOME:
-                handleHomePage (cid);
+                handleHomePage (componentId);
                 break;
 
         case PAGE_CONFIG:
-                handleConfigPage (cid);
+                handleConfigPage (componentId);
                 break;
 
         case PAGE_SETTIME:
-                handleSetTimePage (cid);
+                handleSetTimePage (componentId);
                 break;
 
         case PAGE_SETTINGS:
-                handleSettingsPage (cid);
+                handleSettingsPage (componentId);
                 break;
 
         case PAGE_PWM:
-                handlePWMPage (cid);
+                handlePWMPage (componentId);
                 break;
 
         case PAGE_TEST:
-                handleTestPage (cid);
+                handleTestPage (componentId);
                 break;
 
         case PAGE_SCREENSAVER:
-                handleScreenSaver (cid);
+                handleScreenSaver (componentId);
                 break;
 
         case PAGE_THERMO:
-                handleThermoPage (cid);
+                handleThermoPage (componentId);
                 break;
 
         case PAGE_SCHEDULE:
-                handleSchedulePage (cid);
+                handleSchedulePage (componentId);
                 break;
 
         case PAGE_PWM_LIST:
-                handlePWMListPage (cid);
+                handlePWMListPage (componentId);
                 break;
 
         case PAGE_ERROR:
-                handleScreenSaver (cid);
+                handleScreenSaver (componentId);
                 break;
 
         case PAGE_PWMSTATUS:
-                handlePWMStatus (cid);
+                handlePWMStatus (componentId);
                 break;
 
         default:
@@ -190,7 +193,7 @@ void Nextion::handlePage (byte pid, byte cid)
         lastTouch = currentMillis;
 }
 
-void Nextion::handleScreenSaver (byte cid)
+void Nextion::handleScreenSaver (byte componentId)
 {
         forceRefresh = true;
         setPage (PAGE_HOME);
@@ -199,18 +202,18 @@ void Nextion::handleScreenSaver (byte cid)
         refreshHomePage ();
 }
 
-boolean Nextion::setThermo (byte page, byte field, byte i)
+boolean Nextion::setThermo (byte pageId, byte field, byte thermoId)
 {
-        if (!getNumber(page, field, &t)) return false;
+        if (!getNumber(pageId, field, &t)) return false;
         for (byte k = 0; k < 8; k++)
-                settings.sensors[i][k] = __sensors->getList(t).address[k];
+                settings.sensors[thermoId][k] = __sensors->getList(t).address[k];
         return true;
 }
 
-void Nextion::handleThermoPage (byte cid)
+void Nextion::handleThermoPage (byte componentId)
 {
         boolean status = false;
-        switch (cid)
+        switch (componentId)
         {
         // save
         case THERMOPAGE_BUTTON_SAVE:
@@ -237,9 +240,9 @@ void Nextion::handleThermoPage (byte cid)
         if (!status) setPage (PAGE_THERMO);
 }
 
-void Nextion::handleSchedulePage (byte cid)
+void Nextion::handleSchedulePage (byte componentId)
 {
-        switch (cid)
+        switch (componentId)
         {
         //cancel
         case SCHEDULEPAGE_BUTTON_CLOSE:
@@ -252,17 +255,17 @@ void Nextion::handleSchedulePage (byte cid)
         }
 }
 
-boolean Nextion::handleTestSlider (int field, byte i)
+boolean Nextion::handleTestSlider (int field, byte pwmId)
 {
         if (!getNumber(field, &t)) return false;
-        pwm.setCurrentValue (i, __pwm->mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX));
-        pwm.setTestMode (i, true);
+        pwm.setCurrentValue (pwmId, __pwm->mapRound ((long)t, 0, 100, 0, PWM_I2C_MAX));
+        pwm.setTestMode (pwmId, true);
         return true;
 }
 
-void Nextion::handleTestPage (byte cid)
+void Nextion::handleTestPage (byte componentId)
 {
-        switch (cid)
+        switch (componentId)
         {
         // pwms
         case TESTPAGE_SLIDER_PWM_1:
@@ -294,10 +297,10 @@ void Nextion::handleTestPage (byte cid)
         case TESTPAGE_BUTTON_CLOSE:
                 lastTouch = currentMillis;
                 pwm.forcePWMRecovery  (true);
-                for (byte i = 0; i < PWMS; i++)
+                for (byte pwmId = 0; pwmId < PWMS; pwmId++)
                 {
                         //pwm.getRuntime(i).valueTest = 0;
-                        pwm.setTestMode (i, false);
+                        pwm.setTestMode (pwmId, false);
 
                 }
                 setPage (PAGE_CONFIG);
@@ -308,51 +311,51 @@ void Nextion::handleTestPage (byte cid)
         }
 }
 
-void Nextion::handlePWMPage (byte cid)
+void Nextion::handlePWMPage (byte componentId)
 {
-        byte i;
+        byte pwmId;
         byte lastPin;
         byte lastI2C;
         boolean status = false;
-        switch (cid)
+        switch (componentId)
         {
         // save
         case PWMPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
-                if (!getNumber(PAGE_PWM, NX_FIELD_N9, &i)) break;
-                if (i < 1 || i > PWMS) break;
-                lastPin = pwmSettings[i - 1].pin;
-                lastI2C = pwmSettings[i - 1].isI2C;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N9, &pwmId)) break;
+                if (pwmId < 1 || pwmId > PWMS) break;
+                lastPin = pwmSettings[pwmId - 1].pin;
+                lastI2C = pwmSettings[pwmId - 1].isI2C;
 
-                if (!getNumber(PAGE_PWM, NX_FIELD_C0, &pwmSettings[i - 1].enabled )) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_C1, &pwmSettings[i - 1].isNightLight)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_C2, &pwmSettings[i - 1].isProg)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N0, &pwmSettings[i - 1].onHour)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N1, &pwmSettings[i - 1].onMinute)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N2, &pwmSettings[i - 1].offHour)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N3, &pwmSettings[i - 1].offMinute)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N4, &pwmSettings[i - 1].sunriseLenght)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N5, &pwmSettings[i - 1].sunsetLenght)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N6, &pwmSettings[i - 1].valueNight)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N7, &pwmSettings[i - 1].valueDay)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N8, &pwmSettings[i - 1].valueProg)) return;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N10, &pwmSettings[i - 1].pin)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_N11, &pwmSettings[i - 1].watts)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_C3, &pwmSettings[i - 1].isI2C)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_C4, &pwmSettings[i - 1].invertPwm)) break;
-                if (!getNumber(PAGE_PWM, NX_FIELD_C5, &pwmSettings[i - 1].useLunarPhase)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C0, &pwmSettings[pwmId - 1].enabled )) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C1, &pwmSettings[pwmId - 1].isNightLight)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C2, &pwmSettings[pwmId - 1].isProg)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N0, &pwmSettings[pwmId - 1].onHour)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N1, &pwmSettings[pwmId - 1].onMinute)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N2, &pwmSettings[pwmId - 1].offHour)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N3, &pwmSettings[pwmId - 1].offMinute)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N4, &pwmSettings[pwmId - 1].sunriseLenght)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N5, &pwmSettings[pwmId - 1].sunsetLenght)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N6, &pwmSettings[pwmId - 1].valueNight)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N7, &pwmSettings[pwmId - 1].valueDay)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N8, &pwmSettings[pwmId - 1].valueProg)) return;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N10, &pwmSettings[pwmId - 1].pin)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_N11, &pwmSettings[pwmId - 1].watts)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C3, &pwmSettings[pwmId - 1].isI2C)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C4, &pwmSettings[pwmId - 1].invertPwm)) break;
+                if (!getNumber(PAGE_PWM, NX_FIELD_C5, &pwmSettings[pwmId - 1].useLunarPhase)) break;
 
-                if (lastPin != pwmSettings[i - 1].pin || lastI2C != pwmSettings[i - 1].isI2C) pwm.initPWM ( i-1 );
+                if (lastPin != pwmSettings[pwmId - 1].pin || lastI2C != pwmSettings[pwmId - 1].isI2C) pwm.initPWM ( pwmId - 1 );
 
                 #ifndef PWM_NO_MAP_NIGHT_VALUE
-                pwmSettings[i - 1].valueNight = mapRound ((byte)pwmSettings[i - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
+                pwmSettings[pwmId - 1].valueNight = mapRound ((byte)pwmSettings[pwmId - 1].valueNight, 0, 255, 0, PWM_I2C_MAX);
                 #endif
 
-                pwmSettings[i - 1].valueProg = __pwm->mapRound (pwmSettings[i - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
-                pwmSettings[i - 1].valueDay = __pwm->mapRound (pwmSettings[i - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[pwmId - 1].valueProg = __pwm->mapRound (pwmSettings[pwmId - 1].valueProg, 0, 100, 0, PWM_I2C_MAX);
+                pwmSettings[pwmId - 1].valueDay = __pwm->mapRound (pwmSettings[pwmId - 1].valueDay, 0, 100, 0, PWM_I2C_MAX);
                 lastTouch = currentMillis;
-                __dataStorage->writeEEPROMPWMConfig (i - 1);
-                pwm.updateChannelTimes  (i-1);
+                __dataStorage->writeEEPROMPWMConfig (pwmId - 1);
+                pwm.updateChannelTimes  (pwmId - 1);
                 setPage (PAGE_PWM_LIST);
                 status = true;
                 break;
@@ -371,10 +374,10 @@ void Nextion::handlePWMPage (byte cid)
         if (!status) setPage (PAGE_PWM_LIST);
 }
 
-void Nextion::handleSettingsPage (byte cid)
+void Nextion::handleSettingsPage (byte componentId)
 {
         boolean status = false;
-        switch (cid)
+        switch (componentId)
         {
         // save
         case SETTINGSPAGE_BUTTON_SAVE:
@@ -404,23 +407,23 @@ void Nextion::handleSettingsPage (byte cid)
         if (!status) setPage (PAGE_SETTINGS);
 }
 
-void Nextion::handleSetTimePage (byte cid)
+void Nextion::handleSetTimePage (byte componentId)
 {
-        byte setHour, setMinute,  setMonth, setDay;
-        int setYear;
+        byte _newHour, _newMinute,  _newMonth, _newDay;
+        int _newYear;
         boolean status = false;
-        switch (cid)
+        switch (componentId)
         {
         // save
         case TIMEPAGE_BUTTON_SAVE:
                 setPage (PAGE_SAVING);
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_N0, &setHour)) break;
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_N1, &setMinute)) break;
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_N2, &setDay)) break;
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_N3, &setMonth)) break;
-                if (!getNumber(PAGE_SETTIME, NX_FIELD_N4, &setYear)) break;
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_N0, &_newHour)) break;
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_N1, &_newMinute)) break;
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_N2, &_newDay)) break;
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_N3, &_newMonth)) break;
+                if (!getNumber(PAGE_SETTIME, NX_FIELD_N4, &_newYear)) break;
                 if (!getNumber(PAGE_SETTIME, NX_FIELD_C0, &settings.dst)) break;
-                time.adjust(DateTime(setYear, setMonth, setDay, setHour, setMinute,0));
+                time.adjust(DateTime(_newYear, _newMonth, _newDay, _newHour, _newMinute,0));
                 time.read ();
                 time.adjustDST ();
                 __dataStorage->writeEEPROMSettings ();
@@ -546,13 +549,13 @@ void Nextion::drawSchedule ()
            }*/
 }
 
-void Nextion::handleConfigPage (byte cid)
+void Nextion::handleConfigPage (byte componentId)
 {
         byte s;
         byte idxLed, idxSump, idxWater;
         char tempbuff[50] = {0};
 
-        switch (cid)
+        switch (componentId)
         {
         // schedule
         case CONFIGPAGE_BUTTON_SCHEDULE:
@@ -648,11 +651,10 @@ void Nextion::handleConfigPage (byte cid)
         }
 }
 
-
-void Nextion::handlePWMStatus (byte cid)
+void Nextion::handlePWMStatus (byte componentId)
 {
 
-        switch (cid)
+        switch (componentId)
         {
         // cancel
         case PWMSTATUSPAGE_BUTTON_CLOSE:
@@ -668,11 +670,11 @@ void Nextion::handlePWMStatus (byte cid)
         }
 }
 
-void Nextion::handlePWMListPage (byte cid)
+void Nextion::handlePWMListPage (byte componentId)
 {
-        byte tmin, tmax, tamb;
+        byte _nightValuePercent, _dayValuePercent, _userValuePercent;
 
-        switch (cid)
+        switch (componentId)
         {
         // enter pwm settings
         case PWMCONFIGPAGE_BUTTON_PWM_1:
@@ -683,29 +685,29 @@ void Nextion::handlePWMListPage (byte cid)
         case PWMCONFIGPAGE_BUTTON_PWM_6:
         case PWMCONFIGPAGE_BUTTON_PWM_7:
         case PWMCONFIGPAGE_BUTTON_PWM_8:
-                tmin = pwmSettings[cid - 1].valueNight;
-                tmax = (byte) __pwm->mapRound (pwmSettings[cid - 1].valueDay, 0, PWM_I2C_MAX, 0, 100);
-                tamb = (byte) __pwm->mapRound (pwmSettings[cid - 1].valueProg, 0, PWM_I2C_MAX, 0, 100);
+                _nightValuePercent = pwmSettings[componentId - 1].valueNight;
+                _dayValuePercent = (byte) __pwm->mapRound (pwmSettings[componentId - 1].valueDay, 0, PWM_I2C_MAX, 0, 100);
+                _userValuePercent = (byte) __pwm->mapRound (pwmSettings[componentId - 1].valueProg, 0, PWM_I2C_MAX, 0, 100);
                 setPage (PAGE_PWM);
-                setValue (NX_FIELD_C0, pwmSettings[cid - 1].enabled);
-                setValue (NX_FIELD_C1, pwmSettings[cid - 1].isNightLight);
-                setValue (NX_FIELD_C2, pwmSettings[cid - 1].isProg);
-                setValue (NX_FIELD_N0, pwmSettings[cid - 1].onHour);
-                setValue (NX_FIELD_N1, pwmSettings[cid - 1].onMinute);
-                setValue (NX_FIELD_N2, pwmSettings[cid - 1].offHour);
-                setValue (NX_FIELD_N3, pwmSettings[cid - 1].offMinute);
-                setValue (NX_FIELD_N4, pwmSettings[cid - 1].sunriseLenght);
-                setValue (NX_FIELD_N5, pwmSettings[cid - 1].sunsetLenght);
-                setValue (NX_FIELD_N6, tmin);
-                setValue (NX_FIELD_N7, tmax);
-                setValue (NX_FIELD_N8, tamb);
-                setValue (NX_FIELD_N9, cid);
-                setValue (NX_FIELD_N10, pwmSettings[cid - 1].pin);
-                setValue (NX_FIELD_N11, pwmSettings[cid - 1].watts);
-                setValue (NX_FIELD_C3, pwmSettings[cid - 1].isI2C);
-                setValue (NX_FIELD_C4, pwmSettings[cid - 1].invertPwm);
-                setValue (NX_FIELD_C5, pwmSettings[cid - 1].useLunarPhase);
-                setText (NX_FIELD_T4,  (char*)pgm_read_word(&(nx_pwm_names[cid -1])));
+                setValue (NX_FIELD_C0, pwmSettings[componentId - 1].enabled);
+                setValue (NX_FIELD_C1, pwmSettings[componentId - 1].isNightLight);
+                setValue (NX_FIELD_C2, pwmSettings[componentId - 1].isProg);
+                setValue (NX_FIELD_N0, pwmSettings[componentId - 1].onHour);
+                setValue (NX_FIELD_N1, pwmSettings[componentId - 1].onMinute);
+                setValue (NX_FIELD_N2, pwmSettings[componentId - 1].offHour);
+                setValue (NX_FIELD_N3, pwmSettings[componentId - 1].offMinute);
+                setValue (NX_FIELD_N4, pwmSettings[componentId - 1].sunriseLenght);
+                setValue (NX_FIELD_N5, pwmSettings[componentId - 1].sunsetLenght);
+                setValue (NX_FIELD_N6, _nightValuePercent);
+                setValue (NX_FIELD_N7, _dayValuePercent);
+                setValue (NX_FIELD_N8, _userValuePercent);
+                setValue (NX_FIELD_N9, componentId);
+                setValue (NX_FIELD_N10, pwmSettings[componentId - 1].pin);
+                setValue (NX_FIELD_N11, pwmSettings[componentId - 1].watts);
+                setValue (NX_FIELD_C3, pwmSettings[componentId - 1].isI2C);
+                setValue (NX_FIELD_C4, pwmSettings[componentId - 1].invertPwm);
+                setValue (NX_FIELD_C5, pwmSettings[componentId - 1].useLunarPhase);
+                setText (NX_FIELD_T4,  (char*)pgm_read_word(&(nx_pwm_names[componentId -1])));
                 break;
 
         // cancel
@@ -720,10 +722,10 @@ void Nextion::handlePWMListPage (byte cid)
         }
 }
 
-void Nextion::handleHomePage (byte cid)
+void Nextion::handleHomePage (byte componentId)
 {
 
-        switch (cid)
+        switch (componentId)
         {
 
         // config show
@@ -807,7 +809,7 @@ void Nextion::handleHomePage (byte cid)
         case HOMEPAGE_PWMSTATUS6:
         case HOMEPAGE_PWMSTATUS7:
         case HOMEPAGE_PWMSTATUS8:
-                __activePwmStatus = cid - HOMEPAGE_PWMSTATUS1;
+                __activePwmStatus = componentId - HOMEPAGE_PWMSTATUS1;
                 setPage (PAGE_PWMSTATUS);
                 updatePWMStatusPage (__activePwmStatus);
                 break;
@@ -883,20 +885,20 @@ void Nextion::updateWaterTemp()
 }
 
 
-void Nextion::updatePWMStatusPage (byte i)
+void Nextion::updatePWMStatusPage (byte pwmId)
 {
         uint16_t color;
         byte icon;
-        setText (NX_FIELD_EMPTY, NX_FIELD_T0, (char*)pgm_read_word(&(nx_pwm_names[i])));
-        getColorAndIcon (i, &color, &icon);
-        setTextFloat (NX_FIELD_T1,  getPercent (i), 1, NX_STR_PERCENT);
-        setTextInt (NX_FIELD_T2, pwm.getRuntime(i).valueCurrent);
+        setText (NX_FIELD_EMPTY, NX_FIELD_T0, (char*)pgm_read_word(&(nx_pwm_names[pwmId])));
+        getColorAndIcon (pwmId, &color, &icon);
+        setTextFloat (NX_FIELD_T1,  getPercent (pwmId), 1, NX_STR_PERCENT);
+        setTextInt (NX_FIELD_T2, pwm.getRuntime(pwmId).valueCurrent);
         setText (NX_FIELD_T3, icon);
         setInt (NX_FIELD_T3, NX_CMD_PCO,  color);
-        setTextInt (NX_FIELD_T4, pwm.getRuntime(i).secondsLeft);
-        setTextInt (NX_FIELD_T5, pwm.getRuntime(i).valueGoal);
-        setTextFloat (NX_FIELD_T6, pwm.getRuntime(i).watts, 1, NX_STR_WATTS);
-        setTextFloat (NX_FIELD_T7, pwm.getRuntime(i).step,3, NX_FIELD_EMPTY);
+        setTextInt (NX_FIELD_T4, pwm.getRuntime(pwmId).secondsLeft);
+        setTextInt (NX_FIELD_T5, pwm.getRuntime(pwmId).valueGoal);
+        setTextFloat (NX_FIELD_T6, pwm.getRuntime(pwmId).watts, 1, NX_STR_WATTS);
+        setTextFloat (NX_FIELD_T7, pwm.getRuntime(pwmId).step,3, NX_FIELD_EMPTY);
         setTextFloat (NX_FIELD_T9, __time->getMoonPhaseValue(),0,NX_STR_PERCENT);
         char buf[12];
         uint32_t uptime  = __time->getUnixTime() - startTimestamp;
@@ -921,21 +923,21 @@ void Nextion::updateHomePage()
         {
                 byte valueField = 66+i;
                 byte iconField =  3+i;
-                if (!pwm.getRuntime(i).valueCurrent && pwmSettings[i].enabled == 0 && (pwm.getRuntime(i).nxPwmLast != 0 || forceRefresh))
+                if (!pwm.getRuntime(i).valueCurrent && pwmSettings[i].enabled == 0 && (pwm.getRuntime(i).valueLastNextion != 0 || forceRefresh))
                 {
                         setText (valueField, NX_STR_DASH);
                         setText (iconField, NX_STR_SPACE);
-                        pwm.setnxPwmLast(i,0);
-                        //  pwm.getRuntime(i).nxPwmLast = 0;
+                        pwm.setValueLastNextion(i,0);
+                        //  pwm.getRuntime(i).valueLastNextion = 0;
                         continue;
                 }
 
-                if (pwm.getRuntime(i).nxPwmLast!=pwm.getRuntime(i).valueCurrent || forceRefresh)
+                if (pwm.getRuntime(i).valueLastNextion!=pwm.getRuntime(i).valueCurrent || forceRefresh)
                 {
                         uint16_t color;
                         byte icon;
                         getColorAndIcon (i, &color, &icon);
-                        pwm.setnxPwmLast(i,pwm.getRuntime(i).valueCurrent);
+                        pwm.setValueLastNextion(i,pwm.getRuntime(i).valueCurrent);
                         setTextFloat (valueField,  getPercent (i), 1, NX_STR_PERCENT);
                         setText (iconField, icon);
                         setInt (iconField, NX_CMD_PCO,  color);
@@ -947,50 +949,49 @@ void Nextion::updateHomePage()
 
 }
 
-double Nextion::getPercent (byte i)
+double Nextion::getPercent (byte pwmId)
 {
-        return __pwm->mapDouble((double)pwm.getRuntime(i).valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
+        return __pwm->mapDouble((double)pwm.getRuntime(pwmId).valueCurrent, 0.0, (double)PWM_I2C_MAX, 0.0, 100.0);
 }
 
-void Nextion::getColorAndIcon (byte i, uint16_t *color, byte *icon)
+void Nextion::getColorAndIcon (byte pwmId, uint16_t *color, byte *icon)
 {
         *color = COLOR_WHITE;
         *icon = NX_STR_SPACE;
-        if (pwm.getRuntime(i).isSunrise )
+        if (pwm.getRuntime(pwmId).isSunrise )
         {
                 *icon = NX_STR_SUNRISE;
                 *color = COLOR_LIGHTYELLOW;
         }
-        else if (pwm.getRuntime(i).isSunset )
+        else if (pwm.getRuntime(pwmId).isSunset )
         {
                 *icon = NX_STR_SUNSET;
                 *color = COLOR_ORANGE;
         }
-        else if (pwm.getRuntime(i).recoverLastState)
+        else if (pwm.getRuntime(pwmId).recoverLastState)
         {
                 *icon = NX_STR_RECOVER;
                 *color = COLOR_LIGHTGREEN;
         }
-        else if (pwm.getRuntime(i).valueCurrent < pwm.getRuntime(i).valueGoal)
+        else if (pwm.getRuntime(pwmId).valueCurrent < pwm.getRuntime(pwmId).valueGoal)
         {
                 *icon = NX_STR_UP;
-
         }
-        else if (pwm.getRuntime(i).valueCurrent > pwm.getRuntime(i).valueGoal) *icon = NX_STR_DOWN;
-        else if (pwm.getRuntime(i).valueCurrent == 0 || pwmSettings[i].enabled == 0)
+        else if (pwm.getRuntime(pwmId).valueCurrent > pwm.getRuntime(pwmId).valueGoal) *icon = NX_STR_DOWN;
+        else if (pwm.getRuntime(pwmId).valueCurrent == 0 || pwmSettings[pwmId].enabled == 0)
         {
                 *icon = NX_STR_OFF;
                 *color = COLOR_LIGHTRED;
         }
-        else if (pwm.getRuntime(i).isNight)
+        else if (pwm.getRuntime(pwmId).isNight)
         {
-                if (pwmSettings[i].useLunarPhase)
+                if (pwmSettings[pwmId].useLunarPhase)
                 {
                         *color = rgb565 (map (__time->getMoonPhaseValue (), 0,100,150,255));
                 }
                 *icon = NX_STR_NIGHT;
         }
-        else if (pwm.getRuntime(i).valueCurrent == pwmSettings[i].valueDay)
+        else if (pwm.getRuntime(pwmId).valueCurrent == pwmSettings[pwmId].valueDay)
         {
                 *icon = NX_STR_ON;
                 *color = COLOR_YELLOW;
@@ -1027,7 +1028,6 @@ void Nextion::refreshHomePage ()
         timeDisplay();
         updateHomePage();
         displayWats ();
-
 }
 
 void Nextion::display ()
@@ -1074,10 +1074,12 @@ void Nextion::display ()
                 }
         }
         if (lastTouch == 0) lastTouch = currentMillis;
-
 }
 
+/*************************/
 /* NEXTION COMMUNICATION */
+/*************************/
+
 void Nextion::sendNextionEOL ()
 {
         NEXTION_WRITEB(nextionEol, 3);
@@ -1139,7 +1141,6 @@ void Nextion::setPage (byte number)
         endCommand (false);
         __page = number;
         if (number == PAGE_HOME || number == PAGE_PWM_LIST) refreshPWMNames ();
-
 }
 
 void Nextion::setText (byte field, int nx_string_id)

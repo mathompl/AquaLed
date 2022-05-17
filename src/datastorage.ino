@@ -1,12 +1,15 @@
+/**************************************************************
+   AQUALED data storage library (EEPROM etc.) (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #include "datastorage.h"
 #include "defaults.h"
 
 #define EEPROM_CONFIG_EXISTS_ADDR 1
 #define EEPROM_SETTINGS_ADDR 2
-/*
-   Aqualed EEPROM functions (c) T. Formanowski 2016-2017
-   https://github.com/mathompl/AquaLed
- */
+
 DataStorage::DataStorage ()
 {
 

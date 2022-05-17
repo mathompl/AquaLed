@@ -1,3 +1,9 @@
+/**************************************************************
+   AQUALED sensors and cooling fans header file (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef SENSORS_H
 #define SENSORS_H
 #include <Wire.h>

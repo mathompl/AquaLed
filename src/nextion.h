@@ -1,9 +1,11 @@
+/**************************************************************
+   AQUALED Nextion library header file and configuration (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef NEXTION_H
 #define NEXTION_H
-/*
-   AQUALED Nextion configuration file (c) T. Formanowski 2016-2017
-   https://github.com/mathompl/AquaLed
- */
 
 #include <Arduino.h>
 #include <avr/pgmspace.h>
@@ -492,30 +494,30 @@ private:
         boolean __command_complete = false;
         byte __activePwmStatus;
         COMMAND __lastCommand;
-        void handlePage (byte pid, byte cid);
-        void handleScreenSaver (byte cid);
-        boolean setThermo (byte page, byte field, byte i);
-        void handleThermoPage (byte cid);
-        void handleSchedulePage (byte cid);
-        boolean handleTestSlider (int field, byte i);
-        void handleTestPage (byte cid);
-        void handlePWMPage (byte cid);
-        void handleSettingsPage (byte cid);
-        void handleSetTimePage (byte cid);
+        void handlePage (byte pageId, byte componentId);
+        void handleScreenSaver (byte componentId);
+        boolean setThermo (byte page, byte field, byte pwmId);
+        void handleThermoPage (byte componentId);
+        void handleSchedulePage (byte componentId);
+        boolean handleTestSlider (int field, byte pwmId);
+        void handleTestPage (byte componentId);
+        void handlePWMPage (byte componentId);
+        void handleSettingsPage (byte componentId);
+        void handleSetTimePage (byte componentId);
         void drawSchedule ();
-        void handleConfigPage (byte cid);
-        void handlePWMStatus (byte cid);
-        void handlePWMListPage (byte cid);
-        void handleHomePage (byte cid);
+        void handleConfigPage (byte componentId);
+        void handlePWMStatus (byte componentId);
+        void handlePWMListPage (byte componentId);
+        void handleHomePage (byte componentId);
         void toggleButton (byte value, byte field, byte pic_on, byte pic_off);
         void toggleButtons();
         void updateTempField (byte field, byte sensor, byte max, byte min);
         void updateFanField (byte field, byte sensor);
         void updateWaterTemp();
-        void updatePWMStatusPage (byte i);
+        void updatePWMStatusPage (byte pwmId);
         void updateHomePage();
-        double getPercent (byte i);
-        void getColorAndIcon (byte i, uint16_t *color, byte *icon);
+        double getPercent (byte pwmId);
+        void getColorAndIcon (byte pwmId, uint16_t *color, byte *icon);
         uint16_t rgb565( byte rgb);
         void displayWats ();
         void timeDisplay();
@@ -541,8 +543,5 @@ private:
         void refreshPWMNames ();
         void reconnect ();
         void processResponse ();
-
 };
-
-
 #endif

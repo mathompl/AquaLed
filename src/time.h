@@ -1,3 +1,9 @@
+/**************************************************************
+   AQUALED time functions library header (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef TIME_H
 #define TIME_H
 #include "RTClib.h"

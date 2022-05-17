@@ -1,7 +1,9 @@
-/*
-   AQUALED date/time functions (c) T. Formanowski 2016-2022
+/**************************************************************
+   AQUALED time functions library  (c) T. Formanowski 2016-2022
    https://github.com/mathompl/AquaLed
- */
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #include <time.h>
 
 _Time::_Time (DataStorage *_dataStorage)
@@ -17,7 +19,7 @@ void _Time::begin ()
         rtcAvailable =rtc.begin();
         startTimestamp = rtc.now().unixtime ();
         read ();
-        getMoonPhase ();      
+        getMoonPhase ();
         benchmarkStartMillis = millis ();
 }
 

@@ -1,3 +1,9 @@
+/**************************************************************
+   AQUALED data storage header file (EEPROM etc.) (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef DATASTORAGE_H
 #define DATASTORAGE_H
 #include <EEPROM.h>

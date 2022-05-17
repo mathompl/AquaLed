@@ -1,7 +1,9 @@
-/*
-   AQUALED Temperature && fans relay  functions (c) T. Formanowski 2016-2017
+/**************************************************************
+   AQUALED tempearature sensors and cooling fans relays library (c) T. Formanowski 2016-2022
    https://github.com/mathompl/AquaLed
- */
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #include <sensors.h>
 
 Sensors::Sensors () {

@@ -1,9 +1,12 @@
+/**************************************************************
+   AQUALED system configuration file (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef AQUALED_H
 #define AQUALED_H
-/*
-         AQUALED system configuration file (c) T. Formanowski 2016-2017
-         https://github.com/mathompl/AquaLed
- */
+
  #include <SPI.h>
  #include <avr/wdt.h>
  #include "config.h"

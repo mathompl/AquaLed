@@ -1,3 +1,9 @@
+/**************************************************************
+   AQUALED PWM library header file (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef PWM_H
 #define PWM_H
 
@@ -20,12 +26,12 @@ typedef struct {
         long stopTime;
         long sunriseTime;
         long sunsetTime;
-        bool dimmingStart;
+        bool dimmingStarted;
         bool recoverLastState;
         double valueGoal;
         double valueCurrent;
-        double pwmLast;
-        double nxPwmLast;
+        double valueLast;
+        double valueLastNextion;
         byte isSunrise;
         byte isSunset;
         byte isNight;
@@ -39,31 +45,31 @@ class PWM {
 public:
     PWM(_Time *_time);
     void begin();
-    void initPWM(byte i);
-    void recoverSunsetAndSunrise(byte i);
-    void resetFlags(byte i);
+    void initPWM(byte pwmId);
+    void recoverSunsetAndSunrise(byte pwmId);
+    void resetFlags(byte pwmId);
     void forcePWMRecovery(boolean test);
     void forceDimmingRestart();
     void loop();
     PWM_RUNTIME getRuntime(int pwm);
-    void updateChannelTimes(byte i);
-    void setTestMode(byte pwm, bool value);
-    void setnxPwmLast(byte pwm, double value);
+    void updateChannelTimes(byte pwmId);
+    void setTestMode (byte pwm, bool value);
+    void setValueLastNextion (byte pwm, double value);
     void setCurrentValue(byte pwm, double value);
-    long getSunsetSeconds(byte i);
-    long getSunriseSeconds(byte i);
+    long getSunsetSeconds(byte pwmId);
+    long getSunriseSeconds(byte pwmId);
     long mapRound(long x, long in_min,long in_max, long out_min, long out_max);
     double mapDouble(double x, double in_min, double in_max, double out_min, double out_max);
 
 private:
     PWM_RUNTIME __pwmRuntime[PWMS] = {0};
     _Time *__time;
-    void pwmStep(byte i);
-    void initDimming(byte i, double dimmingScale, long dimmingTime);
-    void goalReached(byte i);
-    double getNightValue(byte i);
-    bool getState(byte i);
-    void loop_channel(byte i);
+    void pwmStep(byte pwmId);
+    void initDimming(byte pwmId, double dimmingScale, long dimmingTime);
+    void goalReached(byte pwmId);
+    double getNightValue(byte pwmId);
+    bool getState(byte pwmId);
+    void loop_channel(byte pwmId);
 };
 
 #endif

@@ -1,3 +1,9 @@
+/**************************************************************
+   AQUALED default system and pwm channels settings used for firstrun (c) T. Formanowski 2016-2022
+   https://github.com/mathompl/AquaLed
+   GNU GENERAL PUBLIC LICENSE
+**************************************************************/
+
 #ifndef DEFAULTS_H
 #define DEFAULTS_H
 
