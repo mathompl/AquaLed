@@ -11,7 +11,6 @@ _Time::_Time (DataStorage *_dataStorage)
         __dataStorage = _dataStorage;
 }
 
-
 void _Time::begin ()
 {
         Wire.begin();

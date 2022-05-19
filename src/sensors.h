@@ -52,7 +52,6 @@ class Sensors
       void setNXFanStatus (byte fan, boolean newStatus);
       double mapDouble(double x, double in_min, double in_max, double out_min, double out_max);
 
-
   private:
       OneWire *__oneWire;
       DS18B20 *__sensorsWire;

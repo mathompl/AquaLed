@@ -787,16 +787,19 @@ void Nextion::handleHomePage (byte componentId)
 
         // fans toggle
         case HOMEPAGE_BUTTON_FAN_WATER:
+        case HOMEPAGE_WATER_TEMPERATURE_FIELD:
                 __sensors->invertFan (WATER_TEMPERATURE_FAN, true);
                 updateHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_LAMP:
+        case HOMEPAGE_LAMP_TEMPERATURE_FIELD:
                 __sensors->invertFan (LED_TEMPERATURE_FAN, true);
                 updateHomePage ();
                 break;
 
         case HOMEPAGE_BUTTON_FAN_SUMP:
+        case HOMEPAGE_SUMP_TEMPERATURE_FIELD:
                 __sensors->invertFan (SUMP_TEMPERATURE_FAN, true);
                 updateHomePage ();
                 break;
